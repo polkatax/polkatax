@@ -40,7 +40,7 @@ export const useStakingRewardsStore = defineStore('rewards', {
       rewards$: rewards$.asObservable(),
       currency: 'USD',
       address: '',
-      timeFrame: 'This Month',
+      timeFrame: 'This Year',
       chainList$,
       chain$: chain$.asObservable(),
     };
@@ -62,7 +62,6 @@ export const useStakingRewardsStore = defineStore('rewards', {
           startDate,
           endDate
         );
-        console.log(rewardsDto);
         const valuesWithIsoDate = addIsoDateAndCurrentValue(
           rewardsDto.values,
           rewardsDto.currentPrice

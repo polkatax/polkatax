@@ -25,22 +25,10 @@ export const getStartDate = (timeFrameKey: string) => {
   const temp = getStartOfCurrentDay();
   if (typeof timeFrame === 'string') {
     switch (timeFrame) {
-      case TimeFrames['This Month']:
-        temp.setDate(1);
-        break;
       case TimeFrames['This Year']:
         temp.setDate(1);
         temp.setMonth(0);
         break;
-      case TimeFrames['Last 7 days']:
-        temp.setDate(temp.getDate() - 6);
-        break;
-      case TimeFrames['Last 30 days']:
-        temp.setDate(temp.getDate() - 29);
-        break;
-      case TimeFrames['Last Month']:
-        temp.setDate(1);
-        temp.setMonth(temp.getMonth() - 1);
         break;
     }
   } else {
@@ -55,14 +43,8 @@ export const getEndDate = (timeFrameKey: string) => {
   const timeFrame = TimeFrames[timeFrameKey];
   const temp = getStartOfCurrentDay();
   switch (timeFrame) {
-    case TimeFrames['This Month']:
     case TimeFrames['This Year']:
-    case TimeFrames['Last 7 days']:
-    case TimeFrames['Last 30 days']:
       temp.setDate(temp.getDate() + 1);
-      break;
-    case TimeFrames['Last Month']:
-      temp.setDate(1);
       break;
     default:
       temp.setDate(1);
