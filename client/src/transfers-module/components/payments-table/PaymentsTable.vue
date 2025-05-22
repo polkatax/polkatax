@@ -35,7 +35,7 @@
           >Export CSV
         </q-btn>
         <q-btn color="primary" class="q-mr-sm" @click="exportKoinlyCsv"
-          >Koinly-friendly CSV
+          >Koinly export
         </q-btn>
         <q-btn color="primary" @click="exportJson">Export JSON</q-btn>
       </template>
@@ -234,7 +234,7 @@ function exportKoinlyCsv() {
     .filter((v) => excludedHashes.indexOf(v.hash ?? '') === -1)
     .map((v) => {
       return {
-        'Koinly Date': formatDateUTC(v.timestamp * 1000),
+        Date: formatDateUTC(v.timestamp * 1000),
         Amount: v.amount,
         Currency: selectedToken.value,
         TxHash: v.hash,

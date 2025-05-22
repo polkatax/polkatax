@@ -8,15 +8,6 @@
       :pagination="initialPagination"
     >
       <template v-slot:top>
-        <div>
-          <span class="text-h6" style="line-break: anywhere"
-            >Rewards ({{ rewards?.chain }}) - {{ timeFrame }}</span
-          ><br />
-          <span class="text-h6" style="line-break: anywhere"
-            >Address {{ rewards?.address }}</span
-          >
-        </div>
-        <q-space />
         <q-btn color="primary" class="q-mr-sm" @click="exportRewardsAsPdf"
           >Export Pdf
         </q-btn>
@@ -24,7 +15,7 @@
           >Export CSV
         </q-btn>
         <q-btn color="primary" class="q-mr-sm" @click="exportRewardsAsKoinlyCsv"
-          >Koinly-friendly CSV
+          >Koinly Export
         </q-btn>
       </template>
     </q-table>
@@ -39,7 +30,6 @@ import {
   valueFormatter,
 } from '../../../shared-module/util/number-formatters';
 import {
-  formatTimeFrame,
   formatDate,
 } from '../../../shared-module/util/date-utils';
 import { exportDefaultCsv } from '../../service/export-default-csv';
@@ -54,10 +44,6 @@ const subscription = rewardsStore.rewards$.subscribe((dataRequest) => {
 
 onUnmounted(() => {
   subscription.unsubscribe();
-});
-
-const timeFrame = computed(() => {
-  return rewards.value ? formatTimeFrame(rewards.value!.timeFrame) : '';
 });
 
 const columns = computed(() => [

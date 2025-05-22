@@ -36,9 +36,7 @@ onUnmounted(() => {
 });
 
 const rewardDataTable = computed(() => {
-  const header = props.currency
-    ? [['date', 'Value at payout time', 'Value now']]
-    : [['date', 'Amount']];
+  const header = [['date', 'Amount']];
   const minDay = rewards.value!.values[0].isoDate;
   const maxDay =
     rewards.value!.values[rewards.value!.values.length - 1].isoDate;
@@ -50,18 +48,10 @@ const rewardDataTable = computed(() => {
   let isoDate = formatDate(temp.getTime());
   do {
     isoDate = formatDate(temp.getTime());
-    data.push(
-      props.currency
-        ? [
-            new Date(isoDate + ':00:00:00'),
-            rewards.value?.dailyValues[isoDate]?.fiatValue || 0,
-            rewards.value?.dailyValues[isoDate]?.valueNow || 0,
-          ]
-        : [
+    data.push([
             new Date(isoDate + ':00:00:00'),
             rewards.value?.dailyValues[isoDate]?.amount || 0,
-          ]
-    );
+          ]);
     temp.setDate(temp.getDate() + 1);
   } while (isoDate !== maxDay);
   return [...header, ...data];

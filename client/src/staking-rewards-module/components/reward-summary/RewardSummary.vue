@@ -1,6 +1,24 @@
 <template>
-  <div class="text-h6">Summary of staking rewards ({{ timeFrame }})</div>
+  <div class="text-h6">Summary of Staking Rewards</div>
   <table class="q-my-lg q-mx-auto" v-if="rewards">
+    <tr>
+      <td class="text-left q-pa-sm">Time frame:</td>
+      <td class="text-right q-pa-sm" data-testid="total-rewards">
+        {{ timeFrame }}
+      </td>
+    </tr>
+    <tr>
+      <td class="text-left q-pa-sm">Blockchain:</td>
+      <td class="text-right q-pa-sm" data-testid="total-rewards">
+        {{ rewards.chain }}
+      </td>
+    </tr>
+    <tr>
+      <td class="text-left q-pa-sm">Wallet:</td>
+      <td class="text-right q-pa-sm" data-testid="total-rewards" style="overflow-wrap: anywhere;">
+        {{ rewards.address }}
+      </td>
+    </tr>
     <tr>
       <td class="text-left q-pa-sm">Total rewards:</td>
       <td class="text-right q-pa-sm" data-testid="total-rewards">
@@ -32,22 +50,10 @@
       </td>
     </tr>
   </table>
-  <div v-if="rewards">
-    Verify your rewards here:
-    <a
-      :href="`https://${rewards.chain}.subscan.io/account/${rewards.address}?tab=reward`"
-      style="line-break: anywhere"
-      target="_blank"
-    >
-      https://{{ rewards!.chain }}.subscan.io/account/{{
-        rewards!.address
-      }}?tab=reward
-    </a>
-  </div>
 </template>
 
 <script setup lang="ts">
-import { computed, ref, Ref } from 'vue';
+import { computed, onBeforeUnmount, ref, Ref } from 'vue';
 import { useStakingRewardsStore } from '../../store/staking-rewards.store';
 import { formatTimeFrame } from '../../../shared-module/util/date-utils';
 import { Rewards } from '../../model/rewards';
@@ -56,9 +62,13 @@ const rewardsStore = useStakingRewardsStore();
 
 const rewards: Ref<Rewards | undefined> = ref(undefined);
 
-rewardsStore.rewards$.subscribe((dataRequest) => {
+const rewardSubscription = rewardsStore.rewards$.subscribe((dataRequest) => {
   rewards.value = dataRequest.data;
 });
+
+onBeforeUnmount(() => {
+  rewardSubscription.unsubscribe()
+})
 
 const averageDailyRewards = computed(() => {
   if (!rewardsStore.rewards$) {

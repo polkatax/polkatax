@@ -29,11 +29,8 @@
     <div class="text-center q-my-xl" v-if="rewards">
       <reward-summary />
     </div>
-    <div class="justify-around items-center column" v-if="rewards">
+    <div class="justify-around items-center column" v-if="rewards && Object.keys(rewards.dailyValues).length > 20">
       <rewards-chart :currency="false" chartType="ColumnChart" />
-      <rewards-chart :currency="false" chartType="LineChart" />
-      <rewards-chart :currency="true" chartType="ColumnChart" />
-      <rewards-chart :currency="true" chartType="LineChart" />
     </div>
     <div class="table q-my-md" v-if="rewards">
       <staking-rewards-table />
