@@ -30,7 +30,6 @@ describe('exportDefaultCsv', () => {
       chain: 'Kusama',
       currency: 'EUR',
       address: '0x123',
-      nominationPoolId: 'np-001',
       summary: {
         amount: 100,
         fiatValue: 500,
@@ -53,7 +52,6 @@ describe('exportDefaultCsv', () => {
         Chain: 'Kusama',
         Currency: 'EUR',
         'Wallet address': '0x123',
-        'NominationPool Id': 'np-001',
         timestamp: 1700000000,
         amount: 50,
         hash: 'hash1',

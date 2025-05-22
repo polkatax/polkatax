@@ -156,38 +156,4 @@ describe("StakingRewardsService", () => {
       expect(result[0].amount).toBeCloseTo(2);
     });
   });
-
-  describe("fetchNominationPoolRewards", () => {
-    it("fetches pool rewards and filters them", async () => {
-      const poolRewards = [
-        {
-          event_id: "Reward",
-          amount: "3000000000",
-          timestamp: 3500,
-          block: "3",
-          hash: "h3",
-        },
-      ];
-      mockSubscanService.fetchAllPoolStakingRewards.mockResolvedValue(
-        poolRewards,
-      );
-      mockSubscanService.fetchNativeToken.mockResolvedValue({
-        token_decimals: 9,
-      });
-
-      const result = await service.fetchNominationPoolRewards(
-        "chain",
-        "addr",
-        1,
-        3_000_000,
-        4_000_000,
-      );
-
-      expect(
-        mockSubscanService.fetchAllPoolStakingRewards,
-      ).toHaveBeenCalledWith("chain", "addr", 1);
-      expect(result).toHaveLength(1);
-      expect(result[0].amount).toBeCloseTo(3);
-    });
-  });
 });

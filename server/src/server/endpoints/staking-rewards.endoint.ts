@@ -25,7 +25,6 @@ export const stakingRewardsEndpoint: RouteOptions = {
       currency: Joi.string().min(1).max(5).default("usd").lowercase(),
       startdate: Joi.date(),
       enddate: Joi.date(),
-      poolid: Joi.number().optional(),
     }),
   },
   validatorCompiler: ({ schema, method, url, httpPart }) => {
@@ -40,7 +39,6 @@ export const stakingRewardsEndpoint: RouteOptions = {
           chain: request.params["chain"],
           address: request.params["address"],
           currency: request.query["currency"],
-          poolId: request.query["poolid"],
           startDay: request.query["startdate"],
           endDay: request.query["enddate"],
         });

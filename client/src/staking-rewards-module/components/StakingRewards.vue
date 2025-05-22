@@ -13,7 +13,6 @@
       <div class="dropdown">
         <currency-dropdown v-model="rewardsStore.currency" />
       </div>
-      <div class="dropdown"><nomination-pool-dropdown /></div>
       <time-frame-dropdown v-model="rewardsStore.timeFrame" />
       <address-input
         v-model="rewardsStore.address"
@@ -69,7 +68,6 @@ import CurrencyDropdown from '../../shared-module/components/currency-dropdown/C
 import StakingRewardsTable from './staking-rewards-table/StakingRewardsTable.vue';
 import TimeFrameDropdown from '../../shared-module/components/time-frame-dropdown/TimeFrameDropdown.vue';
 import RewardSummary from './reward-summary/RewardSummary.vue';
-import NominationPoolDropdown from './nomination-pool-dropdown/NominationPoolDropdown.vue';
 import { computed, onUnmounted, Ref, ref } from 'vue';
 import { useQuasar } from 'quasar';
 import { useStakingRewardsStore } from '../store/staking-rewards.store';

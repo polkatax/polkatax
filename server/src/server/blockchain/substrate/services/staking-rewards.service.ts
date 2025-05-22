@@ -104,28 +104,4 @@ export class StakingRewardsService {
     logger.info(`Exit fetchStakingRewards with ${filtered.length} elements`);
     return filtered;
   }
-
-  async fetchNominationPoolRewards(
-    chainName: string,
-    address: string,
-    poolId: number,
-    minDate: number,
-    maxDate?: number,
-  ): Promise<StakingReward[]> {
-    const token = await this.subscanService.fetchNativeToken(chainName);
-    const rawRewardsSlashes =
-      await this.subscanService.fetchAllPoolStakingRewards(
-        chainName,
-        address,
-        poolId,
-      );
-    const rewardsSlashes = rawRewardsSlashes.map((reward) => ({
-      ...reward,
-      amount:
-        BigNumber(reward.amount)
-          .dividedBy(Math.pow(10, token.token_decimals))
-          .toNumber() * (reward.event_id === "Slash" ? -1 : 1),
-    }));
-    return this.filterRewards(rewardsSlashes, minDate, maxDate);
-  }
 }

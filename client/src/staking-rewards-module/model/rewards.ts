@@ -21,7 +21,6 @@ export interface Rewards {
   currency: string;
   currentPrice: number;
   timeFrame: string;
-  nominationPoolId?: number;
   startDate: number;
   endDate: number;
   summary: RewardSummary;

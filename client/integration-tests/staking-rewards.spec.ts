@@ -1,6 +1,5 @@
 import { test, Page, expect } from '@playwright/test';
 import { mockSubscanChainList } from './util/mock-subscan-chain-list';
-import { mockNominationPools } from './util/mock-nomination-pools';
 
 const mockRewards = {
   values: [
@@ -60,7 +59,6 @@ export const mockStakingRewardsResponse = async (page: Page) => {
 };
 
 test('shows staking rewards', async ({ page }) => {
-  await mockNominationPools(page);
   await mockSubscanChainList(page);
   await mockStakingRewardsResponse(page);
   await page.goto('http://localhost:9000');

@@ -186,29 +186,6 @@ export class SubscanApi {
     });
   }
 
-  public async fetchPoolStakingRewards(
-    chainName: string,
-    address: string,
-    pool_id: number,
-    row: number = 100,
-    page: number = 0,
-  ): Promise<{ list: RawStakingReward[]; hasNext: boolean }> {
-    const responseBody = await this.requestHelper.req(
-      `https://${chainName}.api.subscan.io/api/scan/nomination_pool/rewards`,
-      `post`,
-      {
-        row,
-        page,
-        address,
-        pool_id,
-      },
-    );
-    return {
-      list: this.mapStakingRewards(responseBody.data?.list),
-      hasNext: (responseBody.data?.list || []).length >= row,
-    };
-  }
-
   async fetchStakingRewards(
     chainName: string,
     address: string,

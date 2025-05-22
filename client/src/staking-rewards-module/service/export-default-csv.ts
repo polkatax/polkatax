@@ -27,7 +27,6 @@ export const exportDefaultCsv = (rewards: Rewards) => {
     Chain: rewards.chain,
     Currency: rewards.currency,
     'Wallet address': rewards.address,
-    'NominationPool Id': rewards.nominationPoolId || '',
     ...values[0],
     totalAmount: rewards.summary.amount,
     totalValue: rewards.summary.fiatValue,
