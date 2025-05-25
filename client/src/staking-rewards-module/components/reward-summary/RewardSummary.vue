@@ -3,23 +3,19 @@
   <table class="q-my-lg q-mx-auto" v-if="rewards">
     <tr>
       <td class="text-left q-pa-sm">Time frame:</td>
-      <td class="text-right q-pa-sm" data-testid="total-rewards">
+      <td class="text-right q-pa-sm">
         {{ timeFrame }}
       </td>
     </tr>
     <tr>
       <td class="text-left q-pa-sm">Blockchain:</td>
-      <td class="text-right q-pa-sm" data-testid="total-rewards">
+      <td class="text-right q-pa-sm">
         {{ rewards.chain }}
       </td>
     </tr>
     <tr>
       <td class="text-left q-pa-sm">Wallet:</td>
-      <td
-        class="text-right q-pa-sm"
-        data-testid="total-rewards"
-        style="overflow-wrap: anywhere"
-      >
+      <td class="text-right q-pa-sm" style="overflow-wrap: anywhere">
         {{ rewards.address }}
       </td>
     </tr>

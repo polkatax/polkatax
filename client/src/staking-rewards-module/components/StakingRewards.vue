@@ -3,6 +3,10 @@
     <div
       class="q-my-md flex justify-between align-center items-center column-md row-lg row-xl column-xs column-sm"
     >
+      <address-input
+        v-model="rewardsStore.address"
+        @enter-pressed="fetchRewards"
+      />
       <div class="dropdown">
         <token-dropdown
           v-model="selectedChain"
@@ -11,13 +15,12 @@
         />
       </div>
       <div class="dropdown">
-        <currency-dropdown v-model="rewardsStore.currency" />
+        <currency-dropdown
+          v-model="currency"
+          @update:model-value="newCurrencySelected"
+        />
       </div>
       <time-frame-dropdown v-model="rewardsStore.timeFrame" />
-      <address-input
-        v-model="rewardsStore.address"
-        @enter-pressed="fetchRewards"
-      />
       <q-btn
         color="primary"
         label="Submit"
@@ -81,6 +84,10 @@ const rewardsStore = useStakingRewardsStore();
 const rewards: Ref<Rewards | undefined> = ref(undefined);
 const chainList: Ref<Chain[]> = ref([]);
 const selectedChain: Ref<Chain | undefined> = ref(undefined);
+const currency: Ref<string> = ref('');
+const currencySubscription = rewardsStore.currency$.subscribe(
+  (c) => (currency.value = c)
+);
 rewardsStore.chain$.pipe(take(1)).subscribe((c) => (selectedChain.value = c));
 
 const rewardsSubscription = rewardsStore.rewards$.subscribe(async (r) => {
@@ -128,6 +135,7 @@ const chainListSubscription = rewardsStore.chainList$.subscribe(
 onUnmounted(() => {
   rewardsSubscription.unsubscribe();
   chainListSubscription.unsubscribe();
+  currencySubscription.unsubscribe();
 });
 
 function fetchRewards() {
@@ -140,10 +148,14 @@ function newChainSelected(chain: Chain) {
   rewardsStore.selectChain(chain);
 }
 
+function newCurrencySelected(currency: string) {
+  rewardsStore.selectCurrency(currency);
+}
+
 const isDisabled = computed(() => {
   return (
     rewardsStore.address.trim() === '' ||
-    !rewardsStore.currency ||
+    !currency.value ||
     !selectedChain.value
   );
 });

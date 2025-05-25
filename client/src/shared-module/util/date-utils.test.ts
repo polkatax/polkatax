@@ -8,17 +8,6 @@ import {
   getStartOfCurrentDay,
 } from './date-utils';
 
-jest.mock('../model/time-frames', () => ({
-  TimeFrames: {
-    'This Year': 'This Year',
-    lastYear: 2022,
-    twoYearsAgo: 2021,
-    threeYearsAgo: 2020,
-    yourYearsAgo: 2019,
-    fiveYearsAgo: 2018,
-  },
-}));
-
 const mockDate = new Date(2023, 4, 15); // May 15, 2023
 
 describe('Timeframe Functions', () => {
