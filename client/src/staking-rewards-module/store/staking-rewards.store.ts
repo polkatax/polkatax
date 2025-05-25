@@ -5,7 +5,6 @@ import {
   from,
   ReplaySubject,
   map,
-  take,
 } from 'rxjs';
 import { Chain } from '../../shared-module/model/chain';
 import {
@@ -20,7 +19,7 @@ import { addIsoDateAndCurrentValue } from './util/add-iso-date-and-current-value
 import { calculateRewardSummary } from './util/calculate-reward-summary';
 import { groupRewardsByDay } from './util/group-rewards-by-day';
 import { getEndDate, getStartDate } from '../../shared-module/util/date-utils';
-import { fetchCurrency } from '../../shared-module/service/fetch-currency';
+import { useSharedStore } from '../../shared-module/store/shared.store';
 
 const chainList$ = from(fetchSubscanChains()).pipe(
   map((chainList) => ({
@@ -36,16 +35,10 @@ const rewards$ = new ReplaySubject<DataRequest<Rewards>>(1);
 const sortRewards = (rewards: Rewards) =>
   rewards.values.sort((a, b) => a.block - b.block);
 
-const currency$ = new ReplaySubject<string>(1);
-from(fetchCurrency())
-  .pipe(take(1))
-  .subscribe((currency) => currency$.next(currency));
-
 export const useStakingRewardsStore = defineStore('rewards', {
   state: () => {
     return {
       rewards$: rewards$.asObservable(),
-      currency$: currency$.asObservable(),
       address: '',
       timeFrame: new Date().getFullYear() - 1,
       chainList$,
@@ -56,16 +49,14 @@ export const useStakingRewardsStore = defineStore('rewards', {
     selectChain(newChain: Chain) {
       chain$.next(newChain);
     },
-    selectCurrency(newCurrency: string) {
-      currency$.next(newCurrency);
-    },
+
     async fetchRewards() {
       try {
         rewards$.next(new PendingRequest(undefined));
         const startDate = getStartDate(this.timeFrame);
         const endDate = getEndDate(this.timeFrame);
         const chain = (await firstValueFrom(chain$)).domain;
-        const currency = await firstValueFrom(currency$);
+        const currency = await firstValueFrom(useSharedStore().currency$);
         const rewardsDto = await fetchStakingRewards(
           chain,
           this.address.trim(),

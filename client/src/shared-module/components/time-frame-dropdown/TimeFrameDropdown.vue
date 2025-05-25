@@ -3,7 +3,7 @@
     <q-btn-dropdown :label="selectedTimeFrame" push no-caps>
       <q-list>
         <q-item
-          v-for="timeFrame in Object.keys(timeFrames)"
+          v-for="timeFrame in timeFrames"
           :key="timeFrame"
           :label="timeFrame"
           clickable

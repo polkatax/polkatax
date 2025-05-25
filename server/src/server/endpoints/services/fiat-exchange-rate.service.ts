@@ -10,7 +10,6 @@ export class FiatExchangeRateService {
     return new RequestHelper().req(
       `http://localhost:${this.port}/fiat-exchange-rates`,
       "GET",
-      {},
     );
   }
 }

@@ -4,12 +4,7 @@
   min-height: 0 !important;
 }
 
-@media (min-width: 1440px) {
-  .dropdown {
-    width: 275px;
-  }
-}
-@media (max-width: 1439px) {
+@media (max-width: 600px) {
   .dropdown,
   .datepicker {
     width: 100%;
@@ -18,14 +13,14 @@
 
 .mobile-only2 {
   display: none;
-  @media (max-width: 1439px) {
+  @media (max-width: 600px) {
     display: block;
   }
 }
 
 .desktop-only {
   display: block;
-  @media (max-width: 1439px) {
+  @media (max-width: 600px) {
     display: none;
   }
 }

@@ -1,7 +1,7 @@
 <template>
   <q-page class="q-px-sm q-mx-auto content">
     <div
-      class="q-my-md flex justify-between align-center items-center column-md row-lg row-xl column-xs column-sm"
+      class="q-my-md flex justify-center align-center items-center row-md row-lg row-xl column-xs row-sm"
     >
       <address-input
         v-model="rewardsStore.address"
@@ -12,12 +12,6 @@
           v-model="selectedChain"
           :chains="chainList"
           @update:model-value="newChainSelected"
-        />
-      </div>
-      <div class="dropdown">
-        <currency-dropdown
-          v-model="currency"
-          @update:model-value="newCurrencySelected"
         />
       </div>
       <time-frame-dropdown v-model="rewardsStore.timeFrame" />
@@ -67,7 +61,6 @@
 import TokenDropdown from './token-dropdown/TokenDropdown.vue';
 import AddressInput from '../../shared-module/components/address-input/AddressInput.vue';
 import RewardsChart from './rewards-chart/RewardsChart.vue';
-import CurrencyDropdown from '../../shared-module/components/currency-dropdown/CurrencyDropdown.vue';
 import StakingRewardsTable from './staking-rewards-table/StakingRewardsTable.vue';
 import TimeFrameDropdown from '../../shared-module/components/time-frame-dropdown/TimeFrameDropdown.vue';
 import RewardSummary from './reward-summary/RewardSummary.vue';
@@ -84,10 +77,7 @@ const rewardsStore = useStakingRewardsStore();
 const rewards: Ref<Rewards | undefined> = ref(undefined);
 const chainList: Ref<Chain[]> = ref([]);
 const selectedChain: Ref<Chain | undefined> = ref(undefined);
-const currency: Ref<string> = ref('');
-const currencySubscription = rewardsStore.currency$.subscribe(
-  (c) => (currency.value = c)
-);
+
 rewardsStore.chain$.pipe(take(1)).subscribe((c) => (selectedChain.value = c));
 
 const rewardsSubscription = rewardsStore.rewards$.subscribe(async (r) => {
@@ -135,7 +125,6 @@ const chainListSubscription = rewardsStore.chainList$.subscribe(
 onUnmounted(() => {
   rewardsSubscription.unsubscribe();
   chainListSubscription.unsubscribe();
-  currencySubscription.unsubscribe();
 });
 
 function fetchRewards() {
@@ -148,16 +137,8 @@ function newChainSelected(chain: Chain) {
   rewardsStore.selectChain(chain);
 }
 
-function newCurrencySelected(currency: string) {
-  rewardsStore.selectCurrency(currency);
-}
-
 const isDisabled = computed(() => {
-  return (
-    rewardsStore.address.trim() === '' ||
-    !currency.value ||
-    !selectedChain.value
-  );
+  return rewardsStore.address.trim() === '' || !selectedChain.value;
 });
 
 const meme = ref('img/dollar-4932316_1280.jpg');

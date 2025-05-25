@@ -11,7 +11,6 @@
       option-label="token"
       color="teal"
       @update:model-value="onNewValueSelected"
-      clearable
       options-selected-class="text-deep-orange"
     >
       <template v-slot:option="scope">
