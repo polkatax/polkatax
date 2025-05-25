@@ -15,7 +15,6 @@ export const fetchCurrency = async (): Promise<string> => {
     const body = await response.json();
     const countryCode = body.country; // e.g., "US"
     const currency = getCurrencyByCountry(countryCode);
-    console.log(`Currency for ${countryCode}:`, currency);
     return currency;
   } catch {
     return 'USD';
