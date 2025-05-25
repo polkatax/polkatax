@@ -18,7 +18,7 @@ export const cryptoCurrencyPricesServer = {
     tokenPriceHistoryService.init();
 
     const fastify = Fastify({
-      logger,
+      loggerInstance: logger,
     });
 
     fastify.route({

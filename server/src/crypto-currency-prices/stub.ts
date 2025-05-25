@@ -37,7 +37,7 @@ const createHistoricMockdata = (currency): CurrencyQuotes => {
 
 export const startStub = async () => {
   const fastify = Fastify({
-    logger,
+    loggerInstance: logger,
   });
 
   fastify.route({

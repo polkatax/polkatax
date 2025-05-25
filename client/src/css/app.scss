@@ -4,11 +4,6 @@
   min-height: 0 !important;
 }
 
-@media (min-width: 1440px) {
-  .dropdown {
-    width: 275px;
-  }
-}
 @media (max-width: 1439px) {
   .dropdown,
   .datepicker {

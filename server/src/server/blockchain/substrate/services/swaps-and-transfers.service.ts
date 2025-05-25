@@ -5,7 +5,7 @@ import { Transaction } from "../model/transaction";
 import { logger } from "../../../logger/logger";
 import { hasChainEvmSupport } from "../util/has-chain-evm-support";
 import { Transfer } from "../model/raw-transfer";
-import { isEvmAddress } from "../../../endpoints/helper/is-evm-address";
+import { isEvmAddress } from "../../../data-aggregation/helper/is-evm-address";
 
 dotenv.config({ path: __dirname + "/../.env" });
 

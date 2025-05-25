@@ -10,8 +10,6 @@
       option-value="name"
       color="teal"
       @update:model-value="onNewValueSelected"
-      clearable
-      :options-html="true"
       options-selected-class="text-deep-orange"
     >
       <template v-slot:option="scope">

@@ -2,20 +2,22 @@ import Fastify from "fastify";
 import path from "path";
 import { logger } from "./logger/logger";
 import dotenv from "dotenv";
+import websocketPlugin from '@fastify/websocket';
+import rateLimit from '@fastify/rate-limit';
 dotenv.config({ path: __dirname + "/../../.env" });
 
 import * as fs from "fs";
-import { stakingRewardsEndpoint } from "./endpoints/staking-rewards.endoint";
-import { paymentsEndpoint } from "./endpoints/payments.endpoint";
 import { HttpError } from "../common/error/HttpError";
+import { DIContainer } from "./di-container";
+import { WebSocketManager } from "./endpoints/websocket.manager";
 
 export const polkataxServer = {
   init: async () => {
     const fastify = Fastify({
-      logger,
+      loggerInstance: logger,
     });
-
-    await fastify.register(import("@fastify/rate-limit"), { global: false });
+    await fastify.register(websocketPlugin);
+    await fastify.register(rateLimit, { global: false });
 
     const staticFilesFolder = path.join(__dirname, "../../public");
     if (fs.existsSync(staticFilesFolder)) {
@@ -50,9 +52,6 @@ export const polkataxServer = {
       }
     });
 
-    fastify.route(stakingRewardsEndpoint as any);
-    fastify.route(paymentsEndpoint as any);
-
     fastify.setNotFoundHandler((request, reply) => {
       // TODO: implement better solution
       reply.header("Content-Type", "text/html");
@@ -60,6 +59,12 @@ export const polkataxServer = {
         .send(fs.readFileSync(staticFilesFolder + "/index.html", "utf-8"))
         .status(200);
     });
+
+    const webSocketManager: WebSocketManager = DIContainer.resolve(
+          "webSocketManager",
+    )
+    fastify.get('/ws', { websocket: true }, webSocketManager.wsHandler)
+    webSocketManager.startJobNotificationChannel();
 
     fastify.listen(
       { port: Number(process.env["PORT"] || 3001), host: "0.0.0.0" },

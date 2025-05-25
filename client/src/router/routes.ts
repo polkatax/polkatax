@@ -10,18 +10,9 @@ const routes: RouteRecordRaw[] = [
         redirect: 'staking-rewards',
       },
       {
-        path: 'transfers',
-        component: () =>
-          import('src/transfers-module/components/TransfersAndSwaps.vue'),
-      },
-      {
         path: 'staking-rewards',
         component: () =>
-          import('src/staking-rewards-module/components/StakingRewards.vue'),
-      },
-      {
-        path: 'trades',
-        component: () => import('src/swap-module/components/TokenSwaps.vue'),
+          import('src/staking-rewards-module/components/StakingRewardsDashboard.vue'),
       },
     ],
   },

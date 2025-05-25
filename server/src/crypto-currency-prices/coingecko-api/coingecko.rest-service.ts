@@ -58,10 +58,16 @@ export class CoingeckoRestService {
     tokenId: string,
     currency: string = "usd",
   ): Promise<Quotes> {
-    const dataUrl = (await this.getExportDataUrl(tokenId)).replace(
-      "usd.csv",
-      currency + ".csv",
-    );
+    let dataUrl = ""
+    try {
+      dataUrl = (await this.getExportDataUrl(tokenId)).replace(
+        "usd.csv",
+        currency + ".csv",
+      );
+    } catch (error) {
+      logger.warn("No quotes found for token " + tokenId)
+      return undefined
+    }
     const response = await fetch("https://www.coingecko.com" + dataUrl);
     const csv = await response.text();
     let json = this.csvToJson(csv).filter((d) => d["snapped_at"] && d["price"]);

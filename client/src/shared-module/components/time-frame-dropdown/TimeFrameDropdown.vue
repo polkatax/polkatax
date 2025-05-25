@@ -3,15 +3,15 @@
     <q-btn-dropdown :label="selectedTimeFrame" push no-caps>
       <q-list>
         <q-item
-          v-for="timeFrame in Object.keys(timeFrames)"
+          v-for="timeFrame in timeFrames"
           :key="timeFrame"
-          :label="timeFrames[timeFrame]"
+          :label="timeFrame"
           clickable
           v-close-popup
           @click="onListItemClick(timeFrame)"
         >
           <q-item-section>
-            <q-item-label>{{ timeFrames[timeFrame] }}</q-item-label>
+            <q-item-label>{{ timeFrame }}</q-item-label>
           </q-item-section>
         </q-item>
       </q-list>
@@ -19,13 +19,11 @@
   </div>
 </template>
 <script setup lang="ts">
-import { TimeFrames } from '../../../shared-module/model/time-frames';
 import { computed, ref } from 'vue';
 
 const emits = defineEmits(['update:modelValue']);
-
 const props = defineProps({
-  modelValue: String,
+  modelValue: Number,
 });
 
 function onListItemClick(timeFrame: string | number) {
@@ -33,8 +31,8 @@ function onListItemClick(timeFrame: string | number) {
 }
 
 const selectedTimeFrame = computed(() => {
-  return props.modelValue !== undefined ? TimeFrames[props.modelValue] : '';
+  return props.modelValue !== undefined ? props.modelValue : '';
 });
 
-const timeFrames = ref(TimeFrames);
+const timeFrames = ref([0,1, 2, 3, 4].map(offset => new Date().getFullYear() - offset));
 </script>

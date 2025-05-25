@@ -87,14 +87,20 @@ module.exports = configure(function (/* ctx */) {
     devServer: {
       open: false,
       proxy: {
+        '/ws': {
+          target: 'ws://localhost:3001',  // Your backend WebSocket server
+          ws: true,
+          changeOrigin: true,
+          secure: false
+        },
         '/api': {
           target: 'http://localhost:3001',
           changeOrigin: true,
           pathRewrite: {
             '^/api': '',
-          },
+          }
         },
-      },
+      }
     },
 
     // https://v2.quasar.dev/quasar-cli-vite/quasar-config-js#framework

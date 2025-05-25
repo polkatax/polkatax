@@ -1,6 +1,8 @@
 import { InjectionMode, createContainer } from "awilix";
 import { registerServices as registerBlockchainServices } from "./blockchain/registerServices";
-import { registerServices as registerEndpointServices } from "./endpoints/registerServices";
+import { registerServices as registerDataAggregationServices } from "./data-aggregation/registerServices";
+import { registerServices as registerJobServices } from "./job-management/registerServices";
+import { registerServices as registerEndpointsServices } from "./endpoints/registerServices";
 
 export const DIContainer = createContainer({
   injectionMode: InjectionMode.CLASSIC,
@@ -8,4 +10,6 @@ export const DIContainer = createContainer({
 });
 
 registerBlockchainServices(DIContainer);
-registerEndpointServices(DIContainer);
+registerDataAggregationServices(DIContainer);
+registerJobServices(DIContainer);
+registerEndpointsServices(DIContainer);

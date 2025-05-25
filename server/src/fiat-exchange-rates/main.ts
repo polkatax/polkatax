@@ -15,7 +15,7 @@ const init = async () => {
   }
 
   const fastify = Fastify({
-    logger,
+    loggerInstance: logger,
   });
 
   fastify.route({

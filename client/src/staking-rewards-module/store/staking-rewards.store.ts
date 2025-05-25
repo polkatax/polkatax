@@ -5,6 +5,7 @@ import {
   from,
   ReplaySubject,
   map,
+  withLatestFrom,
 } from 'rxjs';
 import { Chain } from '../../shared-module/model/chain';
 import {
@@ -19,6 +20,8 @@ import { fetchStakingRewards } from '../service/fetch-staking-rewards';
 import { addIsoDateAndCurrentValue } from './util/add-iso-date-and-current-value';
 import { calculateRewardSummary } from './util/calculate-reward-summary';
 import { groupRewardsByDay } from './util/group-rewards-by-day';
+import { startSyncing } from '../service/start-syncing';
+import { wsMsgReceived$, wsSendMsg } from '../../shared-module/service/ws-connection';
 
 const chainList$ = from(fetchSubscanChains()).pipe(
   map((chainList) => ({
@@ -33,6 +36,24 @@ const chain$: BehaviorSubject<Chain> = new BehaviorSubject<Chain>({
 const rewards$ = new ReplaySubject<DataRequest<Rewards>>(1);
 const sortRewards = (rewards: Rewards) =>
   rewards.values.sort((a, b) => a.block - b.block);
+const jobs$ = new ReplaySubject<any[]>(1);
+
+wsMsgReceived$.subscribe(async msg => {
+  const asObj = JSON.parse(msg.data)
+  if (Array.isArray(asObj)) {
+    jobs$.next(asObj)
+  } else {
+    const jobs = await firstValueFrom(jobs$)
+    jobs.forEach(j => {
+      if (j.wallet === asObj.wallet && j.blockchain === asObj.blockchain && j.timeFrame === asObj.timeFrame) {
+        j.value = asObj.value
+        j.status = asObj.status
+        j.error = asObj.error
+      }
+    })
+    jobs$.next([...jobs])
+  }
+})
 
 export const useStakingRewardsStore = defineStore('rewards', {
   state: () => {
@@ -40,15 +61,19 @@ export const useStakingRewardsStore = defineStore('rewards', {
       rewards$: rewards$.asObservable(),
       currency: 'USD',
       address: '',
-      timeFrame: 'This Year',
+      timeFrame: new Date().getFullYear() - 1,
       chainList$,
       chain$: chain$.asObservable(),
+      jobs$: jobs$.asObservable()
     };
   },
   actions: {
     selectChain(newChain: Chain) {
       chain$.next(newChain);
     },
+    async sync() {
+      wsSendMsg({ wallet: this.address.trim(), currency: this.currency, year: this.timeFrame, timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone })
+    }/*,
     async fetchRewards() {
       try {
         rewards$.next(new PendingRequest(undefined));
@@ -84,6 +109,6 @@ export const useStakingRewardsStore = defineStore('rewards', {
       } catch (error) {
         rewards$.next({ pending: false, error, data: undefined });
       }
-    },
+    },*/
   },
 });

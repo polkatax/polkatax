@@ -1,5 +1,3 @@
-import { TimeFrames } from '../model/time-frames';
-
 export const getStartOfCurrentDay = () => {
   const temp = new Date();
   temp.setMilliseconds(0);
@@ -20,38 +18,19 @@ export const getFirstDayOfYear = () => {
   return temp;
 };
 
-export const getStartDate = (timeFrameKey: string) => {
-  const timeFrame = TimeFrames[timeFrameKey];
+export const getStartDate = (year: number) => {
   const temp = getStartOfCurrentDay();
-  if (typeof timeFrame === 'string') {
-    switch (timeFrame) {
-      case TimeFrames['This Year']:
-        temp.setDate(1);
-        temp.setMonth(0);
-        break;
-        break;
-    }
-  } else {
-    temp.setDate(1);
-    temp.setMonth(0);
-    temp.setFullYear(Number(timeFrame));
-  }
+  temp.setDate(1);
+  temp.setMonth(0);
+  temp.setFullYear(Number(year));
   return temp.getTime();
 };
 
-export const getEndDate = (timeFrameKey: string) => {
-  const timeFrame = TimeFrames[timeFrameKey];
+export const getEndDate = (year: number) => {
   const temp = getStartOfCurrentDay();
-  switch (timeFrame) {
-    case TimeFrames['This Year']:
-      temp.setDate(temp.getDate() + 1);
-      break;
-    default:
-      temp.setDate(1);
-      temp.setMonth(0);
-      temp.setFullYear(Number(timeFrame) + 1);
-      break;
-  }
+  temp.setDate(1);
+  temp.setMonth(0);
+  temp.setFullYear(Number(year) + 1);
   return temp.getTime();
 };
 
@@ -83,9 +62,9 @@ export function formatDate(date: number) {
   return [year, month, day].join('-');
 }
 
-export const formatTimeFrame = (timeFrame: string) => {
-  const start = getStartDate(timeFrame);
-  const end = new Date(getEndDate(timeFrame));
+export const formatTimeFrame = (year: number) => {
+  const start = getStartDate(year);
+  const end = new Date(getEndDate(year));
   end.setDate(end.getDate() - 1);
   return formatDate(start) + ' until ' + formatDate(end.getTime());
 };

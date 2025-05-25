@@ -53,11 +53,6 @@ export class TokenPriceConversionService {
         ? currency
         : "usd";
     const result = {};
-    const latestPrices =
-      await this.cryptoCurrencyPricesService.fetchCurrentPrices(
-        tokenIds,
-        currency,
-      );
     for (let i = 0; i < tokenIds.length; i++) {
       try {
         result[tokenIds[i]] =
@@ -65,7 +60,6 @@ export class TokenPriceConversionService {
             tokenIds[i],
             quotesCurrency as PreferredQuoteCurrency,
           );
-        result[tokenIds[i]].quotes.latest = latestPrices[tokenIds[i]];
       } catch (e) {
         logger.error("Failed to fetch quotes for token " + tokenIds[i]);
         logger.error(e);
