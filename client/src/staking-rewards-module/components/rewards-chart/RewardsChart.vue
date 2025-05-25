@@ -49,9 +49,9 @@ const rewardDataTable = computed(() => {
   do {
     isoDate = formatDate(temp.getTime());
     data.push([
-            new Date(isoDate + ':00:00:00'),
-            rewards.value?.dailyValues[isoDate]?.amount || 0,
-          ]);
+      new Date(isoDate + ':00:00:00'),
+      rewards.value?.dailyValues[isoDate]?.amount || 0,
+    ]);
     temp.setDate(temp.getDate() + 1);
   } while (isoDate !== maxDay);
   return [...header, ...data];

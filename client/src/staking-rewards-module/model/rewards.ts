@@ -20,7 +20,7 @@ export interface Rewards {
   address: string;
   currency: string;
   currentPrice: number;
-  timeFrame: string;
+  timeFrame: number;
   startDate: number;
   endDate: number;
   summary: RewardSummary;

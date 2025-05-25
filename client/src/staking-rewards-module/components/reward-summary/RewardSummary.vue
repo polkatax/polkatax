@@ -15,7 +15,11 @@
     </tr>
     <tr>
       <td class="text-left q-pa-sm">Wallet:</td>
-      <td class="text-right q-pa-sm" data-testid="total-rewards" style="overflow-wrap: anywhere;">
+      <td
+        class="text-right q-pa-sm"
+        data-testid="total-rewards"
+        style="overflow-wrap: anywhere"
+      >
         {{ rewards.address }}
       </td>
     </tr>
@@ -67,8 +71,8 @@ const rewardSubscription = rewardsStore.rewards$.subscribe((dataRequest) => {
 });
 
 onBeforeUnmount(() => {
-  rewardSubscription.unsubscribe()
-})
+  rewardSubscription.unsubscribe();
+});
 
 const averageDailyRewards = computed(() => {
   if (!rewardsStore.rewards$) {

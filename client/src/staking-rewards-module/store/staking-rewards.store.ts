@@ -13,12 +13,12 @@ import {
   PendingRequest,
 } from '../../shared-module/model/data-request';
 import { fetchSubscanChains } from '../../shared-module/service/fetch-subscan-chains';
-import { getEndDate, getStartDate } from '../../shared-module/util/date-utils';
 import { Rewards } from '../model/rewards';
 import { fetchStakingRewards } from '../service/fetch-staking-rewards';
 import { addIsoDateAndCurrentValue } from './util/add-iso-date-and-current-value';
 import { calculateRewardSummary } from './util/calculate-reward-summary';
 import { groupRewardsByDay } from './util/group-rewards-by-day';
+import { getEndDate, getStartDate } from '../../shared-module/util/date-utils';
 
 const chainList$ = from(fetchSubscanChains()).pipe(
   map((chainList) => ({
@@ -40,7 +40,7 @@ export const useStakingRewardsStore = defineStore('rewards', {
       rewards$: rewards$.asObservable(),
       currency: 'USD',
       address: '',
-      timeFrame: 'This Year',
+      timeFrame: new Date().getFullYear() - 1,
       chainList$,
       chain$: chain$.asObservable(),
     };

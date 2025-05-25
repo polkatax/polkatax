@@ -47,25 +47,25 @@ describe('Timeframe Functions', () => {
 
   describe('getStartDate', () => {
     test('should return the correct start date for "This Year"', () => {
-      const startDate = getStartDate('This Year');
+      const startDate = getStartDate(2023);
       expect(startDate).toBe(new Date(2023, 0, 1).getTime());
     });
 
     test('should return the correct start date for a last year', () => {
-      const startDate = getStartDate('lastYear');
+      const startDate = getStartDate(2022);
       expect(startDate).toBe(new Date(2022, 0, 1).getTime()); // January 1, 2022
     });
   });
 
   describe('getEndDate', () => {
     test('should return the correct end date for "This Year"', () => {
-      const endDate = getEndDate('This Year');
+      const endDate = getEndDate(2023);
       const expectedEndDate = new Date(2023, 4, 16);
       expect(endDate).toBe(expectedEndDate.getTime());
     });
 
     test('should return the correct end date for "2022"', () => {
-      const endDate = getEndDate('lastYear');
+      const endDate = getEndDate(2022);
       const expectedEndDate = new Date(2023, 0, 1);
       expect(endDate).toBe(expectedEndDate.getTime());
     });

@@ -29,9 +29,7 @@ import {
   tokenAmountFormatter,
   valueFormatter,
 } from '../../../shared-module/util/number-formatters';
-import {
-  formatDate,
-} from '../../../shared-module/util/date-utils';
+import { formatDate } from '../../../shared-module/util/date-utils';
 import { exportDefaultCsv } from '../../service/export-default-csv';
 import { exportKoinlyCsv } from '../../service/export-koinly-csv';
 
