@@ -28,9 +28,13 @@ export const getStartDate = (year: number) => {
 
 export const getEndDate = (year: number) => {
   const temp = getStartOfCurrentDay();
-  temp.setDate(1);
-  temp.setMonth(0);
-  temp.setFullYear(Number(year) + 1);
+  if (year === new Date().getFullYear()) {
+    temp.setDate(temp.getDate() + 1);
+  } else {
+    temp.setDate(1);
+    temp.setMonth(0);
+    temp.setFullYear(year + 1);
+  }
   return temp.getTime();
 };
 

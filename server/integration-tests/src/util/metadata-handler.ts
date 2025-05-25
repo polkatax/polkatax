@@ -1,14 +1,11 @@
-import { http, HttpResponse } from "msw";
-import { MetaData } from "../../../src/server/blockchain/substrate/model/meta-data";
+import { createMockResponseHandler } from "./create-mock-response-handler";
 
-export const metaDataHandler = http.post(
+export const metaDataHandler = createMockResponseHandler(
   "https://*.api.subscan.io/api/scan/metadata",
-  async ({ request }): Promise<HttpResponse<{ data: MetaData }>> => {
-    return HttpResponse.json({
-      data: {
-        avgBlockTime: 6,
-        blockNum: 1000,
-      },
-    });
+  {
+    data: {
+      avgBlockTime: 6,
+      blockNum: 1000,
+    },
   },
 );

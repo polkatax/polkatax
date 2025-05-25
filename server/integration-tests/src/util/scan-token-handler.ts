@@ -1,12 +1,10 @@
-import { http, HttpResponse } from "msw";
+import { createMockResponseHandler } from "./create-mock-response-handler";
 
-export const scanTokenHandler = http.post(
+export const scanTokenHandler = createMockResponseHandler(
   "https://*.api.subscan.io/api/scan/token",
-  async ({ request }): Promise<HttpResponse<{ data: any }>> => {
-    return HttpResponse.json({
-      data: {
-        detail: { DOT: { asset_type: "native", token_decimals: "10" } },
-      },
-    });
+  {
+    data: {
+      detail: { DOT: { asset_type: "native", token_decimals: "10" } },
+    },
   },
 );

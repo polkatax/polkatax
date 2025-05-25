@@ -42,7 +42,6 @@
   "devDependencies": {
     "@jest/globals": "^29.6.2",
     "@jest/types": "^29.6.3",
-    "@types/bignumber.js": "^5.0.0",
     "@types/jest": "^29.5.14",
     "@types/node": "^20.1.5",
     "@types/pg": "^8.15.2",

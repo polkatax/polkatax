@@ -43,10 +43,12 @@ export class StakingRewardsWithFiatService {
     const coingeckoId = findCoingeckoIdForNativeToken(chain.domain);
 
     const [quotes, rewards] = await Promise.all([
-      coingeckoId ? this.tokenPriceConversionService.fetchQuotesForTokens(
-        [coingeckoId],
-        currency,
-      ) : Promise.resolve({}),
+      coingeckoId
+        ? this.tokenPriceConversionService.fetchQuotesForTokens(
+            [coingeckoId],
+            currency,
+          )
+        : Promise.resolve({}),
       this.fetchRawStakingRewards(stakingRewardsRequest),
     ]);
     let priceEndDay =

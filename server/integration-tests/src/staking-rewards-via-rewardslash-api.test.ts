@@ -1,15 +1,14 @@
 import { describe, test, beforeEach, afterEach, expect } from "@jest/globals";
-import { http, HttpResponse } from "msw";
 import { polkataxServer } from "../../src/server/polkatax-server";
 import { setupServer, SetupServerApi } from "msw/node";
 import { startStub as startPricesStub } from "../../src/crypto-currency-prices/stub";
 import { startStub as startFiatStub } from "../../src/fiat-exchange-rates/stub";
 import { FastifyInstance } from "fastify";
-import { RawStakingReward } from "../../src/server/blockchain/substrate/model/staking-reward";
 import { passThroughHandlers } from "./util/pass-through-handlers";
 import { metaDataHandler } from "./util/metadata-handler";
 import { createBlockHandlers } from "./util/create-block-handlers";
 import { scanTokenHandler } from "./util/scan-token-handler";
+import { createPaginatedMockResponseHandler } from "./util/create-paginated-mock-response-handler";
 
 describe("staking rewards via reward_slash endpoint", () => {
   let fastiyInstances: FastifyInstance[] = [];
@@ -45,23 +44,16 @@ describe("staking rewards via reward_slash endpoint", () => {
       },
     ];
 
-    const rewardsAndSlashdMock = http.post(
+    const rewardsAndSlashMock = createPaginatedMockResponseHandler(
       "https://polkadot.api.subscan.io/api/scan/account/reward_slash",
-      async ({
-        request,
-      }): Promise<HttpResponse<{ data: { list: RawStakingReward[] } }>> => {
-        const body = await request.json();
-        if (body["page"] === 0) {
-          return HttpResponse.json({
-            data: { list: mockStakingRewards as any },
-          });
-        } else {
-          return HttpResponse.json({ data: { list: [] } });
-        }
-      },
+      [
+        {
+          data: { list: mockStakingRewards as any },
+        },
+      ],
     );
 
-    server = setupServer(...defaultHandlers, rewardsAndSlashdMock);
+    server = setupServer(...defaultHandlers, rewardsAndSlashMock);
     await server.listen();
     const response = await fetch(
       `http://127.0.0.1:3001/api/staking-rewards/polkadot/2Fd1UGzT8yuhksiKy98TpDg794dEELvNFqenJjRHFvwfuU83?startdate=${timeStamp}&enddate=${timeStamp}&currency=USD`,
@@ -118,19 +110,16 @@ describe("staking rewards via reward_slash endpoint", () => {
       },
     ];
 
-    const rewardsAndSlashedMock = http.post(
+    const rewardsAndSlashMock = createPaginatedMockResponseHandler(
       "https://polkadot.api.subscan.io/api/scan/account/reward_slash",
-      async ({ request }): Promise<HttpResponse<{ data: { list: any[] } }>> => {
-        const body = await request.json();
-        if (body["page"] === 0) {
-          return HttpResponse.json({ data: { list: mockStakingRewards } });
-        } else {
-          return HttpResponse.json({ data: { list: [] } });
-        }
-      },
+      [
+        {
+          data: { list: mockStakingRewards as any },
+        },
+      ],
     );
 
-    server = setupServer(...defaultHandlers, rewardsAndSlashedMock);
+    server = setupServer(...defaultHandlers, rewardsAndSlashMock);
     await server.listen();
     const response = await fetch(
       `http://127.0.0.1:3001/api/staking-rewards/polkadot/2Fd1UGzT8yuhksiKy98TpDg794dEELvNFqenJjRHFvwfuU83?startdate=${timeStamp}&enddate=${timeStamp}&currency=USD`,
@@ -184,21 +173,15 @@ describe("staking rewards via reward_slash endpoint", () => {
       });
     };
 
-    const rewardsAndSlashedMock = http.post(
+    const rewardsAndSlashMock = createPaginatedMockResponseHandler(
       "https://polkadot.api.subscan.io/api/scan/account/reward_slash",
-      async ({ request }): Promise<HttpResponse<{ data: { list: any[] } }>> => {
-        const body = await request.json();
-        if (body["page"] === 0) {
-          return HttpResponse.json({ data: { list: createRewards(100) } });
-        } else if (body["page"] === 1) {
-          return HttpResponse.json({ data: { list: createRewards(70) } });
-        } else {
-          return HttpResponse.json({ data: { list: [] } });
-        }
-      },
+      [
+        { data: { list: createRewards(100) } },
+        { data: { list: createRewards(70) } },
+      ],
     );
 
-    server = setupServer(...defaultHandlers, rewardsAndSlashedMock);
+    server = setupServer(...defaultHandlers, rewardsAndSlashMock);
     await server.listen();
     const response = await fetch(
       `http://127.0.0.1:3001/api/staking-rewards/polkadot/2Fd1UGzT8yuhksiKy98TpDg794dEELvNFqenJjRHFvwfuU83?startdate=${timeStamp}&enddate=${timeStamp}&currency=USD`,

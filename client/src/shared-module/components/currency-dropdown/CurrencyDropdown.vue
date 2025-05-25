@@ -1,68 +1,49 @@
 <template>
   <div class="q-pa-md">
-    <q-select
-      filled
-      @filter="filterFn"
-      use-input
-      :model-value="props.modelValue"
-      label="Currency"
-      :options="filteredCurrencies"
-      option-value="name"
-      color="teal"
-      @update:model-value="onNewValueSelected"
-      options-selected-class="text-deep-orange"
-    >
-      <template v-slot:option="scope">
-        <q-item v-bind="scope.itemProps">
+    <q-btn-dropdown color="primary" no-caps>
+      <template v-slot:label>
+        <span v-html="currency?.flag" />
+        {{ currency?.name }}
+      </template>
+      <q-list>
+        <q-item
+          clickable
+          v-close-popup
+          @click="onNewValueSelected(currency)"
+          v-for="currency of currencies"
+          v-bind:key="currency.name"
+        >
           <q-item-section>
             <q-item-label
-              ><span v-html="scope.opt.flag" />
-              {{ scope.opt.name }}
+              ><span v-html="currency.flag"></span>
+              {{ currency.name }}
             </q-item-label>
           </q-item-section>
         </q-item>
-      </template>
-    </q-select>
+      </q-list>
+    </q-btn-dropdown>
   </div>
 </template>
 <script setup lang="ts">
-import { ref } from 'vue';
+import { onBeforeUnmount, Ref, ref } from 'vue';
 import { Currency } from '../../../shared-module/model/currency';
 import { currencyList } from '../../../shared-module/const/currencyList';
+import { useSharedStore } from '../../store/shared.store';
 
-const currencies = currencyList
-  .sort((a, b) => (a.name > b.name ? 1 : -1))
-  .map((c) => {
-    return {
-      ...c,
-      label: `${c.flag} ${c.name}`,
-    };
-  });
-const filteredCurrencies = ref(currencies);
+const currencies = ref(currencyList);
 
-const emits = defineEmits(['update:modelValue']);
+const currency: Ref<Currency | undefined> = ref(undefined);
+const store = useSharedStore();
+const currencySubscription = store.currency$.subscribe((c) => {
+  currency.value = currencies.value.find((temp) => temp.name === c);
+});
 
-const props = defineProps({
-  modelValue: String,
+onBeforeUnmount(() => {
+  currencySubscription.unsubscribe();
 });
 
 function onNewValueSelected(value: Currency) {
-  emits('update:modelValue', value ? value.name : '');
-}
-
-function filterFn(val: string, update: (cb: () => void) => void) {
-  if (val.trim() === '') {
-    update(() => {
-      filteredCurrencies.value = currencies;
-    });
-    return;
-  }
-
-  update(() => {
-    const needle = val.toLowerCase();
-    filteredCurrencies.value = currencies.filter(
-      (v: Currency) => v.name.toLowerCase().indexOf(needle) > -1
-    );
-  });
+  currency.value = value;
+  store.selectCurrency(currency.value.name);
 }
 </script>

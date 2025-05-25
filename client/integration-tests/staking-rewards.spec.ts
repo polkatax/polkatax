@@ -1,5 +1,6 @@
 import { test, Page, expect } from '@playwright/test';
 import { mockSubscanChainList } from './util/mock-subscan-chain-list';
+import { mockNominationPools } from './util/mock-nomination-pools';
 
 const mockRewards = {
   values: [
@@ -58,7 +59,15 @@ export const mockStakingRewardsResponse = async (page: Page) => {
   );
 };
 
+export const mockCountry = async (page: Page, country: string) => {
+  await page.route('https://ipapi.co/json/', async (route) => {
+    await route.fulfill({ json: { country } });
+  });
+};
+
 test('shows staking rewards', async ({ page }) => {
+  await mockCountry(page, 'IT');
+  await mockNominationPools(page);
   await mockSubscanChainList(page);
   await mockStakingRewardsResponse(page);
   await page.goto('http://localhost:9000');
@@ -73,5 +82,5 @@ test('shows staking rewards', async ({ page }) => {
   });
   await page.waitForSelector('.q-loading', { state: 'hidden', timeout: 10000 });
   await expect(page.getByTestId('total-rewards')).toHaveText('51.5137 DOT');
-  await expect(page.getByTestId('value-at-payout-time')).toHaveText('$351.93');
+  await expect(page.getByTestId('value-at-payout-time')).toHaveText('€351.93');
 });

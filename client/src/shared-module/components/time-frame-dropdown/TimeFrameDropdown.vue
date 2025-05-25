@@ -27,12 +27,14 @@ const props = defineProps({
 });
 
 function onListItemClick(timeFrame: string | number) {
-  emits('update:modelValue', timeFrame);
+  emits('update:modelValue', Number(timeFrame));
 }
 
 const selectedTimeFrame = computed(() => {
-  return props.modelValue !== undefined ? props.modelValue : '';
+  return props.modelValue;
 });
 
-const timeFrames = ref([0,1, 2, 3, 4].map(offset => new Date().getFullYear() - offset));
+const timeFrames = ref(
+  [0, 1, 2, 3, 4].map((offset) => new Date().getFullYear() - offset)
+);
 </script>

@@ -12,7 +12,16 @@ const routes: RouteRecordRaw[] = [
       {
         path: 'staking-rewards',
         component: () =>
-          import('src/staking-rewards-module/components/StakingRewardsDashboard.vue'),
+          import(
+            'src/staking-rewards-module/components/StakingRewardsDashboard.vue'
+          ),
+      },
+      {
+        path: 'staking-rewards/:wallet/:timeframe/:curreny',
+        component: () =>
+          import(
+            'src/staking-rewards-module/components/StakingRewardsJobList.vue'
+          ),
       },
     ],
   },

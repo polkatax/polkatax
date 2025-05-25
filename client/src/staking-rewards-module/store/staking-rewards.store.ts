@@ -14,14 +14,18 @@ import {
   PendingRequest,
 } from '../../shared-module/model/data-request';
 import { fetchSubscanChains } from '../../shared-module/service/fetch-subscan-chains';
-import { getEndDate, getStartDate } from '../../shared-module/util/date-utils';
 import { Rewards } from '../model/rewards';
 import { fetchStakingRewards } from '../service/fetch-staking-rewards';
 import { addIsoDateAndCurrentValue } from './util/add-iso-date-and-current-value';
 import { calculateRewardSummary } from './util/calculate-reward-summary';
 import { groupRewardsByDay } from './util/group-rewards-by-day';
+import { getEndDate, getStartDate } from '../../shared-module/util/date-utils';
+import { useSharedStore } from '../../shared-module/store/shared.store';
 import { startSyncing } from '../service/start-syncing';
-import { wsMsgReceived$, wsSendMsg } from '../../shared-module/service/ws-connection';
+import {
+  wsMsgReceived$,
+  wsSendMsg,
+} from '../../shared-module/service/ws-connection';
 
 const chainList$ = from(fetchSubscanChains()).pipe(
   map((chainList) => ({
@@ -38,33 +42,36 @@ const sortRewards = (rewards: Rewards) =>
   rewards.values.sort((a, b) => a.block - b.block);
 const jobs$ = new ReplaySubject<any[]>(1);
 
-wsMsgReceived$.subscribe(async msg => {
-  const asObj = JSON.parse(msg.data)
+wsMsgReceived$.subscribe(async (msg) => {
+  const asObj = JSON.parse(msg.data);
   if (Array.isArray(asObj)) {
-    jobs$.next(asObj)
+    jobs$.next(asObj);
   } else {
-    const jobs = await firstValueFrom(jobs$)
-    jobs.forEach(j => {
-      if (j.wallet === asObj.wallet && j.blockchain === asObj.blockchain && j.timeFrame === asObj.timeFrame) {
-        j.value = asObj.value
-        j.status = asObj.status
-        j.error = asObj.error
+    const jobs = await firstValueFrom(jobs$);
+    jobs.forEach((j) => {
+      if (
+        j.wallet === asObj.wallet &&
+        j.blockchain === asObj.blockchain &&
+        j.timeFrame === asObj.timeFrame
+      ) {
+        j.value = asObj.value;
+        j.status = asObj.status;
+        j.error = asObj.error;
       }
-    })
-    jobs$.next([...jobs])
+    });
+    jobs$.next([...jobs]);
   }
-})
+});
 
 export const useStakingRewardsStore = defineStore('rewards', {
   state: () => {
     return {
       rewards$: rewards$.asObservable(),
-      currency: 'USD',
       address: '',
       timeFrame: new Date().getFullYear() - 1,
       chainList$,
       chain$: chain$.asObservable(),
-      jobs$: jobs$.asObservable()
+      jobs$: jobs$.asObservable(),
     };
   },
   actions: {
@@ -72,18 +79,24 @@ export const useStakingRewardsStore = defineStore('rewards', {
       chain$.next(newChain);
     },
     async sync() {
-      wsSendMsg({ wallet: this.address.trim(), currency: this.currency, year: this.timeFrame, timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone })
-    }/*,
+      wsSendMsg({
+        wallet: this.address.trim(),
+        currency: await firstValueFrom(useSharedStore().currency$),
+        year: this.timeFrame,
+        timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      });
+    } /*,
     async fetchRewards() {
       try {
         rewards$.next(new PendingRequest(undefined));
         const startDate = getStartDate(this.timeFrame);
         const endDate = getEndDate(this.timeFrame);
         const chain = (await firstValueFrom(chain$)).domain;
+        const currency = await firstValueFrom(useSharedStore().currency$);
         const rewardsDto = await fetchStakingRewards(
           chain,
           this.address.trim(),
-          this.currency,
+          currency,
           startDate,
           endDate
         );
@@ -100,7 +113,7 @@ export const useStakingRewardsStore = defineStore('rewards', {
           endDate,
           chain,
           token: rewardsDto.token,
-          currency: this.currency,
+          currency,
           address: this.address,
           dailyValues: groupRewardsByDay(valuesWithIsoDate),
         };
@@ -109,6 +122,6 @@ export const useStakingRewardsStore = defineStore('rewards', {
       } catch (error) {
         rewards$.next({ pending: false, error, data: undefined });
       }
-    },*/
+    },*/,
   },
 });

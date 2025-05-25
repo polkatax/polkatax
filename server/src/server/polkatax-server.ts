@@ -2,8 +2,8 @@ import Fastify from "fastify";
 import path from "path";
 import { logger } from "./logger/logger";
 import dotenv from "dotenv";
-import websocketPlugin from '@fastify/websocket';
-import rateLimit from '@fastify/rate-limit';
+import websocketPlugin from "@fastify/websocket";
+import rateLimit from "@fastify/rate-limit";
 dotenv.config({ path: __dirname + "/../../.env" });
 
 import * as fs from "fs";
@@ -60,10 +60,9 @@ export const polkataxServer = {
         .status(200);
     });
 
-    const webSocketManager: WebSocketManager = DIContainer.resolve(
-          "webSocketManager",
-    )
-    fastify.get('/ws', { websocket: true }, webSocketManager.wsHandler)
+    const webSocketManager: WebSocketManager =
+      DIContainer.resolve("webSocketManager");
+    fastify.get("/ws", { websocket: true }, webSocketManager.wsHandler);
     webSocketManager.startJobNotificationChannel();
 
     fastify.listen(
