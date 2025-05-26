@@ -74,16 +74,6 @@ export class SubscanService {
     );
   }
 
-  async fetchAllPoolStakingRewards(
-    chainName: string,
-    address: string,
-    poolId: number,
-  ): Promise<RawStakingReward[]> {
-    return this.iterateOverPagesParallel<RawStakingReward>((page) =>
-      this.subscanApi.fetchPoolStakingRewards(chainName, address, poolId, page),
-    );
-  }
-
   private async retry<T>(
     query: () => Promise<T>,
     retries = 2,

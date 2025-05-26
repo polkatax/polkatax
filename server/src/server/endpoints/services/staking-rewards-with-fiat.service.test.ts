@@ -22,7 +22,6 @@ describe("StakingRewardsWithFiatService", () => {
   beforeEach(() => {
     stakingRewardsService = {
       fetchStakingRewards: jest.fn<any>(),
-      fetchNominationPoolRewards: jest.fn<any>(),
     } as any;
 
     tokenPriceConversionService = {
@@ -123,35 +122,6 @@ describe("StakingRewardsWithFiatService", () => {
       mockDate.getTime(),
       undefined,
     );
-  });
-
-  it("calls fetchNominationPoolRewards if poolId is present", async () => {
-    const rewards = [{ era: 10, amount: 50 }] as any;
-    (
-      stakingRewardsService.fetchNominationPoolRewards as jest.Mock<any>
-    ).mockResolvedValue(rewards);
-    (
-      tokenPriceConversionService.fetchQuotesForTokens as jest.Mock<any>
-    ).mockResolvedValue({
-      polkadot: { quotes: { latest: 3 } },
-    });
-
-    jest
-      .spyOn(addFiatHelper, "addFiatValuesToStakingRewards")
-      .mockReturnValue([{ era: 10, amount: 50, fiatValue: 150 }] as any);
-
-    const request: StakingRewardsRequest = {
-      chain: mockChain,
-      address: "0xAny",
-      currency: "USD",
-      startDay: mockDate,
-      poolId: 123,
-    } as any;
-
-    const result = await service.fetchStakingRewards(request);
-
-    expect(stakingRewardsService.fetchNominationPoolRewards).toHaveBeenCalled();
-    expect(result.values[0].fiatValue).toBe(150);
   });
 
   it("uses endDay price if available", async () => {

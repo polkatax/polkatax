@@ -3,6 +3,7 @@
     <div
       class="q-my-md flex justify-between align-center items-center column-md row-lg row-xl column-xs column-sm"
     >
+      <address-input v-model="store.address" />
       <div class="dropdown">
         <chain-dropdown
           v-model="selectedChain"
@@ -10,7 +11,6 @@
           @update:model-value="newChainSelected"
         />
       </div>
-      <div class="dropdown"><currency-dropdown v-model="store.currency" /></div>
       <div class="dropdown">
         <date-picker
           v-model="store.startDate"
@@ -32,7 +32,6 @@
           ⓘ {{ dateValidationError }}
         </div>
       </div>
-      <address-input v-model="store.address" />
       <q-btn
         color="primary"
         label="Submit"
@@ -84,7 +83,6 @@
 
 <script setup lang="ts">
 import AddressInput from '../../shared-module/components/address-input/AddressInput.vue';
-import CurrencyDropdown from '../../shared-module/components/currency-dropdown/CurrencyDropdown.vue';
 import ChainDropdown from '../../shared-module/components/chain-dropdown/ChainDropdown.vue';
 import DatePicker from '../../shared-module/components/date-picker/DatePicker.vue';
 import TokenTransfers from './TokenTransfers.vue';

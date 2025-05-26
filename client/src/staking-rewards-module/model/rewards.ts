@@ -20,8 +20,7 @@ export interface Rewards {
   address: string;
   currency: string;
   currentPrice: number;
-  timeFrame: string;
-  nominationPoolId?: number;
+  timeFrame: number;
   startDate: number;
   endDate: number;
   summary: RewardSummary;

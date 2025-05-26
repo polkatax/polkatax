@@ -1,3 +1,7 @@
+<script setup lang="ts">
+import CurrencyDropdown from '../shared-module/components/currency-dropdown/CurrencyDropdown.vue';
+</script>
+
 <template>
   <q-layout view="hHh lpR fFf">
     <q-header elevated class="bg-primary text-white" height-hint="98">
@@ -16,7 +20,7 @@
           <q-route-tab to="/transfers" label="Transfers & Swaps (alpha)" />
         </q-tabs>
         <div>
-          Price data provided by <a href="https://coingecko.com">CoinGecko</a>
+          <CurrencyDropdown />
         </div>
       </q-toolbar>
       <q-tabs align="left" class="mobile-only2">
@@ -31,6 +35,9 @@
 
     <q-footer elevated class="text-white">
       <q-toolbar>
+        <div>
+          Price data provided by <a href="https://coingecko.com">CoinGecko</a>
+        </div>
         <q-toolbar-title class="flex justify-end"
           ><a href="https://github.com/loanMaster/polkatax" class="flex"
             ><img src="img/github.png" /></a

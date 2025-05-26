@@ -18,6 +18,8 @@
     "@json2csv/plainjs": "^7.0.1",
     "@quasar/extras": "^1.0.0",
     "file-saver": "^2.0.5",
+    "jspdf": "^3.0.1",
+    "jspdf-autotable": "^5.0.2",
     "pinia": "^2.1.6",
     "quasar": "^2.6.0",
     "ts-node": "^10.9.2",

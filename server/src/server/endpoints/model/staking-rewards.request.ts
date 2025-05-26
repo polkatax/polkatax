@@ -5,7 +5,6 @@ export interface StakingRewardsRequest {
     token: string;
   };
   address: string;
-  poolId?: number;
   currency: string;
   startDay: Date;
   endDay?: Date;

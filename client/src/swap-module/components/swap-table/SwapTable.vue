@@ -17,7 +17,7 @@
           >Export CSV
         </q-btn>
         <q-btn color="primary" class="q-mr-sm" @click="exportKoinlyCsv"
-          >Koinly-friendly CSV
+          >Koinly export
         </q-btn>
         <q-btn color="primary" @click="exportJson">Export JSON</q-btn>
       </template>

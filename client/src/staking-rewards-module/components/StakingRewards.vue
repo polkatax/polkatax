@@ -1,8 +1,12 @@
 <template>
   <q-page class="q-px-sm q-mx-auto content">
     <div
-      class="q-my-md flex justify-between align-center items-center column-md row-lg row-xl column-xs column-sm"
+      class="q-my-md flex justify-center align-center items-center row-md row-lg row-xl column-xs row-sm"
     >
+      <address-input
+        v-model="rewardsStore.address"
+        @enter-pressed="fetchRewards"
+      />
       <div class="dropdown">
         <token-dropdown
           v-model="selectedChain"
@@ -10,15 +14,7 @@
           @update:model-value="newChainSelected"
         />
       </div>
-      <div class="dropdown">
-        <currency-dropdown v-model="rewardsStore.currency" />
-      </div>
-      <div class="dropdown"><nomination-pool-dropdown /></div>
       <time-frame-dropdown v-model="rewardsStore.timeFrame" />
-      <address-input
-        v-model="rewardsStore.address"
-        @enter-pressed="fetchRewards"
-      />
       <q-btn
         color="primary"
         label="Submit"
@@ -30,11 +26,11 @@
     <div class="text-center q-my-xl" v-if="rewards">
       <reward-summary />
     </div>
-    <div class="justify-around items-center column" v-if="rewards">
+    <div
+      class="justify-around items-center column"
+      v-if="rewards && Object.keys(rewards.dailyValues).length > 20"
+    >
       <rewards-chart :currency="false" chartType="ColumnChart" />
-      <rewards-chart :currency="false" chartType="LineChart" />
-      <rewards-chart :currency="true" chartType="ColumnChart" />
-      <rewards-chart :currency="true" chartType="LineChart" />
     </div>
     <div class="table q-my-md" v-if="rewards">
       <staking-rewards-table />
@@ -65,11 +61,9 @@
 import TokenDropdown from './token-dropdown/TokenDropdown.vue';
 import AddressInput from '../../shared-module/components/address-input/AddressInput.vue';
 import RewardsChart from './rewards-chart/RewardsChart.vue';
-import CurrencyDropdown from '../../shared-module/components/currency-dropdown/CurrencyDropdown.vue';
 import StakingRewardsTable from './staking-rewards-table/StakingRewardsTable.vue';
 import TimeFrameDropdown from '../../shared-module/components/time-frame-dropdown/TimeFrameDropdown.vue';
 import RewardSummary from './reward-summary/RewardSummary.vue';
-import NominationPoolDropdown from './nomination-pool-dropdown/NominationPoolDropdown.vue';
 import { computed, onUnmounted, Ref, ref } from 'vue';
 import { useQuasar } from 'quasar';
 import { useStakingRewardsStore } from '../store/staking-rewards.store';
@@ -83,6 +77,7 @@ const rewardsStore = useStakingRewardsStore();
 const rewards: Ref<Rewards | undefined> = ref(undefined);
 const chainList: Ref<Chain[]> = ref([]);
 const selectedChain: Ref<Chain | undefined> = ref(undefined);
+
 rewardsStore.chain$.pipe(take(1)).subscribe((c) => (selectedChain.value = c));
 
 const rewardsSubscription = rewardsStore.rewards$.subscribe(async (r) => {
@@ -143,11 +138,7 @@ function newChainSelected(chain: Chain) {
 }
 
 const isDisabled = computed(() => {
-  return (
-    rewardsStore.address.trim() === '' ||
-    !rewardsStore.currency ||
-    !selectedChain.value
-  );
+  return rewardsStore.address.trim() === '' || !selectedChain.value;
 });
 
 const meme = ref('img/dollar-4932316_1280.jpg');

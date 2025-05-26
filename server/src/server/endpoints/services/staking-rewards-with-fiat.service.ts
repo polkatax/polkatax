@@ -18,7 +18,7 @@ export class StakingRewardsWithFiatService {
   private async fetchRawStakingRewards(
     stakingRewardsRequest: StakingRewardsRequest,
   ): Promise<StakingReward[]> {
-    let { chain, address, poolId, startDay, endDay } = stakingRewardsRequest;
+    let { chain, address, startDay, endDay } = stakingRewardsRequest;
     const isEvmAddress = address.length <= 42;
     if (isEvmAddress) {
       address =
@@ -27,20 +27,12 @@ export class StakingRewardsWithFiatService {
           address,
         )) || address;
     }
-    return poolId !== undefined
-      ? this.stakingRewardsService.fetchNominationPoolRewards(
-          chain.domain,
-          address,
-          poolId,
-          startDay.getTime(),
-          endDay ? endDay.getTime() : undefined,
-        )
-      : this.stakingRewardsService.fetchStakingRewards(
-          chain.domain,
-          address,
-          startDay.getTime(),
-          endDay ? endDay.getTime() : undefined,
-        );
+    return this.stakingRewardsService.fetchStakingRewards(
+      chain.domain,
+      address,
+      startDay.getTime(),
+      endDay ? endDay.getTime() : undefined,
+    );
   }
 
   async fetchStakingRewards(
