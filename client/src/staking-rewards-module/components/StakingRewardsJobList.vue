@@ -1,8 +1,5 @@
 <template>
   <q-page class="q-px-sm q-mx-auto content">
-    <div class="q-mx-auto flex justify-center text-h4 q-my-lg cursor-pointer" @click="goBack">
-      🔙
-    </div>
     <div class="table q-my-md flex justify-center" v-if="jobs?.length > 0">
       <q-table
         :rows="jobs"
@@ -109,10 +106,9 @@ import { onUnmounted, Ref, ref } from 'vue';
 import { useStakingRewardsStore } from '../store/staking-rewards.store';
 import { Chain } from '../../shared-module/model/chain';
 import { map, take } from 'rxjs';
-import { useRoute, useRouter } from 'vue-router';
+import { useRoute } from 'vue-router';
 const rewardsStore = useStakingRewardsStore();
 const route = useRoute();
-const router = useRouter();
 const selectedChain: Ref<Chain | undefined> = ref(undefined);
 rewardsStore.chain$.pipe(take(1)).subscribe((c) => (selectedChain.value = c));
 
@@ -140,8 +136,4 @@ const columns = ref([
   { name: 'currency', label: 'Currency', field: 'currency' },
   { name: 'actions', label: 'Actions' }
 ])
-
-function goBack() {
-  router.back()
-}
 </script>
