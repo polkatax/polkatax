@@ -17,7 +17,7 @@ const routes: RouteRecordRaw[] = [
           ),
       },
       {
-        path: 'staking-rewards/:wallet/:timeframe/:curreny',
+        path: 'staking-rewards/:wallet/:timeframe/:currency',
         component: () =>
           import(
             'src/staking-rewards-module/components/StakingRewardsJobList.vue'

@@ -12,15 +12,15 @@ export class WebSocketManager {
 
   wsHandler = (socket: WebSocket) => {
     socket.on("message", async (msg) => {
-      console.log(msg);
       const msgObj = JSON.parse(msg);
       this.connections.push({ wallet: msgObj.wallet, socket });
       const jobs = this.jobManager.enqueue(
         msgObj.wallet,
         "staking_rewards",
-        msgObj.year,
+        msgObj.timeframe,
         msgObj.currency,
         msgObj.timeZone,
+        msgObj.blockchains
       );
       socket.send(JSON.stringify(jobs));
     });
@@ -35,7 +35,7 @@ export class WebSocketManager {
       this.connections
         .filter((c) => c.wallet === j.wallet)
         .forEach((c) => {
-          c.socket.send(JSON.stringify(j));
+          c.socket.send(JSON.stringify([j]));
         });
     });
   }

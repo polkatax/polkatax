@@ -16,36 +16,35 @@ export class JobManager {
     timeframe: number,
     currency: string,
     timezone: string,
+    blockchains: string[] = []
   ): Job[] {
-    // optional blockchains!
     const jobs = [];
-    for (let chain of subscanChains.chains) {
-      if (chain.stakingPallets.length > 0 && !chain.pseudoStaking) {
-        const exsitingJob = this.jobsCache.fetchJob(
-          wallet,
-          chain.domain,
-          type,
-          timeframe,
+    const chains = blockchains.length > 0 ? blockchains : subscanChains.chains.filter(chain => chain.stakingPallets.length > 0 && !chain.pseudoStaking).map(c => c.domain)
+    for (let chain of chains) {
+      const exsitingJob = this.jobsCache.fetchJob(
+        wallet,
+        chain,
+        type,
+        timeframe,
+      );
+      if (exsitingJob) {
+        logger.info(
+          `Trying to add a job which already exists: ${chain}, ${wallet}. ${type}, ${timeframe}`,
         );
-        if (exsitingJob) {
-          logger.info(
-            `Trying to add a job which already exists: ${chain.domain}, ${wallet}. ${type}, ${timeframe}`,
-          );
-          jobs.push({
-            ...exsitingJob,
-          });
-        } else {
-          jobs.push(
-            this.jobsCache.addJob(
-              wallet,
-              chain.domain,
-              type,
-              timeframe,
-              currency,
-              timezone,
-            ),
-          );
-        }
+        jobs.push({
+          ...exsitingJob,
+        });
+      } else {
+        jobs.push(
+          this.jobsCache.addJob(
+            wallet,
+            chain,
+            type,
+            timeframe,
+            currency,
+            timezone,
+          ),
+        );
       }
     }
     return jobs;

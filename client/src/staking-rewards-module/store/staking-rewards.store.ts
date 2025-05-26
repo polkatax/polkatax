@@ -5,27 +5,26 @@ import {
   from,
   ReplaySubject,
   map,
-  withLatestFrom,
+  mergeMap,
+  filter,
 } from 'rxjs';
 import { Chain } from '../../shared-module/model/chain';
 import {
-  CompletedRequest,
   DataRequest,
-  PendingRequest,
 } from '../../shared-module/model/data-request';
 import { fetchSubscanChains } from '../../shared-module/service/fetch-subscan-chains';
-import { Rewards } from '../model/rewards';
-import { fetchStakingRewards } from '../service/fetch-staking-rewards';
+import { Rewards, RewardsDto } from '../model/rewards';
 import { addIsoDateAndCurrentValue } from './util/add-iso-date-and-current-value';
 import { calculateRewardSummary } from './util/calculate-reward-summary';
 import { groupRewardsByDay } from './util/group-rewards-by-day';
 import { getEndDate, getStartDate } from '../../shared-module/util/date-utils';
 import { useSharedStore } from '../../shared-module/store/shared.store';
-import { startSyncing } from '../service/start-syncing';
 import {
   wsMsgReceived$,
   wsSendMsg,
 } from '../../shared-module/service/ws-connection';
+import { Job } from '../../shared-module/model/job';
+import { createOrUpdateJobInIndexedDB, fetchAllJobsFromIndexedDB } from '../../shared-module/service/job.repository';
 
 const chainList$ = from(fetchSubscanChains()).pipe(
   map((chainList) => ({
@@ -40,27 +39,60 @@ const chain$: BehaviorSubject<Chain> = new BehaviorSubject<Chain>({
 const rewards$ = new ReplaySubject<DataRequest<Rewards>>(1);
 const sortRewards = (rewards: Rewards) =>
   rewards.values.sort((a, b) => a.block - b.block);
-const jobs$ = new ReplaySubject<any[]>(1);
+const jobs$ = new BehaviorSubject<any[]>([]);
 
-wsMsgReceived$.subscribe(async (msg) => {
-  const asObj = JSON.parse(msg.data);
-  if (Array.isArray(asObj)) {
-    jobs$.next(asObj);
-  } else {
-    const jobs = await firstValueFrom(jobs$);
-    jobs.forEach((j) => {
-      if (
-        j.wallet === asObj.wallet &&
-        j.blockchain === asObj.blockchain &&
-        j.timeFrame === asObj.timeFrame
-      ) {
-        j.value = asObj.value;
-        j.status = asObj.status;
-        j.error = asObj.error;
-      }
-    });
-    jobs$.next([...jobs]);
+const mapRawValues = (job: Job, rewardsDto: RewardsDto): Rewards => {
+  const valuesWithIsoDate = addIsoDateAndCurrentValue(
+    rewardsDto.values,
+    rewardsDto.currentPrice
+  );
+  const result = {
+    values: valuesWithIsoDate,
+    summary: calculateRewardSummary(valuesWithIsoDate),
+    currentPrice: rewardsDto.currentPrice,
+    timeFrame: job.timeframe,
+    startDate: getStartDate(job.timeframe),
+    endDate: getEndDate(job.timeframe) < job.timestamp ? getEndDate(job.timeframe) : job.timestamp,
+    chain: job.blockchain,
+    token: rewardsDto.token,
+    currency: job.currency,
+    address: job.wallet,
+    dailyValues: groupRewardsByDay(valuesWithIsoDate),
+  };
+  sortRewards(result)
+  return result
+}
+
+const storedJobs = fetchAllJobsFromIndexedDB().then(jobs => {
+  const storedJobs = jobs.filter(job => job.type === 'staking_rewards')
+  if (storedJobs.length > 1) {
+    storedJobs.filter(s => s.status === 'pending' || s.status === 'in_progress').forEach(s => {
+      wsSendMsg({ wallet: s.wallet, timeframe: s.timeframe, timeZone: s.timeZone, blockchains: [s.blockchain] })
+    })
   }
+  jobs$.next(storedJobs)
+});
+
+wsMsgReceived$.pipe(mergeMap(array => from(array)), filter(job => job.type === 'staking_rewards')).subscribe(async (job) => {
+  const jobs = await firstValueFrom(jobs$);
+  if (!job.timeframe) {
+    debugger
+  }
+  const matching = jobs.find((j) => (
+    j.wallet === job.wallet &&
+    j.blockchain === job.blockchain &&
+    j.timeframe === job.timeframe
+  ))
+  if (matching) {
+      matching.value = job.value ? mapRawValues(job, job.value) : job.value;
+      matching.status = job.status;
+      matching.error = job.error;
+  } else {
+    job.value = job.value ? mapRawValues(job, job.value) : job.value
+    jobs.push(job)
+  }
+  await createOrUpdateJobInIndexedDB(job)
+  jobs$.next([...jobs]);
 });
 
 export const useStakingRewardsStore = defineStore('rewards', {
@@ -82,46 +114,9 @@ export const useStakingRewardsStore = defineStore('rewards', {
       wsSendMsg({
         wallet: this.address.trim(),
         currency: await firstValueFrom(useSharedStore().currency$),
-        year: this.timeFrame,
+        timeframe: this.timeFrame,
         timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
       });
-    } /*,
-    async fetchRewards() {
-      try {
-        rewards$.next(new PendingRequest(undefined));
-        const startDate = getStartDate(this.timeFrame);
-        const endDate = getEndDate(this.timeFrame);
-        const chain = (await firstValueFrom(chain$)).domain;
-        const currency = await firstValueFrom(useSharedStore().currency$);
-        const rewardsDto = await fetchStakingRewards(
-          chain,
-          this.address.trim(),
-          currency,
-          startDate,
-          endDate
-        );
-        const valuesWithIsoDate = addIsoDateAndCurrentValue(
-          rewardsDto.values,
-          rewardsDto.currentPrice
-        );
-        const result: Rewards = {
-          values: valuesWithIsoDate,
-          summary: calculateRewardSummary(valuesWithIsoDate),
-          currentPrice: rewardsDto.currentPrice,
-          timeFrame: this.timeFrame,
-          startDate,
-          endDate,
-          chain,
-          token: rewardsDto.token,
-          currency,
-          address: this.address,
-          dailyValues: groupRewardsByDay(valuesWithIsoDate),
-        };
-        sortRewards(result);
-        rewards$.next(new CompletedRequest(result));
-      } catch (error) {
-        rewards$.next({ pending: false, error, data: undefined });
-      }
-    },*/,
+    }
   },
 });

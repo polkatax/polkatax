@@ -108,16 +108,21 @@ import {
 import { onUnmounted, Ref, ref } from 'vue';
 import { useStakingRewardsStore } from '../store/staking-rewards.store';
 import { Chain } from '../../shared-module/model/chain';
-import { take } from 'rxjs';
-import { useRouter } from 'vue-router';
+import { map, take } from 'rxjs';
+import { useRoute, useRouter } from 'vue-router';
 const rewardsStore = useStakingRewardsStore();
-const router = useRouter()
+const route = useRoute();
+const router = useRouter();
 const selectedChain: Ref<Chain | undefined> = ref(undefined);
 rewardsStore.chain$.pipe(take(1)).subscribe((c) => (selectedChain.value = c));
 
 const jobs: Ref<any[]> = ref([]);
 
-const jobsSubscription = rewardsStore.jobs$.subscribe((j) => {
+const jobsSubscription = rewardsStore.jobs$
+  .pipe(map((jobs : any[]) => {
+    const filtered = jobs.filter(j => { return j.wallet === route.params.wallet && j.timeframe === Number(route.params.timeframe) && j.currency == route.params.currency })
+    return filtered
+  })).subscribe((j) => {
   jobs.value = j;
 });
 
