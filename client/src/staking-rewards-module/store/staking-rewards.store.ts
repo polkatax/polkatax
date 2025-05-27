@@ -9,9 +9,6 @@ import {
   filter,
 } from 'rxjs';
 import { Chain } from '../../shared-module/model/chain';
-import {
-  DataRequest,
-} from '../../shared-module/model/data-request';
 import { fetchSubscanChains } from '../../shared-module/service/fetch-subscan-chains';
 import { Rewards, RewardsDto } from '../model/rewards';
 import { addIsoDateAndCurrentValue } from './util/add-iso-date-and-current-value';
@@ -23,7 +20,7 @@ import {
   wsMsgReceived$,
   wsSendMsg,
 } from '../../shared-module/service/ws-connection';
-import { Job } from '../../shared-module/model/job';
+import { JobResult } from '../../shared-module/model/job-result';
 import { createOrUpdateJobInIndexedDB, fetchAllJobsFromIndexedDB } from '../../shared-module/service/job.repository';
 
 const chainList$ = from(fetchSubscanChains()).pipe(
@@ -36,12 +33,12 @@ const chain$: BehaviorSubject<Chain> = new BehaviorSubject<Chain>({
   label: 'Polkadot',
   token: 'DOT',
 });
-const rewards$ = new ReplaySubject<DataRequest<Rewards>>(1);
+const rewards$ = new ReplaySubject<Rewards>(1);
 const sortRewards = (rewards: Rewards) =>
   rewards.values.sort((a, b) => a.block - b.block);
 const jobs$ = new BehaviorSubject<any[]>([]);
 
-const mapRawValues = (job: Job, rewardsDto: RewardsDto): Rewards => {
+const mapRawValues = (job: JobResult, rewardsDto: RewardsDto): Rewards => {
   const valuesWithIsoDate = addIsoDateAndCurrentValue(
     rewardsDto.values,
     rewardsDto.currentPrice
@@ -63,7 +60,7 @@ const mapRawValues = (job: Job, rewardsDto: RewardsDto): Rewards => {
   return result
 }
 
-const storedJobs = fetchAllJobsFromIndexedDB().then(jobs => {
+fetchAllJobsFromIndexedDB().then(jobs => {
   const storedJobs = jobs.filter(job => job.type === 'staking_rewards')
   if (storedJobs.length > 1) {
     storedJobs.filter(s => s.status === 'pending' || s.status === 'in_progress').forEach(s => {
@@ -84,11 +81,11 @@ wsMsgReceived$.pipe(mergeMap(array => from(array)), filter(job => job.type === '
     j.timeframe === job.timeframe
   ))
   if (matching) {
-      matching.value = job.value ? mapRawValues(job, job.value) : job.value;
+      matching.data = job.data ? mapRawValues(job, job.data) : job.data;
       matching.status = job.status;
       matching.error = job.error;
   } else {
-    job.value = job.value ? mapRawValues(job, job.value) : job.value
+    job.data = job.data ? mapRawValues(job, job.data) : job.data
     jobs.push(job)
   }
   await createOrUpdateJobInIndexedDB(job)

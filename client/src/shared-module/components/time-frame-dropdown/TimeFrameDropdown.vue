@@ -35,6 +35,6 @@ const selectedTimeFrame = computed(() => {
 });
 
 const timeFrames = ref(
-  [0, 1, 2, 3, 4].map((offset) => new Date().getFullYear() - offset)
+  [0, 1].map((offset) => new Date().getFullYear() - offset)
 );
 </script>

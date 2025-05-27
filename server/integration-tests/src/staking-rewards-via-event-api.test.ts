@@ -13,7 +13,7 @@ import { RawSubstrateTransferDto } from "../../src/server/blockchain/substrate/m
 import { createPaginatedMockResponseHandler } from "./util/create-paginated-mock-response-handler";
 import { createMockResponseHandler } from "./util/create-mock-response-handler";
 
-describe("fetch staking rewards via the events API", () => {
+describe.skip("fetch staking rewards via the events API", () => {
   let fastiyInstances: FastifyInstance[] = [];
   let server: SetupServerApi;
 

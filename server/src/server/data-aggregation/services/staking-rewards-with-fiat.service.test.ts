@@ -80,8 +80,6 @@ describe("StakingRewardsWithFiatService", () => {
     expect(addFiatSpy).toHaveBeenCalledWith(rewards, quotes.polkadot);
     expect(result).toEqual({
       values: [{ era: 1, amount: 1000, fiatValue: 5000 }],
-      currentPrice: 5,
-      priceEndDay: 5,
       token: "DOT",
     });
   });

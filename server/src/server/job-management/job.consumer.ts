@@ -4,6 +4,7 @@ import { logger } from "../logger/logger";
 import { JobsCache } from "./jobs.cache";
 import * as subscanChains from "../../../res/gen/subscan-chains.json";
 import { getYearRangeInZone } from "./get-range-in-time-zone";
+import { HttpError } from "../../common/error/HttpError";
 
 export class JobConsumer {
   constructor(
@@ -13,13 +14,16 @@ export class JobConsumer {
 
   async process(job: Job) {
     try {
-      logger.info("Processing job " + JSON.stringify(job));
+      logger.info(
+        "Entry: JobConsumer process: " +
+          JSON.stringify({ ...job, data: undefined }),
+      );
       const chain = subscanChains.chains.find(
         (p) => p.domain.toLowerCase() === job.blockchain.toLowerCase(),
       );
       if (!chain) {
         this.jobsCache.setError(
-          { msg: "Chain " + job.blockchain + " not found" },
+          new HttpError(400, "Chain " + job.blockchain + " not found"),
           job,
         );
         return;
@@ -27,8 +31,8 @@ export class JobConsumer {
       this.jobsCache.setInProgress(job);
       const { startDay, endDay } = getYearRangeInZone(
         job.timeframe,
-        "Europe/Zurich",
-      ); // TODO use time zone from client
+        job.timeZone || "Europe/Zurich",
+      );
 
       const result =
         await this.stakingRewardsWithFiatService.fetchStakingRewards({
@@ -39,19 +43,24 @@ export class JobConsumer {
           endDay,
         });
       this.jobsCache.setDone(result, job);
+      logger.info(
+        "Exit: JobConsumer process: " +
+          JSON.stringify({ ...job, data: undefined }),
+      );
     } catch (error) {
       logger.error(error);
       logger.error("Error processing job: " + JSON.stringify(job));
       try {
         this.jobsCache.setError(
-          { msg: "Error processing job: " + JSON.stringify(job) },
+          new HttpError(
+            error?.statusCode,
+            error.message ?? "Error processing job: " + JSON.stringify(job),
+          ),
           job,
         );
       } catch (error) {
         logger.error(error);
-        logger.error(
-          "Error setting job to state error: " + JSON.stringify(job),
-        );
+        logger.error("Setting job to state error: " + JSON.stringify(job));
       }
     }
   }

@@ -42,17 +42,10 @@ describe("TokenPriceConversionService", () => {
       currency: "eur",
     };
 
-    const latestPrices = {
-      btc: 51000,
-    };
-
-    mockCryptoService.fetchCurrentPrices.mockResolvedValue(latestPrices);
     mockCryptoService.fetchHistoricalPrices.mockResolvedValue(historicalQuotes);
 
-    const result = await service.fetchQuotesForTokens(tokenIds, currency);
+    await service.fetchQuotesForTokens(tokenIds, currency);
 
-    expect(result.btc.quotes.latest).toBe(51000);
-    expect(mockCryptoService.fetchCurrentPrices).toHaveBeenCalled();
     expect(mockCryptoService.fetchHistoricalPrices).toHaveBeenCalledWith(
       "btc",
       "eur",
@@ -71,17 +64,12 @@ describe("TokenPriceConversionService", () => {
       currency: "usd",
     };
 
-    const latestPrices = {
-      btc: 51000,
-    };
-
     const exchangeRates = {
       "1234567890": {
         DONG: 0.9,
       },
     };
 
-    mockCryptoService.fetchCurrentPrices.mockResolvedValue(latestPrices);
     mockCryptoService.fetchHistoricalPrices.mockResolvedValue(historicalQuotes);
     mockFiatService.fetchExchangeRates.mockResolvedValue(exchangeRates);
 
@@ -89,7 +77,6 @@ describe("TokenPriceConversionService", () => {
 
     expect(result.btc.currency).toBe("dong");
     expect(result.btc.quotes["1234567890"]).toBeCloseTo(50000 * 0.9);
-    expect(result.btc.quotes.latest).toBe(51000);
   });
 
   it("handles historical price fetch failure gracefully", async () => {

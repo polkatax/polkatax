@@ -1,5 +1,5 @@
 import { openDB } from 'idb';
-import { Job } from '../model/job';
+import { Job } from '../model/job-result';
 
 const DB_NAME = 'JobsDB';
 const STORE_NAME = 'jobs';

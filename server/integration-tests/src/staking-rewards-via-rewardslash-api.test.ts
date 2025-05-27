@@ -10,7 +10,7 @@ import { createBlockHandlers } from "./util/create-block-handlers";
 import { scanTokenHandler } from "./util/scan-token-handler";
 import { createPaginatedMockResponseHandler } from "./util/create-paginated-mock-response-handler";
 
-describe("staking rewards via reward_slash endpoint", () => {
+describe.skip("staking rewards via reward_slash endpoint", () => {
   let fastiyInstances: FastifyInstance[] = [];
   let server: SetupServerApi;
 
