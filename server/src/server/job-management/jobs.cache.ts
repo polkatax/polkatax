@@ -2,6 +2,7 @@ import { Job, JobId } from "../../model/job";
 import { Subject, BehaviorSubject } from "rxjs";
 import { logger } from "../logger/logger";
 import { HttpError } from "../../common/error/HttpError";
+import { WsError } from "../model/ws-error";
 
 export class JobsCache {
   private allJobs: Job[] = [];
@@ -98,7 +99,7 @@ export class JobsCache {
     this.jobUpdate$.next(job);
   }
 
-  setError(error: HttpError, jobId: JobId) {
+  setError(error: WsError, jobId: JobId) {
     const job = this.findJobOrThrow(jobId);
     job.error = error;
     job.status = "error";

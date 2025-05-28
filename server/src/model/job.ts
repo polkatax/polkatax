@@ -1,4 +1,4 @@
-import { HttpError } from "../common/error/HttpError";
+import { WsError } from "../server/model/ws-error";
 
 export interface JobId {
   wallet: string;
@@ -12,7 +12,7 @@ export interface Job extends JobId {
   reqId: string;
   status: "pending" | "in_progress" | "done" | "error";
   data?: any;
-  error?: HttpError;
+  error?: WsError;
   lastModified: number;
   timeZone: string;
   deleted?: boolean;

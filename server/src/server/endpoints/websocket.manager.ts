@@ -8,13 +8,27 @@ import {
 import { logger } from "../logger/logger";
 import { HttpError } from "../../common/error/HttpError";
 
+interface Subscription {
+  wallet: string;
+  currency: string;
+  timeframe: number;
+}
+
 export class WebSocketManager {
-  connections: { wallet: string; socket: WebSocket }[] = [];
+  connections: { subscription: Subscription; socket: WebSocket }[] = [];
 
   constructor(
     private jobManager: JobManager,
     private jobsCache: JobsCache,
   ) {}
+
+  private subscriptionMachtes(s1: Subscription, s2: Subscription) {
+    return (
+      s1.wallet === s2.wallet &&
+      s1.currency === s2.currency &&
+      s1.timeframe === s2.timeframe
+    );
+  }
 
   async handleIncomingMsg(
     socket: WebSocket,
@@ -22,39 +36,26 @@ export class WebSocketManager {
   ): Promise<WebSocketOutgoingMessage> {
     const { wallet, timeframe, currency, timeZone, blockchains } = msg.payload;
 
+    const subscription = { wallet, currency, timeframe };
     if (
-      !this.connections.some((c) => c.socket === socket && c.wallet === wallet)
+      !this.connections.some(
+        (c) =>
+          c.socket === socket &&
+          this.subscriptionMachtes(c.subscription, subscription),
+      )
     ) {
-      this.connections.push({ wallet, socket });
+      this.connections.push({ subscription, socket });
     }
 
-    let jobs;
-    switch (msg.type) {
-      case "fetchDataRequest":
-        jobs = this.jobManager.enqueue(
-          msg.requestId,
-          wallet,
-          "staking_rewards",
-          timeframe,
-          currency,
-          timeZone,
-          blockchains,
-        );
-        break;
-      case "refreshDataRequest":
-        jobs = this.jobManager.retryOrRefresh(
-          msg.requestId,
-          wallet,
-          "staking_rewards",
-          timeframe,
-          currency,
-          timeZone,
-          blockchains,
-        );
-        break;
-      default:
-        jobs = [];
-    }
+    const jobs = this.jobManager.enqueue(
+      msg.requestId,
+      wallet,
+      "staking_rewards",
+      timeframe,
+      currency,
+      timeZone,
+      blockchains,
+    );
 
     return {
       type: "data",
@@ -66,7 +67,7 @@ export class WebSocketManager {
 
   wsHandler = (socket: WebSocket) => {
     socket.on("message", async (rawMsg) => {
-      logger.info("<WebSocketManager: received msg: " + rawMsg);
+      logger.info("WebSocketManager: received msg: " + rawMsg);
       try {
         const msg: WebSocketIncomingMessage = JSON.parse(rawMsg);
         const response = await this.handleIncomingMsg(socket, msg);
@@ -96,10 +97,16 @@ export class WebSocketManager {
   async startJobNotificationChannel() {
     this.jobsCache.jobUpdate$.subscribe((job) => {
       this.connections
-        .filter((c) => c.wallet === job.wallet)
+        .filter((c) =>
+          this.subscriptionMachtes(c.subscription, {
+            wallet: job.wallet,
+            timeframe: job.timeframe,
+            currency: job.currency,
+          }),
+        )
         .forEach((c) => {
           logger.info(
-            `WebSocketManager: Sending job notification for ${c.wallet}`,
+            `WebSocketManager: Sending job notification for ${JSON.stringify(c.subscription)}`,
           );
           c.socket.send(
             JSON.stringify({

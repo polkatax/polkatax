@@ -170,7 +170,7 @@ export class SubscanService {
     evm = false,
   ): Promise<Transfer[]> {
     logger.info(
-      `fetchAllTransfersAs for ${chainName} and account ${account}. Evm: ${evm}`,
+      `fetchAllTransfers for ${chainName} and account ${account}. Evm: ${evm}`,
     );
     const result = await this.iterateOverPagesParallel<
       RawSubstrateTransferDto & RawEvmTransferDto
@@ -187,7 +187,7 @@ export class SubscanService {
       3,
     );
     logger.info(
-      `Exit fetchAllTransfersAs for ${chainName} and account ${account}`,
+      `Exit fetchAllTransfers for ${chainName} and account ${account}`,
     );
     return result.map((transfer) => {
       return {

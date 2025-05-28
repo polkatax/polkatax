@@ -1,7 +1,7 @@
 import { Job } from "../../model/job";
 
 export interface WebSocketIncomingMessage {
-  type: "refreshDataRequest" | "fetchDataRequest";
+  type: "fetchDataRequest";
   timestamp: number;
   requestId: string;
   payload: WalletInfo;
@@ -19,5 +19,5 @@ export interface WalletInfo {
   currency: string;
   timeframe: number;
   timeZone: string;
-  blockchains?: [];
+  blockchains?: string[];
 }

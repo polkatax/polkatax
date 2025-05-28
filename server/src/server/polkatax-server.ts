@@ -5,17 +5,17 @@ import dotenv from "dotenv";
 import websocketPlugin from "@fastify/websocket";
 import rateLimit from "@fastify/rate-limit";
 dotenv.config({ path: __dirname + "/../../.env" });
-
 import * as fs from "fs";
 import { HttpError } from "../common/error/HttpError";
-import { DIContainer } from "./di-container";
 import { WebSocketManager } from "./endpoints/websocket.manager";
+import { createDIContainer } from "./di-container";
 
 export const polkataxServer = {
   init: async () => {
     const fastify = Fastify({
       loggerInstance: logger,
     });
+    const DIContainer = createDIContainer();
     await fastify.register(websocketPlugin);
     await fastify.register(rateLimit, { global: false });
 

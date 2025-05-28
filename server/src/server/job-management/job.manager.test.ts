@@ -2,9 +2,9 @@ import { JobsCache } from "./jobs.cache";
 import { Job } from "../../model/job";
 import { Subject } from "rxjs";
 import * as determineNextJobModule from "./determine-next-job";
-import { DIContainer } from "../di-container";
 import { expect, it, describe, jest, beforeEach } from "@jest/globals";
 import { JobManager } from "./job.manager";
+import { AwilixContainer } from "awilix";
 
 jest.mock("../logger/logger", () => ({
   logger: {
@@ -13,15 +13,10 @@ jest.mock("../logger/logger", () => ({
   },
 }));
 
-jest.mock("../di-container", () => ({
-  DIContainer: {
-    resolve: jest.fn(),
-  },
-}));
-
 describe("JobManager", () => {
   let mockJobsCache: jest.Mocked<JobsCache>;
   let pendingJobs$: Subject<Job[]>;
+  let DIContainer: jest.Mocked<AwilixContainer>;
 
   beforeEach(() => {
     pendingJobs$ = new Subject<Job[]>();
@@ -33,6 +28,10 @@ describe("JobManager", () => {
       delete: jest.fn(),
       pendingJobs$: pendingJobs$,
     } as unknown as jest.Mocked<JobsCache>;
+
+    DIContainer = {
+      resolve: jest.fn(),
+    } as any;
 
     jest.clearAllMocks();
   });
@@ -47,11 +46,10 @@ describe("JobManager", () => {
       type: "staking_rewards",
       data: undefined,
     } as any;
-
-    mockJobsCache.fetchJob.mockReturnValue(undefined);
+    mockJobsCache.fetchJobs.mockReturnValue([]);
     mockJobsCache.addJob.mockReturnValue(job);
 
-    const manager = new JobManager(mockJobsCache);
+    const manager = new JobManager(mockJobsCache, DIContainer);
     const jobs = manager.enqueue(
       "req1",
       "wallet1",
@@ -74,38 +72,7 @@ describe("JobManager", () => {
     );
   });
 
-  it("should reuse valid job and not enqueue new one", () => {
-    const existingJob: Job = {
-      wallet: "wallet1",
-      blockchain: "polkadot",
-      currency: "USD",
-      timeframe: new Date().getFullYear(),
-      timeZone: "UTC",
-      type: "staking_rewards",
-      lastModified: new Date().getTime(),
-      data: undefined,
-    } as any;
-
-    mockJobsCache.fetchJob.mockReturnValue(existingJob);
-
-    const manager = new JobManager(mockJobsCache);
-    const jobs = manager.enqueue(
-      "req1",
-      "wallet1",
-      "staking_rewards",
-      existingJob.timeframe,
-      "USD",
-      "UTC",
-      ["polkadot"],
-    );
-
-    expect(jobs.length).toBe(1);
-    expect(jobs[0]).toEqual(existingJob);
-    expect(mockJobsCache.delete).not.toHaveBeenCalled();
-    expect(mockJobsCache.addJob).not.toHaveBeenCalled();
-  });
-
-  it("should delete outdated jobs and create new ones in retryOrRefresh", () => {
+  it("should delete outdated jobs and create new ones in enqueue", () => {
     const outdatedJob: Job = {
       wallet: "wallet1",
       blockchain: "polkadot",
@@ -125,8 +92,8 @@ describe("JobManager", () => {
     mockJobsCache.fetchJobs.mockReturnValue([outdatedJob]);
     mockJobsCache.addJob.mockReturnValue(newJob);
 
-    const manager = new JobManager(mockJobsCache);
-    const result = manager.retryOrRefresh(
+    const manager = new JobManager(mockJobsCache, DIContainer);
+    const result = manager.enqueue(
       "req1",
       "wallet1",
       "staking_rewards",
@@ -156,11 +123,13 @@ describe("JobManager", () => {
     jest.spyOn(determineNextJobModule, "determineNextJob").mockReturnValue(job);
 
     const mockProcess = jest.fn();
-    (DIContainer.resolve as jest.Mock).mockReturnValue({
-      process: mockProcess,
-    });
+    const DIContainer = {
+      resolve: jest.fn().mockReturnValue({
+        process: mockProcess,
+      }),
+    };
 
-    new JobManager(mockJobsCache);
+    new JobManager(mockJobsCache, DIContainer as any);
 
     // Let the start() method process this
     pendingJobs$.next([job]);

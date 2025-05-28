@@ -9,20 +9,27 @@ import { metaDataHandler } from "./util/metadata-handler";
 import { createBlockHandlers } from "./util/create-block-handlers";
 import { scanTokenHandler } from "./util/scan-token-handler";
 import { createPaginatedMockResponseHandler } from "./util/create-paginated-mock-response-handler";
+import { sendAndWaitForMessages } from "./util/send-and-wait-for-messages";
+import { openWebSocket } from "./util/open-websocket";
+import WebSocket from "ws";
 
-describe.skip("staking rewards via reward_slash endpoint", () => {
+describe("staking rewards via reward_slash endpoint", () => {
   let fastiyInstances: FastifyInstance[] = [];
   let server: SetupServerApi;
+  let webSocket: WebSocket;
 
-  const timeStamp = 1672531200000;
-  const defaultHandlers = [
-    ...createBlockHandlers(timeStamp),
-    metaDataHandler,
-    ...passThroughHandlers,
-    scanTokenHandler,
-  ];
+  let year: number;
+  const createDefaultHandlers = (year = 2024, timeZone = "Europe/Zurich") => {
+    return [
+      ...createBlockHandlers(year, timeZone),
+      metaDataHandler,
+      ...passThroughHandlers,
+      scanTokenHandler,
+    ];
+  };
 
   beforeEach(async () => {
+    year = 2024;
     process.env["SUBSCAN_API_KEY"] = "bla";
     fastiyInstances.push(
       ...[
@@ -38,7 +45,7 @@ describe.skip("staking rewards via reward_slash endpoint", () => {
       {
         event_id: "Reward",
         amount: "1230000000000",
-        block_timestamp: timeStamp / 1000,
+        block_timestamp: new Date(`${year}-04-04 00:00:00`).getTime() / 1000,
         extrinsic_index: "999-6",
         extrinsic_hash: "0xa",
       },
@@ -53,58 +60,75 @@ describe.skip("staking rewards via reward_slash endpoint", () => {
       ],
     );
 
-    server = setupServer(...defaultHandlers, rewardsAndSlashMock);
+    server = setupServer(...createDefaultHandlers(), rewardsAndSlashMock);
     await server.listen();
-    const response = await fetch(
-      `http://127.0.0.1:3001/api/staking-rewards/polkadot/2Fd1UGzT8yuhksiKy98TpDg794dEELvNFqenJjRHFvwfuU83?startdate=${timeStamp}&enddate=${timeStamp}&currency=USD`,
+    webSocket = await openWebSocket();
+
+    const incomingMessages = await sendAndWaitForMessages(
+      webSocket,
+      {
+        type: "fetchDataRequest",
+        requestId: "xyz",
+        timestamp: 0,
+        payload: {
+          wallet: "2Fd1UGzT8yuhksiKy98TpDg794dEELvNFqenJjRHFvwfuU83",
+          timeframe: year,
+          currency: "USD",
+          timeZone: "Europe/Zurich",
+          blockchains: ["polkadot"],
+        },
+      },
+      3,
     );
-    const responseBody = await response.json();
-    expect(responseBody).toEqual({
+    expect(incomingMessages[0].correspondingRequestId).toBe("xyz");
+    expect(incomingMessages[0].payload.length).toBe(1);
+    expect(incomingMessages[1].payload.length).toBe(1);
+    expect(incomingMessages[1].payload[0].status).toBe("in_progress");
+    expect(incomingMessages[2].payload[0].status).toBe("done");
+    expect(incomingMessages[2].payload[0].data).toEqual({
       values: [
         {
           block: "999",
-          timestamp: 1672531200,
+          timestamp: mockStakingRewards[0].block_timestamp,
           amount: 123,
           hash: "0xa",
           price: 10,
           fiatValue: 1230,
         },
       ],
-      currentPrice: 20,
       priceEndDay: 10,
       token: "DOT",
     });
   });
 
   test("example with multiple rewards and a slashing", async () => {
-    const timeStamp = 1672531200000;
-
     const mockStakingRewards = [
       {
         event_id: "Reward",
         amount: "1000000000000",
-        block_timestamp: timeStamp / 1000,
+        block_timestamp: new Date(`${year}-04-04 00:00:00`).getTime() / 1000,
         extrinsic_index: "999-6",
         extrinsic_hash: "0xa",
       },
       {
         event_id: "Reward",
         amount: "2000000000000",
-        block_timestamp: timeStamp / 1000 + 60_000_00, // shoud be removed due to timestamp
+        block_timestamp:
+          new Date(`${year + 1}-04-04 00:00:00`).getTime() / 1000, // shoud be removed due to timestamp
         extrinsic_index: "997-6",
         extrinsic_hash: "0xb",
       },
       {
         event_id: "Reward",
         amount: "2000000000000",
-        block_timestamp: timeStamp / 1000,
+        block_timestamp: new Date(`${year}-02-04 00:00:00`).getTime() / 1000,
         extrinsic_index: "997-6",
         extrinsic_hash: "0xb",
       },
       {
         event_id: "Slash",
         amount: "3000000000000",
-        block_timestamp: timeStamp / 1000,
+        block_timestamp: new Date(`${year}-07-12 00:00:00`).getTime() / 1000,
         extrinsic_index: "998-6",
         extrinsic_hash: "0xc",
       },
@@ -119,17 +143,33 @@ describe.skip("staking rewards via reward_slash endpoint", () => {
       ],
     );
 
-    server = setupServer(...defaultHandlers, rewardsAndSlashMock);
+    server = setupServer(...createDefaultHandlers(), rewardsAndSlashMock);
     await server.listen();
-    const response = await fetch(
-      `http://127.0.0.1:3001/api/staking-rewards/polkadot/2Fd1UGzT8yuhksiKy98TpDg794dEELvNFqenJjRHFvwfuU83?startdate=${timeStamp}&enddate=${timeStamp}&currency=USD`,
+
+    webSocket = await openWebSocket();
+    const incomingMessages = await sendAndWaitForMessages(
+      webSocket,
+      {
+        type: "fetchDataRequest",
+        requestId: "xyz",
+        timestamp: 0,
+        payload: {
+          wallet: "2Fd1UGzT8yuhksiKy98TpDg794dEELvNFqenJjRHFvwfuU83",
+          timeframe: year,
+          currency: "USD",
+          timeZone: "Europe/Zurich",
+          blockchains: ["polkadot"],
+        },
+      },
+      3,
     );
-    const responseBody = await response.json();
-    expect(responseBody).toEqual({
+
+    expect(incomingMessages[2].payload[0].status).toBe("done");
+    expect(incomingMessages[2].payload[0].data).toEqual({
       values: [
         {
           block: "999",
-          timestamp: 1672531200,
+          timestamp: mockStakingRewards[0].block_timestamp,
           amount: 100,
           hash: "0xa",
           price: 10,
@@ -137,7 +177,7 @@ describe.skip("staking rewards via reward_slash endpoint", () => {
         },
         {
           block: "997",
-          timestamp: 1672531200,
+          timestamp: mockStakingRewards[2].block_timestamp,
           amount: 200,
           hash: "0xb",
           price: 10,
@@ -145,28 +185,25 @@ describe.skip("staking rewards via reward_slash endpoint", () => {
         },
         {
           block: "998",
-          timestamp: 1672531200,
+          timestamp: mockStakingRewards[3].block_timestamp,
           amount: -300,
           hash: "0xc",
           price: 10,
           fiatValue: -3000,
         },
       ],
-      currentPrice: 20,
       priceEndDay: 10,
       token: "DOT",
     });
   });
 
   test("example with more than 100 rewards", async () => {
-    const timeStamp = 1672531200000;
-
     const createRewards = (counter) => {
       return Array.from({ length: counter }, (_, i) => {
         return {
           event_id: "Reward",
           amount: "1000000000000",
-          block_timestamp: timeStamp / 1000,
+          block_timestamp: new Date(`${year}-02-04 00:00:00`).getTime() / 1000,
           extrinsic_index: "999-6",
           extrinsic_hash: String(i),
         };
@@ -181,16 +218,36 @@ describe.skip("staking rewards via reward_slash endpoint", () => {
       ],
     );
 
-    server = setupServer(...defaultHandlers, rewardsAndSlashMock);
+    server = setupServer(...createDefaultHandlers(), rewardsAndSlashMock);
     await server.listen();
-    const response = await fetch(
-      `http://127.0.0.1:3001/api/staking-rewards/polkadot/2Fd1UGzT8yuhksiKy98TpDg794dEELvNFqenJjRHFvwfuU83?startdate=${timeStamp}&enddate=${timeStamp}&currency=USD`,
+
+    webSocket = await openWebSocket();
+    const incomingMessages = await sendAndWaitForMessages(
+      webSocket,
+      {
+        type: "fetchDataRequest",
+        requestId: "xyz",
+        timestamp: 0,
+        payload: {
+          wallet: "2Fd1UGzT8yuhksiKy98TpDg794dEELvNFqenJjRHFvwfuU83",
+          timeframe: year,
+          currency: "USD",
+          timeZone: "Europe/Zurich",
+          blockchains: ["polkadot"],
+        },
+      },
+      3,
     );
-    const responseBody = await response.json();
-    expect(responseBody.values.length).toBe(170);
+
+    expect(incomingMessages[2].payload[0].status).toBe("done");
+    expect(incomingMessages[2].payload[0].data.values.length).toBe(170);
   });
 
   afterEach(async () => {
+    if (webSocket) {
+      webSocket.close();
+      await new Promise((resolve) => webSocket.on("close", resolve));
+    }
     if (server) {
       server.resetHandlers();
       server.close();

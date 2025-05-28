@@ -23,7 +23,10 @@ export class JobConsumer {
       );
       if (!chain) {
         this.jobsCache.setError(
-          new HttpError(400, "Chain " + job.blockchain + " not found"),
+          {
+            code: 400,
+            msg: "Chain " + job.blockchain + " not found",
+          },
           job,
         );
         return;
@@ -52,10 +55,11 @@ export class JobConsumer {
       logger.error("Error processing job: " + JSON.stringify(job));
       try {
         this.jobsCache.setError(
-          new HttpError(
-            error?.statusCode,
-            error.message ?? "Error processing job: " + JSON.stringify(job),
-          ),
+          {
+            code: error?.statusCode ?? 500,
+            msg:
+              error.message ?? "Error processing job: " + JSON.stringify(job),
+          },
           job,
         );
       } catch (error) {

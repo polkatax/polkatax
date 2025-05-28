@@ -101,7 +101,7 @@ describe("JobsCache", () => {
       "USD",
       "UTC",
     );
-    const error = new HttpError(500, "Internal error");
+    const error = { code: 500, msg: "error" };
 
     jobsCache.jobUpdate$.subscribe((updatedJob) => {
       expect(updatedJob.status).toBe("error");

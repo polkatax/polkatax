@@ -3,11 +3,14 @@ import * as subscanChains from "../../../res/gen/subscan-chains.json";
 import { logger } from "../logger/logger";
 import { Job } from "../../model/job";
 import { filter, firstValueFrom } from "rxjs";
-import { DIContainer } from "../di-container";
 import { determineNextJob } from "./determine-next-job";
+import { AwilixContainer } from "awilix";
 
 export class JobManager {
-  constructor(private jobsCache: JobsCache) {
+  constructor(
+    private jobsCache: JobsCache,
+    private DIContainer: AwilixContainer,
+  ) {
     this.start();
   }
 
@@ -26,7 +29,7 @@ export class JobManager {
     );
   }
 
-  retryOrRefresh(
+  enqueue(
     reqId: string,
     wallet: string,
     type: "staking_rewards" | "transactions",
@@ -70,56 +73,6 @@ export class JobManager {
     return [...validJobs, ...newJobs];
   }
 
-  enqueue(
-    reqId: string,
-    wallet: string,
-    type: "staking_rewards" | "transactions",
-    timeframe: number,
-    currency: string,
-    timeZone: string,
-    blockchains: string[] = this.stakingChains,
-  ): Job[] {
-    return blockchains.map((chain) => {
-      const existingJob = this.jobsCache.fetchJob(
-        wallet,
-        chain,
-        type,
-        timeframe,
-        currency,
-      );
-
-      if (existingJob) {
-        if (this.isOutDated(existingJob)) {
-          this.jobsCache.delete(existingJob);
-          return this.jobsCache.addJob(
-            reqId,
-            wallet,
-            chain,
-            type,
-            timeframe,
-            currency,
-            timeZone,
-          );
-        }
-
-        logger.info(
-          `Job already exists: ${chain}, ${wallet}, ${type}, ${timeframe}, ${currency}`,
-        );
-        return { ...existingJob };
-      }
-
-      return this.jobsCache.addJob(
-        reqId,
-        wallet,
-        chain,
-        type,
-        timeframe,
-        currency,
-        timeZone,
-      );
-    });
-  }
-
   async start() {
     let previousWallet: string | undefined;
 
@@ -132,7 +85,7 @@ export class JobManager {
       if (job) {
         previousWallet = job.wallet;
         try {
-          return DIContainer.resolve("jobConsumer").process(job);
+          await this.DIContainer.resolve("jobConsumer").process(job);
         } catch (error) {
           logger.error("Error processing job.", error);
         }

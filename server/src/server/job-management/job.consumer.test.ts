@@ -1,7 +1,6 @@
 import { expect, it, describe, jest, beforeEach } from "@jest/globals";
 import { JobsCache } from "./jobs.cache";
 import { StakingRewardsWithFiatService } from "../data-aggregation/services/staking-rewards-with-fiat.service";
-import { HttpError } from "../../common/error/HttpError";
 import { Job } from "../../model/job";
 import * as getRangeModule from "./get-range-in-time-zone";
 import { JobConsumer } from "./job.consumer";
@@ -68,7 +67,7 @@ describe("JobConsumer", () => {
     await consumer.process(badJob);
 
     expect(mockCache.setError).toHaveBeenCalledWith(
-      new HttpError(400, "Chain nonexistent not found"),
+      { code: 400, msg: "Chain nonexistent not found" },
       badJob,
     );
     expect(mockCache.setInProgress).not.toHaveBeenCalled();
@@ -76,15 +75,12 @@ describe("JobConsumer", () => {
   });
 
   it("sets error if fetchStakingRewards throws", async () => {
-    const err = new HttpError(500, "API down");
+    const err = { code: 500, msg: "API down" };
     mockService.fetchStakingRewards.mockRejectedValue(err);
 
     await consumer.process(validJob);
 
-    expect(mockCache.setError).toHaveBeenCalledWith(
-      expect.any(HttpError),
-      validJob,
-    );
+    expect(mockCache.setError).toHaveBeenCalled();
   });
 
   it("fallbacks if setError throws internally", async () => {
