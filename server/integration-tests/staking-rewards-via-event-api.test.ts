@@ -1,25 +1,23 @@
 import { describe, test, beforeEach, afterEach, expect } from "@jest/globals";
-import { polkataxServer } from "../../src/server/polkatax-server";
+import { polkataxServer } from "../src/server/polkatax-server";
 import { setupServer, SetupServerApi } from "msw/node";
-import { startStub as startPricesStub } from "../../src/crypto-currency-prices/stub";
-import { startStub as startFiatStub } from "../../src/fiat-exchange-rates/stub";
+import { startStub as startPricesStub } from "../src/crypto-currency-prices/stub";
+import { startStub as startFiatStub } from "../src/fiat-exchange-rates/stub";
 import { FastifyInstance } from "fastify";
 import { passThroughHandlers } from "./util/pass-through-handlers";
 import { metaDataHandler } from "./util/metadata-handler";
 import { createBlockHandlers } from "./util/create-block-handlers";
 import { scanTokenHandler } from "./util/scan-token-handler";
-import { SubscanEvent } from "../../src/server/blockchain/substrate/model/subscan-event";
-import { RawSubstrateTransferDto } from "../../src/server/blockchain/substrate/model/raw-transfer";
+import { SubscanEvent } from "../src/server/blockchain/substrate/model/subscan-event";
+import { RawSubstrateTransferDto } from "../src/server/blockchain/substrate/model/raw-transfer";
 import { createPaginatedMockResponseHandler } from "./util/create-paginated-mock-response-handler";
 import { createMockResponseHandler } from "./util/create-mock-response-handler";
-import { openWebSocket } from "./util/open-websocket";
-import { sendAndWaitForMessages } from "./util/send-and-wait-for-messages";
-import WebSocket from "ws";
+import { WsWrapper } from "./util/ws-wrapper";
 
 describe("fetch staking rewards via the events API", () => {
   let fastiyInstances: FastifyInstance[] = [];
   let server: SetupServerApi;
-  let webSocket: WebSocket;
+  let wsWrapper: WsWrapper;
 
   const evmAddress = "0x58F17ebFe6B126E9f196e7a87f74e9f026a27A1F";
   const substrateAddress = "2Ad1UGzT8yuaksiKy98TpDf794dEELvNFqenJjRHFvwfuU83";
@@ -114,32 +112,31 @@ describe("fetch staking rewards via the events API", () => {
     );
     await server.listen();
 
-    webSocket = await openWebSocket();
-
-    const incomingMessages = await sendAndWaitForMessages(
-      webSocket,
-      {
-        type: "fetchDataRequest",
-        requestId: "abc123",
-        timestamp: 0,
-        payload: {
-          wallet: "evmAddress",
-          timeframe: year,
-          currency: "EUR",
-          timeZone: "Europe/Zurich",
-          blockchains: ["mythos"],
-        },
+    wsWrapper = new WsWrapper();
+    await wsWrapper.connect();
+    wsWrapper.send({
+      type: "fetchDataRequest",
+      requestId: "abc123",
+      timestamp: 0,
+      payload: {
+        wallet: "evmAddress",
+        timeframe: year,
+        currency: "EUR",
+        timeZone: "Europe/Zurich",
+        blockchains: ["mythos"],
       },
-      3,
-    );
-    expect(incomingMessages[0].payload.length).toBe(1);
-    expect(incomingMessages[1].payload.length).toBe(1);
-    expect(incomingMessages[1].payload[0].status).toBe("in_progress");
-    expect(incomingMessages[2].payload[0].status).toBe("done");
+    });
+    await wsWrapper.waitForNMessages(3);
+    const msg = wsWrapper.receivedMessages;
 
-    delete incomingMessages[2].payload[0].lastModified;
-    delete incomingMessages[2].timestamp;
-    expect(incomingMessages[2]).toEqual({
+    expect(msg[0].payload.length).toBe(1);
+    expect(msg[1].payload.length).toBe(1);
+    expect(msg[1].payload[0].status).toBe("in_progress");
+    expect(msg[2].payload[0].status).toBe("done");
+
+    delete msg[2].payload[0].lastModified;
+    delete msg[2].timestamp;
+    expect(msg[2]).toEqual({
       correspondingRequestId: "abc123",
       payload: [
         {
@@ -241,28 +238,27 @@ describe("fetch staking rewards via the events API", () => {
       mapToSubstrateAccountMock,
     );
     await server.listen();
-    webSocket = await openWebSocket();
-    const incomingMessages = await sendAndWaitForMessages(
-      webSocket,
-      {
-        type: "fetchDataRequest",
-        requestId: "abc123",
-        timestamp: 0,
-        payload: {
-          wallet: evmAddress,
-          timeframe: year,
-          currency: "EUR",
-          timeZone: timeZone,
-          blockchains: ["mythos"],
-        },
-      },
-      3,
-    );
 
-    expect(incomingMessages[0].payload.length).toBe(1);
-    expect(incomingMessages[1].payload.length).toBe(1);
-    expect(incomingMessages[1].payload[0].status).toBe("in_progress");
-    expect(incomingMessages[2].payload[0].data).toEqual({
+    wsWrapper = new WsWrapper();
+    await wsWrapper.connect();
+    wsWrapper.send({
+      type: "fetchDataRequest",
+      requestId: "abc123",
+      timestamp: 0,
+      payload: {
+        wallet: evmAddress,
+        timeframe: year,
+        currency: "EUR",
+        timeZone: timeZone,
+        blockchains: ["mythos"],
+      },
+    });
+    await wsWrapper.waitForNMessages(3);
+    const msg = wsWrapper.receivedMessages;
+    expect(msg[0].payload.length).toBe(1);
+    expect(msg[1].payload.length).toBe(1);
+    expect(msg[1].payload[0].status).toBe("in_progress");
+    expect(msg[2].payload[0].data).toEqual({
       values: [
         {
           block: 1000,
@@ -317,30 +313,28 @@ describe("fetch staking rewards via the events API", () => {
     );
     await server.listen();
 
-    webSocket = await openWebSocket();
-
-    const incomingMessages = await sendAndWaitForMessages(
-      webSocket,
-      {
-        type: "fetchDataRequest",
-        requestId: "abc123",
-        timestamp: 0,
-        payload: {
-          wallet: evmAddress,
-          timeframe: year,
-          currency: "EUR",
-          timeZone: "Europe/Zurich",
-          blockchains: ["mythos"],
-        },
+    wsWrapper = new WsWrapper();
+    await wsWrapper.connect();
+    wsWrapper.send({
+      type: "fetchDataRequest",
+      requestId: "abc123",
+      timestamp: 0,
+      payload: {
+        wallet: evmAddress,
+        timeframe: year,
+        currency: "EUR",
+        timeZone: "Europe/Zurich",
+        blockchains: ["mythos"],
       },
-      3,
-    );
+    });
+    await wsWrapper.waitForNMessages(3);
+    const msg = wsWrapper.receivedMessages;
 
-    expect(incomingMessages.length).toBe(3);
-    expect(incomingMessages[2].correspondingRequestId).toBe("abc123");
-    expect(incomingMessages[2].payload.length).toBe(1);
-    expect(incomingMessages[2].payload[0].status).toBe("done");
-    expect(incomingMessages[2].payload[0].data).toEqual({
+    expect(msg.length).toBe(3);
+    expect(msg[2].correspondingRequestId).toBe("abc123");
+    expect(msg[2].payload.length).toBe(1);
+    expect(msg[2].payload[0].status).toBe("done");
+    expect(msg[2].payload[0].data).toEqual({
       values: [],
       priceEndDay: 10,
       token: "MYTH",
@@ -408,35 +402,32 @@ describe("fetch staking rewards via the events API", () => {
     );
     await server.listen();
 
-    webSocket = await openWebSocket();
-
-    const incomingMessages = await sendAndWaitForMessages(
-      webSocket,
-      {
-        type: "fetchDataRequest",
-        requestId: "abc123",
-        timestamp: 0,
-        payload: {
-          wallet: evmAddress,
-          timeframe: year,
-          currency: "EUR",
-          timeZone: "Europe/Zurich",
-          blockchains: ["mythos"],
-        },
+    wsWrapper = new WsWrapper();
+    await wsWrapper.connect();
+    wsWrapper.send({
+      type: "fetchDataRequest",
+      requestId: "abc123",
+      timestamp: 0,
+      payload: {
+        wallet: evmAddress,
+        timeframe: year,
+        currency: "EUR",
+        timeZone: "Europe/Zurich",
+        blockchains: ["mythos"],
       },
-      3,
-    );
+    });
+    await wsWrapper.waitForNMessages(3);
+    const msg = wsWrapper.receivedMessages;
 
-    expect(incomingMessages.length).toBe(3);
-    expect(incomingMessages[2].payload.length).toBe(1);
-    expect(incomingMessages[2].payload[0].status).toBe("done");
-    expect(incomingMessages[2].payload[0].data.values.length).toBe(180);
+    expect(msg.length).toBe(3);
+    expect(msg[2].payload.length).toBe(1);
+    expect(msg[2].payload[0].status).toBe("done");
+    expect(msg[2].payload[0].data.values.length).toBe(180);
   });
 
   afterEach(async () => {
-    if (webSocket) {
-      webSocket.close();
-      await new Promise((resolve) => webSocket.on("close", resolve));
+    if (wsWrapper) {
+      await wsWrapper.close();
     }
     if (server) {
       server.resetHandlers();

@@ -17,7 +17,7 @@ export class TransferMerger {
     transferList: PricedTransfer[],
     isMyAccount: (acc: string) => boolean,
     tx?: PricedTransaction,
-  ) {
+  ): void {
     if (tx && tx.amount > 0) {
       transferList.push({
         ...tx,

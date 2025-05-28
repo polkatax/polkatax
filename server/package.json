@@ -16,7 +16,7 @@
     "start-with-stubs": "concurrently \"npm run start:server\" \"npm run start:crypto-currency-prices\" \"npm run start:fiat-exchange-rates-stub\"",
     "generate-subscan-chain-list": "ts-node src/generators/generate-subscan-chain-list.ts",
     "test": "jest --config jest.unit.config.ts",
-    "integration-tests": "jest --config jest.unit.config.ts --runInBand",
+    "integration-tests": "jest --config jest.integration.config.ts --runInBand integration-tests",
     "format": "prettier --write . --ignore-path ../.gitignore",
     "copy-env-to-dist": "if [ -f .env ]; then cp .env ./dist; fi"
   },

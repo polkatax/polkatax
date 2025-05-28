@@ -1,0 +1,292 @@
+import { describe, test, beforeEach, afterEach, expect } from "@jest/globals";
+import { polkataxServer } from "../src/server/polkatax-server";
+import { setupServer, SetupServerApi } from "msw/node";
+import { startStub as startPricesStub } from "../src/crypto-currency-prices/stub";
+import { startStub as startFiatStub } from "../src/fiat-exchange-rates/stub";
+import { FastifyInstance } from "fastify";
+import { passThroughHandlers } from "./util/pass-through-handlers";
+import { metaDataHandler } from "./util/metadata-handler";
+import { createBlockHandlers } from "./util/create-block-handlers";
+import { scanTokenHandler } from "./util/scan-token-handler";
+import { createPaginatedMockResponseHandler } from "./util/create-paginated-mock-response-handler";
+import { WsWrapper } from "./util/ws-wrapper";
+import { http, HttpResponse, ws } from "msw";
+
+describe("Proper handling of jobs", () => {
+  let fastiyInstances: FastifyInstance[] = [];
+  let server: SetupServerApi;
+  let wsWrapper: WsWrapper;
+
+  let year: number;
+  const createDefaultHandlers = (year = 2024, timeZone = "Europe/Zurich") => {
+    return [
+      ...createBlockHandlers(year, timeZone),
+      metaDataHandler,
+      ...passThroughHandlers,
+      scanTokenHandler,
+    ];
+  };
+
+  const mockStakingRewards = [
+    {
+      event_id: "Reward",
+      amount: "1230000000000",
+      block_timestamp: new Date(`${year}-04-04 00:00:00`).getTime() / 1000,
+      extrinsic_index: "999-6",
+      extrinsic_hash: "0xa",
+    },
+  ];
+
+  const rewardsAndSlashMock = createPaginatedMockResponseHandler(
+    "https://*.api.subscan.io/api/scan/account/reward_slash",
+    [
+      {
+        data: { list: mockStakingRewards as any },
+      },
+    ],
+  );
+
+  beforeEach(async () => {
+    year = 2024;
+    process.env["SUBSCAN_API_KEY"] = "bla";
+    fastiyInstances.push(
+      ...[
+        await polkataxServer.init(),
+        await startPricesStub(),
+        await startFiatStub(),
+      ],
+    );
+  });
+
+  test("request data from two chains", async () => {
+    server = setupServer(...createDefaultHandlers(), rewardsAndSlashMock);
+    await server.listen();
+    wsWrapper = new WsWrapper();
+    await wsWrapper.connect();
+    wsWrapper.send({
+      type: "fetchDataRequest",
+      requestId: "xyz",
+      timestamp: 0,
+      payload: {
+        wallet: "2Fd1UGzT8yuhksiKy98TpDg794dEELvNFqenJjRHFvwfuU83",
+        timeframe: year,
+        currency: "USD",
+        timeZone: "Europe/Zurich",
+        blockchains: ["polkadot", "kusama"],
+      },
+    });
+    await wsWrapper.waitForNMessages(5);
+
+    const msgForBothChains = wsWrapper.receivedMessages.find(
+      (m) => m.payload.length === 2,
+    );
+    const blockChains = msgForBothChains.payload.map((data) => data.blockchain);
+    expect(blockChains).toEqual(["polkadot", "kusama"]);
+
+    const kusamaMessages = wsWrapper.receivedMessages.filter(
+      (m) => m.payload.length === 1 && m.payload[0].blockchain === "kusama",
+    );
+    expect(kusamaMessages.length).toBe(2);
+    expect(kusamaMessages[0].payload[0].status).toBe("in_progress");
+    expect(kusamaMessages[1].payload[0].status).toBe("done");
+
+    const polkadotMessages = wsWrapper.receivedMessages.filter(
+      (m) => m.payload.length === 1 && m.payload[0].blockchain === "polkadot",
+    );
+    expect(polkadotMessages.length).toBe(2);
+    expect(polkadotMessages[0].payload[0].status).toBe("in_progress");
+    expect(polkadotMessages[1].payload[0].status).toBe("done");
+  });
+
+  test("should cache jobs", async () => {
+    server = setupServer(...createDefaultHandlers(), rewardsAndSlashMock);
+    await server.listen();
+    wsWrapper = new WsWrapper();
+    await wsWrapper.connect();
+    wsWrapper.send({
+      type: "fetchDataRequest",
+      requestId: "xyz",
+      timestamp: 0,
+      payload: {
+        wallet: "2Fd1UGzT8yuhksiKy98TpDg794dEELvNFqenJjRHFvwfuU83",
+        timeframe: year,
+        currency: "USD",
+        timeZone: "Europe/Zurich",
+        blockchains: ["polkadot"],
+      },
+    });
+    await wsWrapper.waitForNMessages(3);
+    expect(wsWrapper.receivedMessages[2].payload[0].status).toBe("done");
+
+    wsWrapper.send({
+      type: "fetchDataRequest",
+      requestId: "xyz",
+      timestamp: 0,
+      payload: {
+        wallet: "2Fd1UGzT8yuhksiKy98TpDg794dEELvNFqenJjRHFvwfuU83",
+        timeframe: year,
+        currency: "USD",
+        timeZone: "Europe/Zurich",
+        blockchains: ["polkadot"],
+      },
+    });
+    await wsWrapper.waitForNMessages(1);
+    expect(wsWrapper.receivedMessages[3].payload[0].status).toBe("done");
+  });
+
+  test("handle errors", async () => {
+    const errorMock = http.post(
+      "https://*.api.subscan.io/api/scan/metadata",
+      () => {
+        // Similate a network error.
+        return HttpResponse.error();
+      },
+    );
+    server = setupServer(
+      ...[
+        ...createBlockHandlers(year, "Europe/Zurich"),
+        ...passThroughHandlers,
+        scanTokenHandler,
+      ],
+      errorMock,
+    );
+
+    await server.listen();
+    wsWrapper = new WsWrapper();
+    await wsWrapper.connect();
+    wsWrapper.send({
+      type: "fetchDataRequest",
+      requestId: "xyz",
+      timestamp: 0,
+      payload: {
+        wallet: "2Fd1UGzT8yuhksiKy98TpDg794dEELvNFqenJjRHFvwfuU83",
+        timeframe: year,
+        currency: "USD",
+        timeZone: "Europe/Zurich",
+        blockchains: ["polkadot"],
+      },
+    });
+    await wsWrapper.waitForNMessages(3);
+
+    expect(wsWrapper.receivedMessages[2].payload[0].status).toBe("error");
+    expect(wsWrapper.receivedMessages[2].payload[0].error.code).toBe(500);
+  });
+
+  test("retry failed jobs", async () => {
+    const errorMock = http.post(
+      "https://*.api.subscan.io/api/scan/metadata",
+      () => {
+        // Similate a network error.
+        return HttpResponse.error();
+      },
+    );
+    server = setupServer(
+      ...[
+        ...createBlockHandlers(year, "Europe/Zurich"),
+        ...passThroughHandlers,
+        scanTokenHandler,
+      ],
+      errorMock,
+    );
+    await server.listen();
+
+    wsWrapper = new WsWrapper();
+    await wsWrapper.connect();
+    wsWrapper.send({
+      type: "fetchDataRequest",
+      requestId: "xyz",
+      timestamp: 0,
+      payload: {
+        wallet: "2Fd1UGzT8yuhksiKy98TpDg794dEELvNFqenJjRHFvwfuU83",
+        timeframe: year,
+        currency: "USD",
+        timeZone: "Europe/Zurich",
+        blockchains: ["polkadot"],
+      },
+    });
+    await wsWrapper.waitForNMessages(3);
+    expect(wsWrapper.receivedMessages[2].payload[0].status).toBe("error");
+
+    server = setupServer(...createDefaultHandlers(), rewardsAndSlashMock);
+
+    wsWrapper.send({
+      type: "fetchDataRequest",
+      requestId: "xyz",
+      timestamp: 0,
+      payload: {
+        wallet: "2Fd1UGzT8yuhksiKy98TpDg794dEELvNFqenJjRHFvwfuU83",
+        timeframe: year,
+        currency: "USD",
+        timeZone: "Europe/Zurich",
+        blockchains: ["polkadot"],
+      },
+    });
+    await wsWrapper.waitForNMessages(2);
+    expect(wsWrapper.receivedMessages[4].payload[0].status).toBe("in_progress");
+  });
+
+  test.only("should perform round robin", async () => {
+    server = setupServer(...createDefaultHandlers(), rewardsAndSlashMock);
+    await server.listen();
+    wsWrapper = new WsWrapper();
+    await wsWrapper.connect();
+
+    // Send first data fetch request (multiple blockchains)
+    wsWrapper.send({
+      type: "fetchDataRequest",
+      requestId: "xyz",
+      timestamp: 0,
+      payload: {
+        wallet: "2Fd1UGzT8yuhksiKy98TpDg794dEELvNFqenJjRHFvwfuU83",
+        timeframe: year,
+        currency: "USD",
+        timeZone: "Europe/Zurich",
+        blockchains: ["polkadot", "kusama", "hydration"],
+      },
+    });
+
+    // Send second data fetch request (single blockchain)
+    wsWrapper.send({
+      type: "fetchDataRequest",
+      requestId: "xyz",
+      timestamp: 0,
+      payload: {
+        wallet: "00000zT8yuhksiKy98TpDg794dEELvNFqenJjRHFvwfuU83",
+        timeframe: year,
+        currency: "USD",
+        timeZone: "Europe/Zurich",
+        blockchains: ["polkadot"],
+      },
+    });
+
+    // Each request results in:
+    // - 1 message confirming request receipt
+    // - 1 message for status "in_progress"
+    // - 1 message for status "done"
+    // So we expect 6 messages in total until 2 jobs are done
+    await wsWrapper.waitForNMessages(6);
+
+    const completedJobs = wsWrapper.receivedMessages.filter(
+      (msg) => msg.payload[0].status === "done",
+    );
+    expect(completedJobs.length).toBe(2);
+
+    // Ensure that the two completed jobs are for different wallets
+    expect(
+      completedJobs[0].payload[0].wallet !== completedJobs[1].payload[0].wallet,
+    ).toBe(true);
+  });
+
+  afterEach(async () => {
+    if (wsWrapper) {
+      await wsWrapper.close();
+    }
+    if (server) {
+      server.resetHandlers();
+      server.close();
+    }
+    for (let fastiyInstance of fastiyInstances) {
+      await fastiyInstance.close();
+    }
+  });
+});

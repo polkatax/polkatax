@@ -1,5 +1,5 @@
 import { http, HttpResponse } from "msw";
-import { getYearRangeInZone } from "../../../src/server/job-management/get-range-in-time-zone";
+import { getYearRangeInZone } from "../../src/server/job-management/get-range-in-time-zone";
 import { createMockResponseHandler } from "./create-mock-response-handler";
 
 /**
