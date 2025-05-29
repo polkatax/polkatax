@@ -29,7 +29,6 @@ export const WalletInfoSchema = z.object({
   }),
   currency: z.string(),
   timeframe: z.number(),
-  timeZone: z.string(),
   blockchains: z.array(z.string()).optional(),
 });
 

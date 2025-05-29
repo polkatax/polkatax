@@ -17,9 +17,9 @@ describe("staking rewards via reward_slash endpoint", () => {
   let wsWrapper: WsWrapper;
 
   let year: number;
-  const createDefaultHandlers = (year = 2024, timeZone = "Europe/Zurich") => {
+  const createDefaultHandlers = (year = 2024) => {
     return [
-      ...createBlockHandlers(year, timeZone),
+      ...createBlockHandlers(year),
       metaDataHandler,
       ...passThroughHandlers,
       scanTokenHandler,
@@ -71,7 +71,6 @@ describe("staking rewards via reward_slash endpoint", () => {
         wallet: "2Fd1UGzT8yuhksiKy98TpDg794dEELvNFqenJjRHFvwfuU83",
         timeframe: year,
         currency: "USD",
-        timeZone: "Europe/Zurich",
         blockchains: ["polkadot"],
       },
     });
@@ -154,7 +153,6 @@ describe("staking rewards via reward_slash endpoint", () => {
         wallet: "2Fd1UGzT8yuhksiKy98TpDg794dEELvNFqenJjRHFvwfuU83",
         timeframe: year,
         currency: "USD",
-        timeZone: "Europe/Zurich",
         blockchains: ["polkadot"],
       },
     });
@@ -228,7 +226,6 @@ describe("staking rewards via reward_slash endpoint", () => {
         wallet: "2Fd1UGzT8yuhksiKy98TpDg794dEELvNFqenJjRHFvwfuU83",
         timeframe: year,
         currency: "USD",
-        timeZone: "Europe/Zurich",
         blockchains: ["polkadot"],
       },
     });

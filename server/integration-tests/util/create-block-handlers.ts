@@ -1,15 +1,14 @@
 import { http, HttpResponse } from "msw";
-import { getYearRangeInZone } from "../../src/server/job-management/get-range-in-time-zone";
+import { getYearRange } from "../../src/server/job-management/get-time-range";
 import { createMockResponseHandler } from "./create-mock-response-handler";
 
 /**
- * Creates a handler to return two blocks, which correspond to beginning and end of a year in the respective timeZone
+ * Creates a handler to return two blocks, which correspond to beginning and end of a year 
  * @param year
- * @param timeZone
  * @returns
  */
-export const createBlockHandlers = (year: number, timeZone: string) => {
-  const { startDay, endDay } = getYearRangeInZone(year, timeZone);
+export const createBlockHandlers = (year: number) => {
+  const { startDay, endDay } = getYearRange(year);
   return [
     http.post(
       "https://*.api.subscan.io/api/scan/block",

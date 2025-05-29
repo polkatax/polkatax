@@ -42,7 +42,6 @@ describe("JobManager", () => {
       blockchain: "polkadot",
       currency: "USD",
       timeframe: 2024,
-      timeZone: "UTC",
       type: "staking_rewards",
       data: undefined,
     } as any;
@@ -56,7 +55,6 @@ describe("JobManager", () => {
       "staking_rewards",
       2024,
       "USD",
-      "UTC",
       ["polkadot"],
     );
 
@@ -68,7 +66,6 @@ describe("JobManager", () => {
       "staking_rewards",
       2024,
       "USD",
-      "UTC",
     );
   });
 
@@ -78,7 +75,6 @@ describe("JobManager", () => {
       blockchain: "polkadot",
       currency: "USD",
       timeframe: new Date().getFullYear(),
-      timeZone: "UTC",
       type: "staking_rewards",
       lastModified: Date.now() - 4 * 24 * 60 * 60 * 1000, // 4 days old
       data: undefined,
@@ -99,7 +95,6 @@ describe("JobManager", () => {
       "staking_rewards",
       new Date().getFullYear(),
       "USD",
-      "UTC",
       ["polkadot"],
     );
 
@@ -114,7 +109,6 @@ describe("JobManager", () => {
       blockchain: "polkadot",
       currency: "USD",
       timeframe: 2024,
-      timeZone: "UTC",
       type: "staking_rewards",
       lastModified: Date.now(),
       data: undefined,

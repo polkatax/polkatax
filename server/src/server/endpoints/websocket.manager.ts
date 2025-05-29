@@ -35,7 +35,7 @@ export class WebSocketManager {
     socket: WebSocket,
     msg: WebSocketIncomingMessage,
   ): Promise<WebSocketOutgoingMessage> {
-    const { wallet, timeframe, currency, timeZone, blockchains } = msg.payload;
+    const { wallet, timeframe, currency, blockchains } = msg.payload;
 
     const subscription = { wallet, currency, timeframe };
     if (
@@ -54,7 +54,6 @@ export class WebSocketManager {
       "staking_rewards",
       timeframe,
       currency,
-      timeZone,
       blockchains,
     );
 

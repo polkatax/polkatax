@@ -60,12 +60,6 @@ export const polkataxServer = {
         .status(200);
     });
 
-    fastify.register(websocketPlugin, {
-      options: {
-        maxPayload: 1024,
-      },
-    });
-
     const webSocketManager: WebSocketManager =
       DIContainer.resolve("webSocketManager");
     fastify.get("/ws", { websocket: true }, webSocketManager.wsHandler);

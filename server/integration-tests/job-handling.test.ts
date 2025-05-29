@@ -18,9 +18,9 @@ describe("Proper handling of jobs", () => {
   let wsWrapper: WsWrapper;
 
   let year: number;
-  const createDefaultHandlers = (year = 2024, timeZone = "Europe/Zurich") => {
+  const createDefaultHandlers = (year = 2024) => {
     return [
-      ...createBlockHandlers(year, timeZone),
+      ...createBlockHandlers(year),
       metaDataHandler,
       ...passThroughHandlers,
       scanTokenHandler,
@@ -71,7 +71,6 @@ describe("Proper handling of jobs", () => {
         wallet: "2Fd1UGzT8yuhksiKy98TpDg794dEELvNFqenJjRHFvwfuU83",
         timeframe: year,
         currency: "USD",
-        timeZone: "Europe/Zurich",
         blockchains: ["polkadot", "kusama"],
       },
     });
@@ -111,7 +110,6 @@ describe("Proper handling of jobs", () => {
         wallet: "2Fd1UGzT8yuhksiKy98TpDg794dEELvNFqenJjRHFvwfuU83",
         timeframe: year,
         currency: "USD",
-        timeZone: "Europe/Zurich",
         blockchains: ["polkadot"],
       },
     });
@@ -126,7 +124,6 @@ describe("Proper handling of jobs", () => {
         wallet: "2Fd1UGzT8yuhksiKy98TpDg794dEELvNFqenJjRHFvwfuU83",
         timeframe: year,
         currency: "USD",
-        timeZone: "Europe/Zurich",
         blockchains: ["polkadot"],
       },
     });
@@ -144,7 +141,7 @@ describe("Proper handling of jobs", () => {
     );
     server = setupServer(
       ...[
-        ...createBlockHandlers(year, "Europe/Zurich"),
+        ...createBlockHandlers(year),
         ...passThroughHandlers,
         scanTokenHandler,
       ],
@@ -162,7 +159,6 @@ describe("Proper handling of jobs", () => {
         wallet: "2Fd1UGzT8yuhksiKy98TpDg794dEELvNFqenJjRHFvwfuU83",
         timeframe: year,
         currency: "USD",
-        timeZone: "Europe/Zurich",
         blockchains: ["polkadot"],
       },
     });
@@ -182,7 +178,7 @@ describe("Proper handling of jobs", () => {
     );
     server = setupServer(
       ...[
-        ...createBlockHandlers(year, "Europe/Zurich"),
+        ...createBlockHandlers(year),
         ...passThroughHandlers,
         scanTokenHandler,
       ],
@@ -200,14 +196,11 @@ describe("Proper handling of jobs", () => {
         wallet: "2Fd1UGzT8yuhksiKy98TpDg794dEELvNFqenJjRHFvwfuU83",
         timeframe: year,
         currency: "USD",
-        timeZone: "Europe/Zurich",
         blockchains: ["polkadot"],
       },
     });
     await wsWrapper.waitForNMessages(3);
     expect(wsWrapper.receivedMessages[2].payload[0].status).toBe("error");
-
-    server = setupServer(...createDefaultHandlers(), rewardsAndSlashMock);
 
     wsWrapper.send({
       type: "fetchDataRequest",
@@ -217,7 +210,6 @@ describe("Proper handling of jobs", () => {
         wallet: "2Fd1UGzT8yuhksiKy98TpDg794dEELvNFqenJjRHFvwfuU83",
         timeframe: year,
         currency: "USD",
-        timeZone: "Europe/Zurich",
         blockchains: ["polkadot"],
       },
     });
@@ -225,7 +217,7 @@ describe("Proper handling of jobs", () => {
     expect(wsWrapper.receivedMessages[4].payload[0].status).toBe("in_progress");
   });
 
-  test.only("should perform round robin", async () => {
+  test("should perform round robin", async () => {
     server = setupServer(...createDefaultHandlers(), rewardsAndSlashMock);
     await server.listen();
     wsWrapper = new WsWrapper();
@@ -237,10 +229,9 @@ describe("Proper handling of jobs", () => {
       requestId: "xyz",
       timestamp: 0,
       payload: {
-        wallet: "2Fd1UGzT8yuhksiKy98TpDg794dEELvNFqenJjRHFvwfuU83",
+        wallet: "Dnn4xiYdgz3bdRWQaUsvX5noNpcUwmqomKgHg8xzZL1vzfq",
         timeframe: year,
         currency: "USD",
-        timeZone: "Europe/Zurich",
         blockchains: ["polkadot", "kusama", "hydration"],
       },
     });
@@ -248,13 +239,12 @@ describe("Proper handling of jobs", () => {
     // Send second data fetch request (single blockchain)
     wsWrapper.send({
       type: "fetchDataRequest",
-      requestId: "xyz",
+      requestId: "abc",
       timestamp: 0,
       payload: {
-        wallet: "00000zT8yuhksiKy98TpDg794dEELvNFqenJjRHFvwfuU83",
+        wallet: "EUKqtB33pRN2cgru8WXiz4zAuZUn4YRuWG25AZqjzPAdVvJ",
         timeframe: year,
         currency: "USD",
-        timeZone: "Europe/Zurich",
         blockchains: ["polkadot"],
       },
     });
@@ -265,7 +255,6 @@ describe("Proper handling of jobs", () => {
     // - 1 message for status "done"
     // So we expect 6 messages in total until 2 jobs are done
     await wsWrapper.waitForNMessages(6);
-
     const completedJobs = wsWrapper.receivedMessages.filter(
       (msg) => msg.payload[0].status === "done",
     );

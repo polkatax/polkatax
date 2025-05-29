@@ -16,7 +16,7 @@ const createMockData = (symbols): { [symbol: string]: number } => {
 const createHistoricMockdata = (currency): CurrencyQuotes => {
   const result: CurrencyQuotes = {
     currency,
-    quotes: { timestamp: Date.now(), latest: 20.0 },
+    quotes: { timestamp: Date.now() },
   };
   const now = new Date();
   const startDate = new Date(now);

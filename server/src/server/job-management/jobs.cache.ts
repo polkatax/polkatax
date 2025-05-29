@@ -1,7 +1,6 @@
 import { Job, JobId } from "../../model/job";
 import { Subject, BehaviorSubject } from "rxjs";
 import { logger } from "../logger/logger";
-import { HttpError } from "../../common/error/HttpError";
 import { WsError } from "../model/ws-error";
 
 export class JobsCache {
@@ -15,11 +14,10 @@ export class JobsCache {
     blockchain: string,
     type: "staking_rewards" | "transactions",
     timeframe: number,
-    currency: string,
-    timeZone: string,
+    currency: string
   ) {
     logger.info(
-      `Adding job: ${reqId}, ${wallet}, ${blockchain}, ${type}, ${timeframe}, ${currency}, ${timeZone}`,
+      `Adding job: ${reqId}, ${wallet}, ${blockchain}, ${type}, ${timeframe}, ${currency}`,
     );
 
     const job: Job = {
@@ -30,8 +28,7 @@ export class JobsCache {
       timeframe,
       status: "pending",
       lastModified: Date.now(),
-      currency,
-      timeZone,
+      currency
     };
 
     this.allJobs.push(job);

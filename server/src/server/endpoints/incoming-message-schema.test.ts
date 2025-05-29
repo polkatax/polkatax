@@ -17,7 +17,6 @@ describe("WebSocketIncomingMessageSchema", () => {
     payload: {
       currency: "USD",
       timeframe: 30,
-      timeZone: "UTC",
       blockchains: ["ethereum", "polkadot"],
     },
   };

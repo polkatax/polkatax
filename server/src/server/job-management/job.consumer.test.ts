@@ -2,7 +2,7 @@ import { expect, it, describe, jest, beforeEach } from "@jest/globals";
 import { JobsCache } from "./jobs.cache";
 import { StakingRewardsWithFiatService } from "../data-aggregation/services/staking-rewards-with-fiat.service";
 import { Job } from "../../model/job";
-import * as getRangeModule from "./get-range-in-time-zone";
+import * as getRangeModule from "./get-time-range";
 import { JobConsumer } from "./job.consumer";
 
 jest.mock("../logger/logger", () => ({
@@ -30,15 +30,14 @@ describe("JobConsumer", () => {
     blockchain: "polkadot",
     currency: "USD",
     timeframe: 2023,
-    timeZone: "UTC",
     data: undefined,
   } as any;
 
   beforeEach(() => {
     jest.clearAllMocks();
-    jest.spyOn(getRangeModule, "getYearRangeInZone").mockReturnValue({
-      startDay: new Date("2023-01-01T00:00:00Z"),
-      endDay: new Date("2023-12-31T23:59:59Z"),
+    jest.spyOn(getRangeModule, "getYearRange").mockReturnValue({
+      startDay: new Date("2022-12-31T23:59:59Z"),
+      endDay: new Date("2023-01-01T00:00:00Z"),
     });
   });
 

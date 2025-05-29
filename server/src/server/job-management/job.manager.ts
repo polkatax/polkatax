@@ -35,7 +35,6 @@ export class JobManager {
     type: "staking_rewards" | "transactions",
     timeframe: number,
     currency: string,
-    timeZone: string,
     blockchains: string[] = this.stakingChains,
   ): Job[] {
     const matchingJobs = this.jobsCache
@@ -65,8 +64,7 @@ export class JobManager {
           chain,
           type,
           timeframe,
-          currency,
-          timeZone,
+          currency
         ),
       );
 

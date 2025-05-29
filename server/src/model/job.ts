@@ -14,6 +14,5 @@ export interface Job extends JobId {
   data?: any;
   error?: WsError;
   lastModified: number;
-  timeZone: string;
   deleted?: boolean;
 }

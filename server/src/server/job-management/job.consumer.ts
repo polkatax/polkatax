@@ -3,8 +3,7 @@ import { StakingRewardsWithFiatService } from "../data-aggregation/services/stak
 import { logger } from "../logger/logger";
 import { JobsCache } from "./jobs.cache";
 import * as subscanChains from "../../../res/gen/subscan-chains.json";
-import { getYearRangeInZone } from "./get-range-in-time-zone";
-import { HttpError } from "../../common/error/HttpError";
+import { getYearRange } from "./get-time-range";
 
 export class JobConsumer {
   constructor(
@@ -32,9 +31,8 @@ export class JobConsumer {
         return;
       }
       this.jobsCache.setInProgress(job);
-      const { startDay, endDay } = getYearRangeInZone(
-        job.timeframe,
-        job.timeZone || "Europe/Zurich",
+      const { startDay, endDay } = getYearRange(
+        job.timeframe
       );
 
       const result =

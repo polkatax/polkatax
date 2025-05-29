@@ -20,7 +20,7 @@ describe("fetch staking rewards via the events API", () => {
   let wsWrapper: WsWrapper;
 
   const evmAddress = "0x58F17ebFe6B126E9f196e7a87f74e9f026a27A1F";
-  const substrateAddress = "2Ad1UGzT8yuaksiKy98TpDf794dEELvNFqenJjRHFvwfuU83";
+  const substrateAddress = "EUKqtB33pRN2cgru8WXiz4zAuZUn4YRuWG25AZqjzPAdVvJ";
   const mapToSubstrateAccountMock = createMockResponseHandler(
     "https://*.api.subscan.io/api/v2/scan/search",
     {
@@ -30,9 +30,9 @@ describe("fetch staking rewards via the events API", () => {
     },
   );
 
-  const createDefaultHandlers = (year, timeZone = "Europe/Zurich") => {
+  const createDefaultHandlers = (year) => {
     return [
-      ...createBlockHandlers(year, timeZone),
+      ...createBlockHandlers(year),
       metaDataHandler,
       ...passThroughHandlers,
       scanTokenHandler,
@@ -50,9 +50,8 @@ describe("fetch staking rewards via the events API", () => {
     );
   });
 
-  test.only("simple example with only 1 reward", async () => {
+  test("simple example with only 1 reward", async () => {
     const year = 2024;
-    const timeZone = "Europe/Zurich";
 
     const mockEvents: SubscanEvent[] = [
       {
@@ -105,7 +104,7 @@ describe("fetch staking rewards via the events API", () => {
     );
 
     server = setupServer(
-      ...createDefaultHandlers(2024, timeZone),
+      ...createDefaultHandlers(2024),
       transfersMock,
       eventsMock,
       mapToSubstrateAccountMock,
@@ -119,10 +118,9 @@ describe("fetch staking rewards via the events API", () => {
       requestId: "abc123",
       timestamp: 0,
       payload: {
-        wallet: "evmAddress",
+        wallet: evmAddress,
         timeframe: year,
         currency: "EUR",
-        timeZone: "Europe/Zurich",
         blockchains: ["mythos"],
       },
     });
@@ -141,13 +139,12 @@ describe("fetch staking rewards via the events API", () => {
       payload: [
         {
           reqId: "abc123",
-          wallet: "evmAddress",
+          wallet: evmAddress,
           blockchain: "mythos",
           type: "staking_rewards",
           timeframe: 2024,
           status: "done",
           currency: "EUR",
-          timeZone: "Europe/Zurich",
           data: {
             values: [
               {
@@ -168,9 +165,8 @@ describe("fetch staking rewards via the events API", () => {
     });
   });
 
-  test.only("filter by date", async () => {
+  test("filter by date", async () => {
     const year = 2024;
-    const timeZone = "America/New_York";
 
     const mockEvents: SubscanEvent[] = [
       {
@@ -232,7 +228,7 @@ describe("fetch staking rewards via the events API", () => {
     );
 
     server = setupServer(
-      ...createDefaultHandlers(2024, timeZone),
+      ...createDefaultHandlers(2024),
       transfersMock,
       eventsMock,
       mapToSubstrateAccountMock,
@@ -249,7 +245,6 @@ describe("fetch staking rewards via the events API", () => {
         wallet: evmAddress,
         timeframe: year,
         currency: "EUR",
-        timeZone: timeZone,
         blockchains: ["mythos"],
       },
     });
@@ -323,7 +318,6 @@ describe("fetch staking rewards via the events API", () => {
         wallet: evmAddress,
         timeframe: year,
         currency: "EUR",
-        timeZone: "Europe/Zurich",
         blockchains: ["mythos"],
       },
     });
@@ -412,7 +406,6 @@ describe("fetch staking rewards via the events API", () => {
         wallet: evmAddress,
         timeframe: year,
         currency: "EUR",
-        timeZone: "Europe/Zurich",
         blockchains: ["mythos"],
       },
     });

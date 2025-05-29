@@ -21,7 +21,6 @@ describe("JobsCache", () => {
       "staking_rewards",
       2024,
       "USD",
-      "UTC",
     );
 
     expect(job.status).toBe("pending");
@@ -42,7 +41,6 @@ describe("JobsCache", () => {
       "staking_rewards",
       2024,
       "USD",
-      "UTC",
     );
     jobsCache.delete(job);
 
@@ -59,7 +57,6 @@ describe("JobsCache", () => {
       "staking_rewards",
       2024,
       "USD",
-      "UTC",
     );
 
     jobsCache.jobUpdate$.subscribe((updatedJob) => {
@@ -78,7 +75,6 @@ describe("JobsCache", () => {
       "staking_rewards",
       2024,
       "USD",
-      "UTC",
     );
     const result = { rewards: 123 };
 
@@ -99,7 +95,6 @@ describe("JobsCache", () => {
       "staking_rewards",
       2024,
       "USD",
-      "UTC",
     );
     const error = { code: 500, msg: "error" };
 
@@ -122,7 +117,6 @@ describe("JobsCache", () => {
       "staking_rewards",
       2024,
       "USD",
-      "UTC",
     );
     const oldDoneJob = jobsCache.addJob(
       "req2",
@@ -131,7 +125,6 @@ describe("JobsCache", () => {
       "staking_rewards",
       2023,
       "USD",
-      "UTC",
     );
     oldDoneJob.status = "done";
     oldDoneJob.lastModified = now - 100 * 60 * 60 * 1000; // > 72h
