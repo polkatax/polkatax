@@ -5,7 +5,6 @@ export interface WebSocketOutGoingMessage {
   payload: {
     wallet: string;
     timeframe: number;
-    timeZone: string;
     currency: string;
     blockchains?: string[];
   };

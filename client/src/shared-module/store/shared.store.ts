@@ -20,6 +20,7 @@ import { addIsoDate } from '../helper/add-iso-date';
 import { calculateRewardSummary } from '../helper/calculate-reward-summary';
 import { getEndDate, getStartDate } from '../util/date-utils';
 import { groupRewardsByDay } from '../helper/group-rewards-by-day';
+import { filterOnDateRange } from '../helper/filter-on-date-range';
 
 const sortRewards = (rewards: Rewards) =>
   rewards.values.sort((a, b) => a.block - b.block);
@@ -71,7 +72,6 @@ fetchAllJobsFromIndexedDB().then((jobs) => {
             currency: s.currency,
             wallet: s.wallet,
             timeframe: s.timeframe,
-            timeZone: s.timeZone,
             blockchains: [s.blockchain],
           },
         });
@@ -89,13 +89,16 @@ wsMsgReceived$.pipe(mergeMap((array) => from(array))).subscribe(async (job) => {
       j.timeframe === job.timeframe &&
       j.currency === job.currency
   );
+  if (job.data) {
+    filterOnDateRange(job, job.data)
+    job.data = mapRawValues(job, job.data)
+  }
   if (matching) {
-    matching.data = job.data ? mapRawValues(job, job.data) : job.data;
+    matching.data = job.data
     matching.status = job.status;
     matching.error = job.error;
     await createOrUpdateJobInIndexedDB(matching);
   } else {
-    job.data = job.data ? mapRawValues(job, job.data) : job.data;
     jobs.push(job);
     await createOrUpdateJobInIndexedDB(job);
   }
@@ -128,8 +131,7 @@ export const useSharedStore = defineStore('shared', {
           currency: await firstValueFrom(
             useSharedStore().currency$.pipe(filter((c) => c !== undefined))
           ),
-          timeframe: this.timeFrame,
-          timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+          timeframe: this.timeFrame
         },
       });
     },

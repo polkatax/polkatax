@@ -10,5 +10,4 @@ export interface JobResult {
   timestamp: number;
   blockchain: string;
   status: string;
-  timeZone: string;
 }
