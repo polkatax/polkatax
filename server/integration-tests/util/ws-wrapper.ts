@@ -1,9 +1,7 @@
-import {
-  WebSocketIncomingMessage,
-  WebSocketOutgoingMessage,
-} from "../../src/server/model/web-socket-msg";
+import { WebSocketOutgoingMessage } from "../../src/server/model/web-socket-msg";
 import WebSocket from "ws";
 import { firstValueFrom, ReplaySubject, skip } from "rxjs";
+import { WebSocketIncomingMessage } from "../../src/server/endpoints/incoming-message-schema";
 
 export class WsWrapper {
   webSocket: WebSocket;

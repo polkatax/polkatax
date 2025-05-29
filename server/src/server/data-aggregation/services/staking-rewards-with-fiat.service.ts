@@ -7,6 +7,7 @@ import { formatDate } from "../../../common/util/date-utils";
 import { addFiatValuesToStakingRewards } from "../helper/add-fiat-values-to-staking-rewards";
 import { StakingReward } from "../../blockchain/substrate/model/staking-reward";
 import { findCoingeckoIdForNativeToken } from "../helper/find-coingecko-id-for-native-token";
+import { isEvmAddress } from "../helper/is-evm-address";
 
 export class StakingRewardsWithFiatService {
   constructor(
@@ -19,8 +20,7 @@ export class StakingRewardsWithFiatService {
     stakingRewardsRequest: StakingRewardsRequest,
   ): Promise<StakingReward[]> {
     let { chain, address, startDay, endDay } = stakingRewardsRequest;
-    const isEvmAddress = address.length <= 42;
-    if (isEvmAddress) {
+    if (isEvmAddress(address)) {
       address =
         (await this.subscanService.mapToSubstrateAccount(
           chain.domain,

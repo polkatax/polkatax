@@ -62,7 +62,7 @@ export class CoingeckoRestService {
     try {
       dataUrl = (await this.getExportDataUrl(tokenId)).replace(
         "usd.csv",
-        currency + ".csv",
+        currency.toLocaleLowerCase() + ".csv",
       );
     } catch (error) {
       logger.warn("No quotes found for token " + tokenId);

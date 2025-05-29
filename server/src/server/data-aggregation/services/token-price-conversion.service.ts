@@ -49,7 +49,7 @@ export class TokenPriceConversionService {
       `Entry fetchQuotesForTokens ${tokenIds.join(", ")} in ${currency}`,
     );
     const quotesCurrency =
-      preferredQuoteCurrencyValues.indexOf(currency.toLowerCase()) > -1
+      preferredQuoteCurrencyValues.indexOf(currency?.toLowerCase()) > -1
         ? currency
         : "usd";
     const result = {};

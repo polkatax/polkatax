@@ -103,7 +103,7 @@ describe("StakingRewardsWithFiatService", () => {
 
     const request: StakingRewardsRequest = {
       chain: mockChain,
-      address: "0xEvmAddr", // shorter address
+      address: "0x5050F69a9786F081509234F1a7F4684b5E5b76C9",
       currency: "USD",
       startDay: mockDate,
     } as any;
@@ -112,7 +112,7 @@ describe("StakingRewardsWithFiatService", () => {
 
     expect(subscanService.mapToSubstrateAccount).toHaveBeenCalledWith(
       "polkadot",
-      "0xEvmAddr",
+      "0x5050F69a9786F081509234F1a7F4684b5E5b76C9",
     );
     expect(stakingRewardsService.fetchStakingRewards).toHaveBeenCalledWith(
       "polkadot",
@@ -148,7 +148,7 @@ describe("StakingRewardsWithFiatService", () => {
 
     const request: StakingRewardsRequest = {
       chain: mockChain,
-      address: "0xAddr",
+      address: "0x5050F69a9786F081509234F1a7F4684b5E5b76C9",
       currency: "USD",
       startDay: mockDate,
       endDay,

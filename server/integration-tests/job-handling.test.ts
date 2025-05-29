@@ -10,7 +10,7 @@ import { createBlockHandlers } from "./util/create-block-handlers";
 import { scanTokenHandler } from "./util/scan-token-handler";
 import { createPaginatedMockResponseHandler } from "./util/create-paginated-mock-response-handler";
 import { WsWrapper } from "./util/ws-wrapper";
-import { http, HttpResponse, ws } from "msw";
+import { http, HttpResponse } from "msw";
 
 describe("Proper handling of jobs", () => {
   let fastiyInstances: FastifyInstance[] = [];
