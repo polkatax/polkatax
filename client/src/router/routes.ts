@@ -7,20 +7,23 @@ const routes: RouteRecordRaw[] = [
     children: [
       {
         path: '',
-        redirect: 'staking-rewards',
+        redirect: 'wallets',
       },
       {
-        path: 'staking-rewards',
+        path: 'wallets',
         component: () =>
-          import(
-            'src/staking-rewards-module/components/StakingRewardsDashboard.vue'
-          ),
+          import('src/wallets-module/components/WalletsDashboard.vue'),
       },
       {
-        path: 'staking-rewards/:wallet/:timeframe/:currency',
+        path: 'blockchains/:wallet/:timeframe/:currency',
+        component: () =>
+          import('src/blockchains-module/components/BlockchainList.vue'),
+      },
+      {
+        path: 'taxable-events/:wallet/:blockchain/:timeframe/:currency',
         component: () =>
           import(
-            'src/staking-rewards-module/components/StakingRewardsJobList.vue'
+            'src/taxable-events-module/components/TaxableEventsTabView.vue'
           ),
       },
     ],

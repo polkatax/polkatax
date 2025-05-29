@@ -12,7 +12,7 @@ async function getDB() {
         db.createObjectStore(STORE_NAME, { keyPath: 'id' });
         // we'll add 'id' = createKey(job) manually before saving
       }
-    }
+    },
   });
 }
 

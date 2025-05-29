@@ -1,16 +1,17 @@
-import { JobResult } from './job-result'
+import { JobResult } from './job-result';
 
 export interface WebSocketOutGoingMessage {
-  type: 'refreshDataRequest' | 'fetchDataRequest'
+  type: 'fetchDataRequest';
   payload: {
-    wallet: string,
-    timeframe: number,
-    timeZone: string,
-    blockchains?: string[]
-  }
+    wallet: string;
+    timeframe: number;
+    timeZone: string;
+    currency: string;
+    blockchains?: string[];
+  };
 }
 
 export interface WebSocketIncomingMessage {
-  timestamp: number
-  payload: JobResult[]
+  timestamp: number;
+  payload: JobResult[];
 }

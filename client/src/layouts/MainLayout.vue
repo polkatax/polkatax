@@ -16,8 +16,9 @@ import CurrencyDropdown from '../shared-module/components/currency-dropdown/Curr
           </div>
         </q-toolbar-title>
         <q-tabs align="left" class="desktop-only">
-          <q-route-tab to="/staking-rewards" label="Staking rewards" />
-          <q-route-tab to="/transfers" label="Transfers & Swaps (alpha)" />
+          <q-route-tab to="/wallets" label="Wallets" />
+          <q-route-tab to="/blockchains" label="Blockchains" />
+          <q-route-tab to="/taxable-events" label="Taxable events" />
         </q-tabs>
         <div>
           <CurrencyDropdown />
