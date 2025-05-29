@@ -4,9 +4,9 @@ import dotenv from "dotenv";
 dotenv.config({ path: __dirname + "/../../.env" });
 import { TokenPriceHistoryService } from "./services/token-price-history.service";
 import { TokenPriceService } from "./services/token-price.service";
-import { CurrentPriceRequest } from "../model/crypto-currency-prices/current-price-request";
 import { DIContainer } from "./di-container";
 import { PreferredQuoteCurrency } from "../model/preferred-quote-currency";
+import { formatDate } from "../common/util/date-utils";
 
 export const cryptoCurrencyPricesServer = {
   init: async () => {
@@ -22,17 +22,6 @@ export const cryptoCurrencyPricesServer = {
     });
 
     fastify.route({
-      method: "POST",
-      url: "/crypto-current-prices",
-      handler: async (
-        request: FastifyRequest<{ Body: CurrentPriceRequest }>,
-      ) => {
-        const { tokenIds, currency } = request.body;
-        return tokenPriceService.fetchCurrentPrices(tokenIds, currency);
-      },
-    });
-
-    fastify.route({
       method: "GET",
       url: "/crypto-historic-prices/:tokenId",
       handler: async (
@@ -43,7 +32,15 @@ export const cryptoCurrencyPricesServer = {
       ) => {
         const { tokenId } = request.params;
         const { currency } = request.query;
-        return tokenPriceHistoryService.getHistoricPrices(tokenId, currency);
+        const [ current, historic ] = await Promise.all([
+          tokenPriceService.fetchCurrentPrices([tokenId], currency),
+          tokenPriceHistoryService.getHistoricPrices(tokenId, currency)
+        ])
+        const today = formatDate(new Date())
+        if (current && current[tokenId] && !historic.quotes[today]) {
+          historic.quotes[today] = current[tokenId]
+        }
+        return historic
       },
     });
 

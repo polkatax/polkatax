@@ -90,11 +90,11 @@ wsMsgReceived$.pipe(mergeMap((array) => from(array))).subscribe(async (job) => {
       j.currency === job.currency
   );
   if (job.data) {
-    filterOnDateRange(job, job.data)
-    job.data = mapRawValues(job, job.data)
+    filterOnDateRange(job, job.data);
+    job.data = mapRawValues(job, job.data);
   }
   if (matching) {
-    matching.data = job.data
+    matching.data = job.data;
     matching.status = job.status;
     matching.error = job.error;
     await createOrUpdateJobInIndexedDB(matching);
@@ -131,7 +131,7 @@ export const useSharedStore = defineStore('shared', {
           currency: await firstValueFrom(
             useSharedStore().currency$.pipe(filter((c) => c !== undefined))
           ),
-          timeframe: this.timeFrame
+          timeframe: this.timeFrame,
         },
       });
     },

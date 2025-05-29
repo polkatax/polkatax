@@ -6,22 +6,6 @@ export class CryptoCurrencyPricesService {
     return process.env["CRYPTO_CURRENCY_PRICES_PORT"] || 3003;
   }
 
-  fetchCurrentPrices(
-    tokenIds: string[],
-    currency: string,
-  ): Promise<{ [symbol: string]: number }> {
-    const helper = new RequestHelper();
-    helper.defaultHeader = {
-      ...helper.defaultHeader,
-      "Content-Type": "application/json",
-    };
-    return helper.req(
-      `http://localhost:${this.port}/crypto-current-prices`,
-      "POST",
-      { tokenIds, currency },
-    );
-  }
-
   fetchHistoricalPrices(
     tokenId: string,
     currency: string,

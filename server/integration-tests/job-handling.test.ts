@@ -168,6 +168,28 @@ describe("Proper handling of jobs", () => {
     expect(wsWrapper.receivedMessages[2].payload[0].error.code).toBe(500);
   });
 
+  test("handle invalid wallet address", async () => {
+    server = setupServer(...passThroughHandlers);
+
+    await server.listen();
+    wsWrapper = new WsWrapper();
+    await wsWrapper.connect();
+    wsWrapper.send({
+      type: "fetchDataRequest",
+      requestId: "xyz",
+      timestamp: 0,
+      payload: {
+        wallet: "invalid-address",
+        timeframe: year,
+        currency: "USD",
+        blockchains: ["polkadot"],
+      },
+    });
+    await wsWrapper.waitForNMessages(1);
+    expect(wsWrapper.receivedMessages[0].error).not.toBeUndefined();
+    expect(wsWrapper.receivedMessages[0].error.code).toBe(400);
+  });
+
   test("retry failed jobs", async () => {
     const errorMock = http.post(
       "https://*.api.subscan.io/api/scan/metadata",

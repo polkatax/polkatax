@@ -129,7 +129,6 @@ export class WebSocketManager {
         logger.info(
           "WebSocketManager: Client send mal-formatted message: " + rawMsg,
         );
-        console.log(result.error.format());
         return this.sendError(socket, { code: 400, msg: "Invalid message" });
       }
 
