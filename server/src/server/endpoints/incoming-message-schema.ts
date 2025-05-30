@@ -35,7 +35,7 @@ export const WalletInfoSchema = z.object({
 export const WebSocketIncomingMessageSchema = z.object({
   type: z.literal("fetchDataRequest"),
   timestamp: z.number(),
-  requestId: z.string(),
+  reqId: z.string(),
   payload: WalletInfoSchema,
 });
 

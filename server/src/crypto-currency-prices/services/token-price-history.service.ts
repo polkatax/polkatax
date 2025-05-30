@@ -109,10 +109,8 @@ export class TokenPriceHistoryService {
 
     return (
       this.cachedPrices[combinedIdx] &&
-      (this.cachedPrices[combinedIdx][formatDate(yesterday)] ||
-        new Date().getTime() - this.cachedPrices[combinedIdx].timestamp <
-          MAX_AGE)
-    );
+      this.cachedPrices[combinedIdx][formatDate(yesterday)]
+    )
   }
 
   private async fetchQuotesForId(

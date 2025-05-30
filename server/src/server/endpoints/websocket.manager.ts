@@ -49,7 +49,7 @@ export class WebSocketManager {
     }
 
     const jobs = this.jobManager.enqueue(
-      msg.requestId,
+      msg.reqId,
       wallet,
       "staking_rewards",
       timeframe,
@@ -59,7 +59,7 @@ export class WebSocketManager {
 
     return {
       type: "data",
-      correspondingRequestId: msg.requestId,
+      reqId: msg.reqId,
       payload: jobs,
       timestamp: Date.now(),
     };
@@ -127,7 +127,7 @@ export class WebSocketManager {
       const result = WebSocketIncomingMessageSchema.safeParse(msg);
       if (!result.success) {
         logger.info(
-          "WebSocketManager: Client send mal-formatted message: " + rawMsg,
+          "WebSocketManager: Client sent mal-formatted message: " + rawMsg,
         );
         return this.sendError(socket, { code: 400, msg: "Invalid message" });
       }
@@ -135,7 +135,7 @@ export class WebSocketManager {
       try {
         const response = await this.handleIncomingMsg(socket, msg);
         logger.info(
-          `WebSocketManager: sending msg. RequestId: ${response.correspondingRequestId}, type: ${response.type}, jobs: ${response.payload.length}`,
+          `WebSocketManager: sending msg. RequestId: ${response.reqId}, type: ${response.type}, jobs: ${response.payload.length}`,
         );
         socket.send(JSON.stringify(response));
       } catch (error) {
@@ -169,7 +169,7 @@ export class WebSocketManager {
           );
           c.socket.send(
             JSON.stringify({
-              correspondingRequestId: job.reqId,
+              reqId: job.reqId,
               payload: [job],
               timestamp: Date.now(),
               type: "data",

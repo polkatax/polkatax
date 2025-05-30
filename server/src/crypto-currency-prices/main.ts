@@ -32,15 +32,14 @@ export const cryptoCurrencyPricesServer = {
       ) => {
         const { tokenId } = request.params;
         const { currency } = request.query;
-        const [ current, historic ] = await Promise.all([
-          tokenPriceService.fetchCurrentPrices([tokenId], currency),
-          tokenPriceHistoryService.getHistoricPrices(tokenId, currency)
-        ])
-        const today = formatDate(new Date())
-        if (current && current[tokenId] && !historic.quotes[today]) {
-          historic.quotes[today] = current[tokenId]
+        const quotes = await tokenPriceHistoryService.getHistoricPrices(tokenId, currency)
+        const todayFormatted = formatDate(new Date())
+        const yesterday = new Date()
+        yesterday.setDate(yesterday.getDate() - 1);
+        if (quotes?.quotes[formatDate(yesterday)] && !quotes.quotes[todayFormatted]) { // use yesterday eod quotes if current day not finished yet
+          quotes.quotes[todayFormatted] = quotes.quotes[formatDate(yesterday)]
         }
-        return historic
+        return quotes
       },
     });
 

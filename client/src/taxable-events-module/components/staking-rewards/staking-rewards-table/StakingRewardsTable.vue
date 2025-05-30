@@ -83,15 +83,7 @@ const columns = computed(() => [
     field: 'fiatValue',
     format: (num: number) => valueFormatter.format(num),
     sortable: true,
-  },
-  {
-    name: 'valueNow',
-    align: 'right',
-    label: `Value now (${rewards.value?.currency})`,
-    field: 'valueNow',
-    format: (num: number) => valueFormatter.format(num),
-    sortable: true,
-  },
+  }
 ]);
 
 const rows = computed(() => {

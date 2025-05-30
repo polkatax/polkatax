@@ -88,6 +88,7 @@ import TimeFrameDropdown from '../../shared-module/components/time-frame-dropdow
 import { computed, onUnmounted, Ref, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useSharedStore } from '../../shared-module/store/shared.store';
+import { isValidAddress } from '../util/is-valid-address';
 
 const store = useSharedStore();
 const router = useRouter();
@@ -131,7 +132,7 @@ function startSyncing() {
 }
 
 const isDisabled = computed(() => {
-  return store.address.trim() === '';
+  return !isValidAddress(store.address?.trim());
 });
 
 const meme = ref('img/dollar-4932316_1280.jpg');

@@ -10,7 +10,7 @@
     <tr>
       <td class="text-left q-pa-sm">Blockchain:</td>
       <td class="text-right q-pa-sm">
-        {{ rewards.chain }}
+        {{ blockchainLabel ?? rewards.chain }}
       </td>
     </tr>
     <tr>
@@ -26,27 +26,9 @@
       </td>
     </tr>
     <tr>
-      <td class="text-left q-pa-sm">Average rewards per day:</td>
-      <td class="text-right q-pa-sm">
-        {{ formatTokenAmount(averageDailyRewards) + ' ' + rewards!.token }}
-      </td>
-    </tr>
-    <tr>
       <td class="text-left q-pa-sm">Value at payout time:</td>
       <td class="text-right q-pa-sm" data-testid="value-at-payout-time">
         {{ formatCurrency(rewards?.summary?.fiatValue ?? -0) }}
-      </td>
-    </tr>
-    <tr>
-      <td class="text-left q-pa-sm">Value now:</td>
-      <td class="text-right q-pa-sm">
-        {{ formatCurrency(rewards?.summary?.valueNow ?? 0) }}
-      </td>
-    </tr>
-    <tr>
-      <td class="text-left q-pa-sm">Current price:</td>
-      <td class="text-right q-pa-sm">
-        {{ formatPrice(rewards!.currentPrice) }}
       </td>
     </tr>
   </table>
@@ -57,31 +39,21 @@ import { computed, onBeforeUnmount, ref, Ref } from 'vue';
 import { useStakingRewardsStore } from '../store/staking-rewards.store';
 import { formatTimeFrame } from '../../../../shared-module/util/date-utils';
 import { Rewards } from '../../../../shared-module/model/rewards';
+import { useSharedStore } from '../../../../shared-module/store/shared.store';
+import { combineLatest } from 'rxjs';
 
 const rewardsStore = useStakingRewardsStore();
 
 const rewards: Ref<Rewards | undefined> = ref(undefined);
+const blockchainLabel: Ref<string> = ref('')
 
-const subscription = rewardsStore.rewards$.subscribe(async (r) => {
-  rewards.value = r;
+const subscription = combineLatest([useSharedStore().substrateChains$, rewardsStore.rewards$]).subscribe(async ([chains, stakingRewards]) => {
+  rewards.value = stakingRewards;
+  blockchainLabel.value = chains.chains.find(c => c.domain === stakingRewards?.chain)?.label ?? ''
 });
 
 onBeforeUnmount(() => {
   subscription.unsubscribe();
-});
-
-const averageDailyRewards = computed(() => {
-  if (!rewardsStore.rewards$) {
-    return 0;
-  }
-  return (
-    (rewards.value!.summary.amount /
-      (rewards.value!.endDate - rewards.value!.startDate)) *
-    24 *
-    60 *
-    60 *
-    1000
-  );
 });
 
 const timeFrame = computed(() => {

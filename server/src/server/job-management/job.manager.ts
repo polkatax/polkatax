@@ -2,7 +2,7 @@ import { JobsCache } from "./jobs.cache";
 import * as subscanChains from "../../../res/gen/subscan-chains.json";
 import { logger } from "../logger/logger";
 import { Job } from "../../model/job";
-import { filter, firstValueFrom, isEmpty } from "rxjs";
+import { filter, firstValueFrom } from "rxjs";
 import { determineNextJob } from "./determine-next-job";
 import { AwilixContainer } from "awilix";
 import { isEvmAddress } from "../data-aggregation/helper/is-evm-address";
@@ -19,7 +19,7 @@ export class JobManager {
     const isEvmWallet = isEvmAddress(wallet)
     return subscanChains.chains
       .filter((c) => c.stakingPallets.length > 0 && !c.pseudoStaking)
-      .filter((c) => !isEvmWallet || c.evmPallet)
+      .filter((c) => !isEvmWallet || (c.evmPallet || c.evmAddressSupport))
       .map((c) => c.domain);
   }
 
@@ -38,9 +38,9 @@ export class JobManager {
     type: "staking_rewards" | "transactions",
     timeframe: number,
     currency: string,
-    blockchains?: string[],
+    blockchains: string[] = [],
   ): Job[] {
-    blockchains = blockchains ? blockchains : this.getStakingChains(wallet)
+    blockchains = blockchains.length > 0 ? blockchains : this.getStakingChains(wallet)
 
     const matchingJobs = this.jobsCache
       .fetchJobs(wallet)

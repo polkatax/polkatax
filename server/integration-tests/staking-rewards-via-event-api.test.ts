@@ -135,7 +135,7 @@ describe("fetch staking rewards via the events API", () => {
     delete msg[2].payload[0].lastModified;
     delete msg[2].timestamp;
     expect(msg[2]).toEqual({
-      correspondingRequestId: "abc123",
+      reqId: "abc123",
       payload: [
         {
           reqId: "abc123",
@@ -325,7 +325,7 @@ describe("fetch staking rewards via the events API", () => {
     const msg = wsWrapper.receivedMessages;
 
     expect(msg.length).toBe(3);
-    expect(msg[2].correspondingRequestId).toBe("abc123");
+    expect(msg[2].reqId).toBe("abc123");
     expect(msg[2].payload.length).toBe(1);
     expect(msg[2].payload[0].status).toBe("done");
     expect(msg[2].payload[0].data).toEqual({

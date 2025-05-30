@@ -13,7 +13,7 @@ describe("WebSocketIncomingMessageSchema", () => {
   const baseMessage = {
     type: "fetchDataRequest",
     timestamp: Date.now(),
-    requestId: "abc-123",
+    reqId: "abc-123",
     payload: {
       currency: "USD",
       timeframe: 30,
