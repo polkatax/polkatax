@@ -1,9 +1,18 @@
 <template>
   <q-page class="q-px-sm q-mx-auto content">
     <div class="flex justify-center q-pa-md">
-      <q-btn color="purple" label="Synchronizing" icon="sync" class="icon-spinner" :style="{ 'cursor': 'default', 'opacity': isSynchronizing ? 1: 0}"/>
+      <q-btn
+        color="purple"
+        label="Synchronizing"
+        icon="sync"
+        class="icon-spinner"
+        :style="{ cursor: 'default', opacity: isSynchronizing ? 1 : 0 }"
+      />
     </div>
-    <div class="table q-my-md flex justify-center" v-if="jobs?.length > 0 && chains.length > 0">
+    <div
+      class="table q-my-md flex justify-center"
+      v-if="jobs?.length > 0 && chains.length > 0"
+    >
       <q-table
         :rows="jobs"
         :columns="columns"
@@ -45,13 +54,21 @@
               </q-badge>
             </q-td>
             <q-td key="amountRewards" :props="props">
-              {{ props.row?.data?.summary?.amount !== undefined ? props.row?.data?.summary?.amount.toPrecision(4) : '-' }}
+              {{
+                props.row?.data?.summary?.amount !== undefined
+                  ? props.row?.data?.summary?.amount.toPrecision(4)
+                  : '-'
+              }}
             </q-td>
             <q-td key="token" :props="props">
               {{ props.row?.data?.token }}
             </q-td>
             <q-td key="lastSynchronized" :props="props">
-              {{ props.row?.lastModified ? formatDate(props.row?.lastModified) : '?' }}
+              {{
+                props.row?.lastModified
+                  ? formatDate(props.row?.lastModified)
+                  : '?'
+              }}
             </q-td>
             <q-td key="actions" :props="props">
               <div
@@ -102,9 +119,7 @@
         No staking rewards found yet. Synchronization is in ongoing.
       </div>
     </div>
-    <div class="q-pa-md">
-
-  </div>
+    <div class="q-pa-md"></div>
   </q-page>
 </template>
 
@@ -122,8 +137,8 @@ const route = useRoute();
 const router = useRouter();
 
 const jobs: Ref<JobResult[]> = ref([]);
-const chains: Ref<{ domain: string, label: string}[]> = ref([])
-const isSynchronizing: Ref<boolean> = ref(true)
+const chains: Ref<{ domain: string; label: string }[]> = ref([]);
+const isSynchronizing: Ref<boolean> = ref(true);
 
 store.setCurrency(route.params.currency as string);
 store.setWallet(route.params.wallet as string);
@@ -137,14 +152,16 @@ const syncSubscription = store.isSynchronizing$.subscribe((synchronizing) => {
   isSynchronizing.value = synchronizing;
 });
 
-const blokchainsSubscription = useSharedStore().substrateChains$.subscribe(substrateChains => {
-  chains.value = substrateChains.chains
-})
+const blokchainsSubscription = useSharedStore().substrateChains$.subscribe(
+  (substrateChains) => {
+    chains.value = substrateChains.chains;
+  }
+);
 
 onUnmounted(() => {
-  jobsSubscription.unsubscribe()
-  blokchainsSubscription.unsubscribe()
-  syncSubscription.unsubscribe()
+  jobsSubscription.unsubscribe();
+  blokchainsSubscription.unsubscribe();
+  syncSubscription.unsubscribe();
 });
 
 const columns = ref([
@@ -153,7 +170,7 @@ const columns = ref([
     name: 'blockchain',
     align: 'left',
     label: 'Blockchain',
-    sortable: true
+    sortable: true,
   },
   { name: 'timeframe', label: 'Year' },
   { name: 'currency', label: 'Currency' },
@@ -164,12 +181,12 @@ const columns = ref([
 ]);
 
 function getLabelForBlockchain(domain: string) {
-  return chains.value.find(c => c.domain === domain)?.label ?? ''
+  return chains.value.find((c) => c.domain === domain)?.label ?? '';
 }
 
 function showTaxableEvents(row: any) {
   router.push(
-    `/taxable-events/${row.wallet}/${row.blockchain}/${row.timeframe}/${row.currency}`
+    `/wallets/${row.wallet}/${row.timeframe}/${row.currency}/${row.blockchain}`
   );
 }
 

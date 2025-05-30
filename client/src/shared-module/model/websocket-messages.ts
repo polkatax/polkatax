@@ -13,5 +13,5 @@ export interface WebSocketOutGoingMessage {
 export interface WebSocketIncomingMessage {
   timestamp: number;
   payload: JobResult[];
-  error?: { code: number, msg: string }
+  error?: { code: number; msg: string };
 }

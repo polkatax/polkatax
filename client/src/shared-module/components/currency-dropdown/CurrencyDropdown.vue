@@ -1,5 +1,5 @@
 <template>
-  <div class="q-pa-md">
+  <div>
     <q-btn-dropdown color="primary" no-caps>
       <template v-slot:label>
         <span v-html="currency?.flag" />

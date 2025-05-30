@@ -7,23 +7,20 @@
           class="row-xl row-lg row-md column-sm column-xs q-pt-xs-sm q-pt-sm-sm q-pt-md-none q-pt-lg-none q-pt-xl-none items-center"
         >
           <div class="flex justify-center items-center">
-            <img src="/white.ico" style="height: 3rem; margin: 5px" />
-            <div class="q-ml-sm text-h5">PolkaTax</div>
+            <img src="/white.ico" style="height: 2.25rem; margin: 5px" v-if="!parentRoute"/>
+            <q-btn v-if="parentRoute" outline color="white" label="Back" :to="parentRoute" />
+            <div class="q-ml-sm text-h5">{{ route.name }}</div>
           </div>
         </q-toolbar-title>
         <q-tabs align="left" class="desktop-only">
           <q-route-tab to="/wallets" label="Wallets" />
-          <q-route-tab to="/blockchains" label="Blockchains" />
-          <q-route-tab to="/taxable-events" label="Taxable events" />
+          <q-route-tab to="/guide" label="Guide" />
         </q-tabs>
-        <div>
-          <CurrencyDropdown />
-        </div>
+        <CurrencyDropdown />
       </q-toolbar>
-      <q-tabs align="left" class="mobile-only2">
-        <q-route-tab to="/staking-rewards" label="Staking rewards" />
-        <q-route-tab to="/transfers" label="Transfers & Swaps" />
-      </q-tabs>
+      <div class="q-py-sm q-px-md">
+        <BreadCrumbs />
+      </div>
     </q-header>
 
     <q-page-container>
@@ -56,29 +53,43 @@
   </q-layout>
 </template>
 <script setup lang="ts">
-import { onBeforeUnmount, ref } from 'vue';
+import { computed, onBeforeUnmount, ref } from 'vue';
 import CurrencyDropdown from '../shared-module/components/currency-dropdown/CurrencyDropdown.vue';
+import BreadCrumbs from '../shared-module/components/bread-crumbs/BreadCrumbs.vue';
 import { useSharedStore } from '../shared-module/store/shared.store';
-import {  merge} from 'rxjs'
-const alert = ref(false)
-const errorMsg = ref('')
+import { merge } from 'rxjs';
+import { useRoute } from 'vue-router';
 
-const subscription = merge(useSharedStore().webSocketConnectionError$, useSharedStore().webSocketResponseError$).subscribe(err => {
-  console.log(JSON.stringify(err))
+const route = useRoute();
+const alert = ref(false);
+const errorMsg = ref('');
+
+const subscription = merge(
+  useSharedStore().webSocketConnectionError$,
+  useSharedStore().webSocketResponseError$
+).subscribe((err) => {
+  console.log(JSON.stringify(err));
   switch (err.code) {
     case 429:
-      errorMsg.value = 'Too many request. Please try again later.'
-      break
+      errorMsg.value = 'Too many request. Please try again later.';
+      break;
     case 400:
-      errorMsg.value = 'The data sent to the server is invalid.'
-      break
+      errorMsg.value = 'The data sent to the server is invalid.';
+      break;
     default:
-      errorMsg.value = 'There was an error connecting to the server. Please try again later.'
+      errorMsg.value =
+        'There was an error connecting to the server. Please try again later.';
   }
-  alert.value = true
-})
+  alert.value = true;
+});
 
 onBeforeUnmount(() => {
-  subscription.unsubscribe()
-})
+  subscription.unsubscribe();
+});
+
+const parentRoute = computed(() => {
+  return route.meta.parent && typeof route.meta.parent === 'function'
+      ? route.meta.parent(route)
+      : undefined;
+});
 </script>

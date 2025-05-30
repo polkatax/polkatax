@@ -55,6 +55,9 @@
                 {{ props.row.currency }}
               </q-badge>
             </q-td>
+            <q-td key="delete" :props="props">
+              <q-btn outline color="primary" icon="delete" @click="confirmDelete(props.row)"></q-btn>
+            </q-td>
           </q-tr>
         </template>
       </q-table>
@@ -89,7 +92,9 @@ import { computed, onUnmounted, Ref, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useSharedStore } from '../../shared-module/store/shared.store';
 import { isValidAddress } from '../util/is-valid-address';
-
+import { useQuasar } from 'quasar';
+import { JobResult } from '../../shared-module/model/job-result';
+const $q = useQuasar()
 const store = useSharedStore();
 const router = useRouter();
 
@@ -141,10 +146,22 @@ const columns = ref([
   { name: 'done', align: 'left', label: 'Status', field: 'done' },
   { name: 'wallet', align: 'left', label: 'Wallet', field: 'wallet' },
   { name: 'timeframe', label: 'Year', field: 'timeframe' },
-  { name: 'currency', label: 'Currency', field: 'currency' },
+  { name: 'currency', label: 'Currency' },
+  { name: 'delete', label: 'Delete' },
 ]);
 
 function navigateToJob(job: any) {
-  router.push(`/blockchains/${job.wallet}/${job.timeframe}/${job.currency}`);
+  router.push(`/wallets/${job.wallet}/${job.timeframe}/${job.currency}`);
 }
+
+function confirmDelete (job: JobResult) {
+      $q.dialog({
+        title: 'Confirm',
+        message: 'Do you want to remove this wallet and its data?',
+        cancel: true,
+        persistent: true
+      }).onOk(() => {
+        store.removeWallet(job)
+      })
+    }
 </script>

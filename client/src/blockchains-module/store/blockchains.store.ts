@@ -13,26 +13,39 @@ const jobsMatchingWallet$ = combineLatest([
   currency$,
 ]).pipe(
   map(([jobs, wallet, timeframe, currency]) => {
+    return jobs.filter(
+      (j) =>
+        j.wallet === wallet &&
+        j.timeframe === timeframe &&
+        j.currency === currency
+    );
+  })
+);
+
+const syncedChains$ = jobsMatchingWallet$.pipe(
+  map((jobs) => {
     return jobs
       .filter(
         (j) =>
-          j.wallet === wallet &&
-          j.timeframe === timeframe &&
-          j.currency === currency
-      )}))
+          j.status === 'error' ||
+          (j.status === 'done' && j.data?.summary?.amount) ||
+          0 > 0
+      )
+      .sort((a, b) => (a.blockchain > b.blockchain ? 1 : -1));
+  })
+);
 
-const syncedChains$ = jobsMatchingWallet$.pipe(map(jobs => {
-  return jobs.filter((j) => j.status === 'error' || (j.status === 'done' && j.data?.summary?.amount || 0 > 0))
-  .sort((a, b) => (a.blockchain > b.blockchain ? 1 : -1))
-}))
-
-const isSynchronizing$ = jobsMatchingWallet$.pipe(map(jobs => jobs.some(j => j.status === 'pending' || j.status === 'in_progress')))
+const isSynchronizing$ = jobsMatchingWallet$.pipe(
+  map((jobs) =>
+    jobs.some((j) => j.status === 'pending' || j.status === 'in_progress')
+  )
+);
 
 export const useBlockchainsStore = defineStore('blockchains', {
   state: () => {
     return {
       syncedChains$,
-      isSynchronizing$
+      isSynchronizing$,
     };
   },
   actions: {

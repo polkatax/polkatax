@@ -1,4 +1,16 @@
-import { RouteRecordRaw } from 'vue-router';
+import { RouteLocationNormalizedLoaded, RouteRecordRaw } from 'vue-router';
+
+const breadcrumbs = {
+  Wallets: () => ({ label: 'Wallets', route: '/wallets' }),
+  Blockchains: (route: RouteLocationNormalizedLoaded) => ({
+    label: 'Blockchains',
+    route: `/wallets/${route.params.wallet}/${route.params.timeframe}/${route.params.currency}`,
+  }),
+  TaxableEvents: (route: RouteLocationNormalizedLoaded) => ({
+    label: 'Taxable Events',
+    route: `/wallets/${route.params.wallet}/${route.params.timeframe}/${route.params.currency}/${route.params.blockchain}`,
+  }),
+};
 
 const routes: RouteRecordRaw[] = [
   {
@@ -8,23 +20,41 @@ const routes: RouteRecordRaw[] = [
       {
         path: '',
         redirect: 'wallets',
+        meta: { breadcrumbs: [breadcrumbs.Wallets] },
       },
       {
+        name: 'Wallets',
         path: 'wallets',
         component: () =>
           import('src/wallets-module/components/WalletsDashboard.vue'),
+        meta: { breadcrumbs: [breadcrumbs.Wallets] },
       },
       {
-        path: 'blockchains/:wallet/:timeframe/:currency',
+        name: 'Blockchains',
+        path: 'wallets/:wallet/:timeframe/:currency',
         component: () =>
           import('src/blockchains-module/components/BlockchainList.vue'),
+        meta: {
+          breadcrumbs: [breadcrumbs.Wallets, breadcrumbs.Blockchains],
+          parent: () => '/wallets',
+        },
       },
       {
-        path: 'taxable-events/:wallet/:blockchain/:timeframe/:currency',
+        name: 'Taxable Events',
+        path: 'wallets/:wallet/:timeframe/:currency/:blockchain',
         component: () =>
           import(
             'src/taxable-events-module/components/TaxableEventsTabView.vue'
           ),
+        meta: {
+          breadcrumbs: [
+            breadcrumbs.Wallets,
+            breadcrumbs.Blockchains,
+            breadcrumbs.TaxableEvents,
+          ],
+          parent: (route: RouteLocationNormalizedLoaded) =>
+            `/wallets/${route.params.wallet}/${route.params.timeframe}/${route.params.currency}`,
+        },
       },
     ],
   },

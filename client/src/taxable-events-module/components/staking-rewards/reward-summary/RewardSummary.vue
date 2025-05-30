@@ -45,11 +45,15 @@ import { combineLatest } from 'rxjs';
 const rewardsStore = useStakingRewardsStore();
 
 const rewards: Ref<Rewards | undefined> = ref(undefined);
-const blockchainLabel: Ref<string> = ref('')
+const blockchainLabel: Ref<string> = ref('');
 
-const subscription = combineLatest([useSharedStore().substrateChains$, rewardsStore.rewards$]).subscribe(async ([chains, stakingRewards]) => {
+const subscription = combineLatest([
+  useSharedStore().substrateChains$,
+  rewardsStore.rewards$,
+]).subscribe(async ([chains, stakingRewards]) => {
   rewards.value = stakingRewards;
-  blockchainLabel.value = chains.chains.find(c => c.domain === stakingRewards?.chain)?.label ?? ''
+  blockchainLabel.value =
+    chains.chains.find((c) => c.domain === stakingRewards?.chain)?.label ?? '';
 });
 
 onBeforeUnmount(() => {

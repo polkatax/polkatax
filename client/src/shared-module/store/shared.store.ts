@@ -84,41 +84,52 @@ fetchAllJobsFromIndexedDB().then((jobs) => {
   jobs$.next(sortJobs(storedJobs));
 });
 
-wsMsgReceived$.pipe(filter(msg => !msg.error), map(msg => msg.payload), mergeMap((array) => from(array))).subscribe(async (job) => {
-  const jobs = await firstValueFrom(jobs$);
-  const matching = jobs.find(
-    (j) =>
-      j.wallet === job.wallet &&
-      j.blockchain === job.blockchain &&
-      j.timeframe === job.timeframe &&
-      j.currency === job.currency
-  );
-  if (job.data) {
-    filterOnDateRange(job, job.data);
-    job.data = mapRawValues(job, job.data);
-  }
-  if (matching) {
-    matching.data = job.data;
-    matching.status = job.status;
-    matching.error = job.error;
-    await createOrUpdateJobInIndexedDB(matching);
-  } else {
-    jobs.push(job);
-    await createOrUpdateJobInIndexedDB(job);
-  }
-  jobs$.next([...sortJobs(jobs)]);
-});
+wsMsgReceived$
+  .pipe(
+    filter((msg) => !msg.error),
+    map((msg) => msg.payload),
+    mergeMap((array) => from(array))
+  )
+  .subscribe(async (job) => {
+    const jobs = await firstValueFrom(jobs$);
+    const matching = jobs.find(
+      (j) =>
+        j.wallet === job.wallet &&
+        j.blockchain === job.blockchain &&
+        j.timeframe === job.timeframe &&
+        j.currency === job.currency
+    );
+    if (job.data) {
+      filterOnDateRange(job, job.data);
+      job.data = mapRawValues(job, job.data);
+    }
+    if (matching) {
+      matching.data = job.data;
+      matching.status = job.status;
+      matching.error = job.error;
+      await createOrUpdateJobInIndexedDB(matching);
+    } else {
+      jobs.push(job);
+      await createOrUpdateJobInIndexedDB(job);
+    }
+    jobs$.next([...sortJobs(jobs)]);
+  });
 
-const webSocketResponseError$ = wsMsgReceived$.pipe(filter(msg => !!msg.error), map(msg => msg.error!))
+const webSocketResponseError$ = wsMsgReceived$.pipe(
+  filter((msg) => !!msg.error),
+  map((msg) => msg.error!)
+);
 
 const currency$ = new ReplaySubject<string>(1);
 from(fetchCurrency())
   .pipe(take(1))
   .subscribe((currency) => currency$.next(currency));
 
-const webSocketConnectionError$ = wsError$.pipe(map(() => ({ code: 503, msg: "Connection error" })))
+const webSocketConnectionError$ = wsError$.pipe(
+  map(() => ({ code: 503, msg: 'Connection error' }))
+);
 
-const substrateChains$ = from(fetchSubscanChains()).pipe(shareReplay())
+const substrateChains$ = from(fetchSubscanChains()).pipe(shareReplay());
 
 export const useSharedStore = defineStore('shared', {
   state: () => {
@@ -148,5 +159,10 @@ export const useSharedStore = defineStore('shared', {
         },
       });
     },
+    async removeWallet(job: JobResult) {
+      const jobs = (await firstValueFrom(this.jobs$)).filter(j => j.wallet !== job.wallet || j.timeframe !== job.timeframe || job.currency !== j.currency)
+      await createOrUpdateJobInIndexedDB([...jobs]);
+      jobs$.next([...jobs])
+    }
   },
 });
