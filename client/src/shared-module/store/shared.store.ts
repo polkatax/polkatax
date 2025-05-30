@@ -15,6 +15,7 @@ import { fetchCurrency } from '../service/fetch-currency';
 import {
   createOrUpdateJobInIndexedDB,
   fetchAllJobsFromIndexedDB,
+  removeJobFromIndexedDB,
 } from '../service/job.repository';
 import { wsError$, wsMsgReceived$, wsSendMsg } from '../service/ws-connection';
 import { JobResult } from '../model/job-result';
@@ -86,7 +87,7 @@ fetchAllJobsFromIndexedDB().then((jobs) => {
 
 wsMsgReceived$
   .pipe(
-    filter((msg) => !msg.error),
+    filter((msg) => msg.type === 'data'),
     map((msg) => msg.payload),
     mergeMap((array) => from(array))
   )
@@ -160,9 +161,18 @@ export const useSharedStore = defineStore('shared', {
       });
     },
     async removeWallet(job: JobResult) {
-      const jobs = (await firstValueFrom(this.jobs$)).filter(j => j.wallet !== job.wallet || j.timeframe !== job.timeframe || job.currency !== j.currency)
-      await createOrUpdateJobInIndexedDB([...jobs]);
-      jobs$.next([...jobs])
+      const reqId = wsSendMsg({
+        type: 'unsubscribeRequest',
+        payload: {
+          wallet: job.wallet,
+          timeframe: job.timeframe,
+          currency: job.currency
+        }
+      })
+      await firstValueFrom(wsMsgReceived$.pipe(filter(m => m.type === 'acknowledgeUnsubscribe' && m.reqId === reqId)))
+      const toDelete = (await firstValueFrom(this.jobs$)).filter(j => j.wallet === job.wallet && j.timeframe === job.timeframe && job.currency === j.currency)
+      await Promise.all(toDelete.map(j => removeJobFromIndexedDB(j)))
+      jobs$.next(await fetchAllJobsFromIndexedDB())
     }
   },
 });

@@ -30,8 +30,8 @@ import {
   valueFormatter,
 } from '../../../../shared-module/util/number-formatters';
 import { formatDate } from '../../../../shared-module/util/date-utils';
-import { exportDefaultCsv } from '../service/export-default-csv';
-import { exportKoinlyCsv } from '../service/export-koinly-csv';
+import { exportDefaultCsv } from '../../../../shared-module/service/export-default-csv';
+import { exportKoinlyCsv } from '../../../../shared-module/service/export-koinly-csv';
 
 const rewardsStore = useStakingRewardsStore();
 const rewards: Ref<Rewards | undefined> = ref(undefined);
@@ -126,7 +126,7 @@ function exportRewardsAsKoinlyCsv() {
 
 async function exportRewardsAsPdf() {
   // loading exportPdf on demand due to module size.
-  const { exportPdf } = await import('../service/export-pdf');
+  const { exportPdf } = await import('../../../../shared-module/service/export-pdf');
   exportPdf(rewards.value!);
 }
 const amountFormatter = computed(() => tokenAmountFormatter(tokenDigits.value));

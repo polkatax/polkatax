@@ -1,11 +1,11 @@
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { Rewards } from '../../../../shared-module/model/rewards';
+import { Rewards } from '../model/rewards';
 import {
   formatCurrency,
   formatTokenAmount,
-} from '../../../../shared-module/util/number-formatters';
-import { formatTimeFrame } from '../../../../shared-module/util/date-utils';
+} from '../util/number-formatters';
+import { formatTimeFrame } from '../util/date-utils';
 
 export const exportPdf = (rewards: Rewards) => {
   const doc = new jsPDF();
@@ -74,5 +74,5 @@ export const exportPdf = (rewards: Rewards) => {
     },
   });
 
-  doc.save('staking-rewards.pdf');
+  doc.save(`staking-rewards-${rewards.chain}-${rewards.address.substring(0, 5)}-${rewards.timeFrame}.pdf`);
 };

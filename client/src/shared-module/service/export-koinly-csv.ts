@@ -1,6 +1,6 @@
 import { Parser } from '@json2csv/plainjs';
-import { Rewards } from '../../../../shared-module/model/rewards';
-import { formatDateUTC } from '../../../../shared-module/util/date-utils';
+import { Rewards } from '../model/rewards';
+import { formatDateUTC } from '../util/date-utils';
 import saveAs from 'file-saver';
 
 export const exportKoinlyCsv = (stakingRewards: Rewards) => {
@@ -17,6 +17,6 @@ export const exportKoinlyCsv = (stakingRewards: Rewards) => {
   const csv = parser.parse(values);
   saveAs(
     new Blob([csv], { type: 'text/plain;charset=utf-8' }),
-    'staking-rewards.csv'
+    `staking-rewards-koinly-${stakingRewards.chain}-${stakingRewards.address.substring(0, 5)}-${stakingRewards.timeFrame}.csv`
   );
 };

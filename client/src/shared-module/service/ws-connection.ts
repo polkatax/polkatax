@@ -19,15 +19,17 @@ socket.addEventListener('open', () => {
 });
 
 export const wsSendMsg = (msg: WebSocketOutGoingMessage) => {
+  const reqId = crypto.randomUUID()
   connected$.pipe(take(1)).subscribe(() => {
     socket.send(
       JSON.stringify({
         ...msg,
         timestamp: Date.now(),
-        reqId: crypto.randomUUID(),
+        reqId,
       })
     );
   });
+  return reqId
 };
 
 socket.addEventListener('message', (event) => {

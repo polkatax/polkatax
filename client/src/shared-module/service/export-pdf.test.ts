@@ -2,7 +2,7 @@ import { expect, jest, it, describe } from '@jest/globals';
 import { exportPdf } from './export-pdf';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { Rewards } from '../../../../shared-module/model/rewards';
+import { Rewards } from '../model/rewards';
 
 const mockDocInstance = {
   setFontSize: jest.fn<any>(),
@@ -18,14 +18,14 @@ jest.mock('jspdf', () => {
 
 jest.mock('jspdf-autotable', () => jest.fn());
 
-jest.mock('../../../../shared-module/util/number-formatters', () => ({
+jest.mock('../util/number-formatters', () => ({
   formatCurrency: jest.fn(
     (val: number, cur: string) => `$${val.toFixed(2)} ${cur}`
   ),
   formatTokenAmount: jest.fn((val: number) => val.toFixed(4)),
 }));
 
-jest.mock('../../../../shared-module/util/date-utils', () => ({
+jest.mock('..//util/date-utils', () => ({
   formatTimeFrame: jest.fn(() => '01/01/2024 - 01/31/2024'),
 }));
 
@@ -36,7 +36,7 @@ describe('exportPdf', () => {
       chain: 'Polkadot',
       currency: 'USD',
       address: '0x123',
-      timeFrame: { from: 1704067200, to: 1706659200 } as any,
+      timeFrame: 2024,
       summary: {
         amount: 123.4567,
         fiatValue: 987.65,
@@ -59,7 +59,7 @@ describe('exportPdf', () => {
       14,
       20
     );
-    expect(mockDocInstance.save).toHaveBeenCalledWith('staking-rewards.pdf');
+    expect(mockDocInstance.save).toHaveBeenCalledWith('staking-rewards-Polkadot-0x123-2024.pdf');
 
     // AutoTable called with correct config
     expect(autoTable).toHaveBeenCalled();

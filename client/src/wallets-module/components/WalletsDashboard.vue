@@ -56,7 +56,7 @@
               </q-badge>
             </q-td>
             <q-td key="delete" :props="props">
-              <q-btn outline color="primary" icon="delete" @click="confirmDelete(props.row)"></q-btn>
+              <q-btn outline color="primary" icon="delete" @click.stop="confirmDelete(props.row)"></q-btn>
             </q-td>
           </q-tr>
         </template>
@@ -64,7 +64,7 @@
     </div>
     <div v-if="!requests || requests.length === 0" class="q-my-xl">
       <div class="text-h6 text-center">
-        Export your staking rewards as CSV or JSON
+        Export your staking rewards as CSV or PDF
       </div>
       <div class="text-h6 text-center q-mt-md">
         A wide range of substrate chains and fiat currencies are supported.
@@ -156,8 +156,7 @@ function navigateToJob(job: any) {
 
 function confirmDelete (job: JobResult) {
       $q.dialog({
-        title: 'Confirm',
-        message: 'Do you want to remove this wallet and its data?',
+        title: 'Do you want to remove this wallet and its data?',
         cancel: true,
         persistent: true
       }).onOk(() => {

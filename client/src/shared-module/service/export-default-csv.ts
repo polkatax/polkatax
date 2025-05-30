@@ -1,6 +1,6 @@
 import { Parser } from '@json2csv/plainjs';
-import { Reward, Rewards } from '../../../../shared-module/model/rewards';
-import { formatDateUTC } from '../../../../shared-module/util/date-utils';
+import { Reward, Rewards } from '../model/rewards';
+import { formatDateUTC } from '../util/date-utils';
 import saveAs from 'file-saver';
 
 interface RewardsTableHeader extends Reward {
@@ -35,6 +35,6 @@ export const exportDefaultCsv = (rewards: Rewards) => {
   const csv = parser.parse(values);
   saveAs(
     new Blob([csv], { type: 'text/plain;charset=utf-8' }),
-    'staking-rewards.csv'
+    `staking-rewards-${rewards.chain}-${rewards.address.substring(0, 5)}-${rewards.timeFrame}.csv`
   );
 };

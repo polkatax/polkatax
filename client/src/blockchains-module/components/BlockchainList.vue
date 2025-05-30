@@ -35,6 +35,7 @@
               style="overflow-wrap: anywhere !important"
             >
               {{ props.row.wallet.substring(0, 5) + '...' }}
+              <q-tooltip>{{props.row.wallet}}</q-tooltip>
             </q-td>
             <q-td
               key="blockchain"
@@ -88,7 +89,8 @@
                   dense
                   round
                   icon="picture_as_pdf"
-                />
+                  @click.stop="pdfExport(props.row)"
+                ><q-tooltip>Export as PDF</q-tooltip></q-btn>
                 <q-btn
                   class="gt-xs"
                   size="12px"
@@ -96,15 +98,17 @@
                   dense
                   round
                   icon="view_list"
-                />
+                  @click.stop="csvExport(props.row)"
+                ><q-tooltip>Export as CSV</q-tooltip></q-btn>
                 <q-btn
                   class="gt-xs"
                   size="12px"
                   flat
                   dense
                   round
-                  icon="arrow_forward"
-                />
+                  icon="receipt"
+                  @click.stop="koinlyExport(props.row)"
+                ><q-tooltip>Koinly export</q-tooltip></q-btn>
               </div>
             </q-td>
           </q-tr>
@@ -131,6 +135,8 @@ import { JobResult } from '../../shared-module/model/job-result';
 import { useSharedStore } from '../../shared-module/store/shared.store';
 import { tokenAmountFormatter } from '../../shared-module/util/number-formatters';
 import { formatDate } from '../../shared-module/util/date-utils';
+import { exportDefaultCsv } from '../../shared-module/service/export-default-csv';
+import { exportKoinlyCsv } from '../../shared-module/service/export-koinly-csv';
 
 const store = useBlockchainsStore();
 const route = useRoute();
@@ -190,7 +196,19 @@ function showTaxableEvents(row: any) {
   );
 }
 
-const amountFormatter = computed(() => tokenAmountFormatter(4));
+function csvExport(jobResult: JobResult) {
+  exportDefaultCsv(jobResult.data);
+}
+
+function koinlyExport(jobResult: JobResult) {
+  exportKoinlyCsv(jobResult.data);
+}
+
+async function pdfExport(jobResult: JobResult) {
+  // loading exportPdf on demand due to module size.
+  const { exportPdf } = await import('../../shared-module/service/export-pdf');
+  exportPdf(jobResult.data);
+}
 </script>
 <style lang="scss">
 .icon-spinner i {

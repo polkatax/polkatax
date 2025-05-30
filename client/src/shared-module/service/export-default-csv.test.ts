@@ -1,5 +1,5 @@
 import { expect, jest, it, describe, beforeEach } from '@jest/globals';
-import { formatDateUTC } from '../../../../shared-module/util/date-utils';
+import { formatDateUTC } from '../util/date-utils';
 import saveAs from 'file-saver';
 import { exportDefaultCsv } from './export-default-csv';
 
@@ -15,7 +15,7 @@ jest.mock('file-saver', () => ({
   default: jest.fn(),
 }));
 
-jest.mock('../../../../shared-module/util/date-utils', () => ({
+jest.mock('../util/date-utils', () => ({
   formatDateUTC: jest.fn(),
 }));
 
@@ -30,6 +30,7 @@ describe('exportDefaultCsv', () => {
       chain: 'Kusama',
       currency: 'EUR',
       address: '0x123',
+      timeFrame: 2023,
       summary: {
         amount: 100,
         fiatValue: 500,
@@ -72,7 +73,7 @@ describe('exportDefaultCsv', () => {
 
     expect(saveAs).toHaveBeenCalledWith(
       expect.any(Blob),
-      'staking-rewards.csv'
+      'staking-rewards-Kusama-0x123-2023.csv'
     );
   });
 });

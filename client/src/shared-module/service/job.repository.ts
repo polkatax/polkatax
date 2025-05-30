@@ -33,7 +33,6 @@ export const createOrUpdateJobInIndexedDB = async (job: Job) => {
   await tx.done;
 };
 
-// Fetch all jobs from IndexedDB
 export const fetchAllJobsFromIndexedDB = async (): Promise<Job[]> => {
   const db = await getDB();
   return await db.getAll(STORE_NAME);
