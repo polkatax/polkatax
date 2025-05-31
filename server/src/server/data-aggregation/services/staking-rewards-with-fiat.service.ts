@@ -19,7 +19,7 @@ export class StakingRewardsWithFiatService {
   private async fetchRawStakingRewards(
     stakingRewardsRequest: StakingRewardsRequest,
   ): Promise<StakingReward[]> {
-    let { chain, address, startDay, endDay } = stakingRewardsRequest;
+    let { chain, address, startDate } = stakingRewardsRequest;
     if (isEvmAddress(address)) {
       address =
         (await this.subscanService.mapToSubstrateAccount(
@@ -30,15 +30,14 @@ export class StakingRewardsWithFiatService {
     return this.stakingRewardsService.fetchStakingRewards(
       chain.domain,
       address,
-      startDay.getTime(),
-      endDay ? endDay.getTime() : undefined,
+      startDate,
     );
   }
 
   async fetchStakingRewards(
     stakingRewardsRequest: StakingRewardsRequest,
   ): Promise<StakingRewardsResponse> {
-    let { chain, currency, endDay } = stakingRewardsRequest;
+    let { chain, currency } = stakingRewardsRequest;
 
     const coingeckoId = findCoingeckoIdForNativeToken(chain.domain);
 
@@ -51,17 +50,9 @@ export class StakingRewardsWithFiatService {
         : Promise.resolve({}),
       this.fetchRawStakingRewards(stakingRewardsRequest),
     ]);
-    let priceEndDay =
-      coingeckoId &&
-      endDay &&
-      quotes[coingeckoId]?.quotes &&
-      quotes[coingeckoId].quotes.hasOwnProperty(formatDate(endDay))
-        ? quotes[coingeckoId].quotes[formatDate(endDay)]
-        : undefined;
 
     return {
       values: addFiatValuesToStakingRewards(rewards, quotes[coingeckoId]),
-      priceEndDay,
       token: chain.token,
     };
   }

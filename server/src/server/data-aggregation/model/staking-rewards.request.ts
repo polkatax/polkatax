@@ -6,6 +6,5 @@ export interface StakingRewardsRequest {
   };
   address: string;
   currency: string;
-  startDay: Date;
-  endDay?: Date;
+  startDate: number;
 }

@@ -1,22 +1,21 @@
 import { defineStore } from 'pinia';
-import { combineLatest, filter, map, ReplaySubject } from 'rxjs';
+import { combineLatest, map, ReplaySubject } from 'rxjs';
 import { useSharedStore } from '../../shared-module/store/shared.store';
+import { JobResult } from '../../shared-module/model/job-result';
+import { wsSendMsg } from '../../shared-module/service/ws-connection';
 
 const wallet$ = new ReplaySubject<string>(1);
-const timeframe$ = new ReplaySubject<number>(1);
 const currency$ = new ReplaySubject<string>(1);
 
 const jobsMatchingWallet$ = combineLatest([
   useSharedStore().jobs$,
   wallet$,
-  timeframe$,
   currency$,
 ]).pipe(
-  map(([jobs, wallet, timeframe, currency]) => {
+  map(([jobs, wallet, currency]) => {
     return jobs.filter(
       (j) =>
         j.wallet === wallet &&
-        j.timeframe === timeframe &&
         j.currency === currency
     );
   })
@@ -28,8 +27,7 @@ const syncedChains$ = jobsMatchingWallet$.pipe(
       .filter(
         (j) =>
           j.status === 'error' ||
-          (j.status === 'done' && j.data?.summary?.amount) ||
-          0 > 0
+          (j.data?.summary?.amount ?? 0 > 0)
       )
       .sort((a, b) => (a.blockchain > b.blockchain ? 1 : -1));
   })
@@ -52,11 +50,18 @@ export const useBlockchainsStore = defineStore('blockchains', {
     setWallet(wallet: string) {
       wallet$.next(wallet);
     },
-    setTimeframe(timeframe: number) {
-      timeframe$.next(timeframe);
-    },
     setCurrency(currency: string) {
       currency$.next(currency);
     },
+    retry(job: JobResult) {
+      wsSendMsg({
+        type: 'fetchDataRequest',
+        payload: {
+          wallet: job.wallet,
+          blockchains: [job.blockchain],
+          currency: job.currency
+        }
+      })
+    }
   },
 });

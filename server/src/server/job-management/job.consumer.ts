@@ -3,7 +3,7 @@ import { StakingRewardsWithFiatService } from "../data-aggregation/services/stak
 import { logger } from "../logger/logger";
 import { JobsCache } from "./jobs.cache";
 import * as subscanChains from "../../../res/gen/subscan-chains.json";
-import { getYearRange } from "./get-time-range";
+import { StakingRewardsResponse } from "../data-aggregation/model/staking-rewards.response";
 
 export class JobConsumer {
   constructor(
@@ -31,18 +31,20 @@ export class JobConsumer {
         return;
       }
       this.jobsCache.setInProgress(job);
-      const { startDay, endDay } = getYearRange(
-        job.timeframe
-      );
 
       const result =
         await this.stakingRewardsWithFiatService.fetchStakingRewards({
           chain,
           address: job.wallet,
           currency: job.currency,
-          startDay,
-          endDay,
+          startDate: job.syncFromDate,
         });
+      if (job.data) {
+        const previouslySyncedValues = (
+          job.data as StakingRewardsResponse
+        ).values.filter((v) => v.timestamp * 1000 < job.syncFromDate);
+        result.values = result.values.concat(previouslySyncedValues);
+      }
       this.jobsCache.setDone(result, job);
       logger.info(
         "Exit: JobConsumer process: " +

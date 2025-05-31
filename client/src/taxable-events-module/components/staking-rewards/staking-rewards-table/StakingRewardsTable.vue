@@ -8,13 +8,13 @@
       :pagination="initialPagination"
     >
       <template v-slot:top>
-        <q-btn color="primary" class="q-mr-sm" @click="exportRewardsAsPdf"
+        <q-btn color="primary" class="q-mr-sm" @click="exportRewardsAsPdf" :disable="noRewards"
           >Export Pdf
         </q-btn>
-        <q-btn color="primary" class="q-mr-sm" @click="exportRewardsAsCsv"
+        <q-btn color="primary" class="q-mr-sm" @click="exportRewardsAsCsv" :disable="noRewards"
           >Export CSV
         </q-btn>
-        <q-btn color="primary" class="q-mr-sm" @click="exportRewardsAsKoinlyCsv"
+        <q-btn color="primary" class="q-mr-sm" @click="exportRewardsAsKoinlyCsv" :disable="noRewards"
           >Koinly Export
         </q-btn>
       </template>
@@ -23,7 +23,7 @@
 </template>
 <script setup lang="ts">
 import { computed, onUnmounted, Ref, ref } from 'vue';
-import { Reward, Rewards } from '../../../../shared-module/model/rewards';
+import { Reward, StakingRewardsPerYear } from '../../../../shared-module/model/rewards';
 import { useStakingRewardsStore } from '../store/staking-rewards.store';
 import {
   tokenAmountFormatter,
@@ -34,15 +34,19 @@ import { exportDefaultCsv } from '../../../../shared-module/service/export-defau
 import { exportKoinlyCsv } from '../../../../shared-module/service/export-koinly-csv';
 
 const rewardsStore = useStakingRewardsStore();
-const rewards: Ref<Rewards | undefined> = ref(undefined);
+const rewards: Ref<StakingRewardsPerYear | undefined> = ref(undefined);
 
-const subscription = rewardsStore.rewards$.subscribe(async (r) => {
+const subscription = rewardsStore.rewardsPerYear$.subscribe(async (r) => {
   rewards.value = r;
 });
 
 onUnmounted(() => {
   subscription.unsubscribe();
 });
+
+const noRewards = computed(() => {
+  return !rewards.value || rewards.value?.values.length === 0
+})
 
 const columns = computed(() => [
   {

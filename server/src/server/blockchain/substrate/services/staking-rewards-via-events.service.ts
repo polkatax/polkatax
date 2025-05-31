@@ -9,22 +9,19 @@ export class StakingRewardsViaEventsService {
     address,
     module,
     eventId,
-    blockMin,
-    blockMax,
+    startDate: number,
   ): Promise<StakingReward[]> {
     const events = await this.subscanService.searchAllEvents(
       chain,
       address,
       module,
       eventId,
-      blockMin,
-      blockMax,
+      startDate,
     );
-    const transfers = await this.subscanService.fetchAllTransfers(
+    const transfers = await this.subscanService.fetchAllTransfersFrom(
       chain,
       address,
-      blockMin,
-      blockMax,
+      startDate,
     );
     const eventHashes = events.map((e) => e.extrinsic_hash);
     return transfers

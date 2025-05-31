@@ -2,7 +2,7 @@ import { expect, it, describe, jest, beforeEach } from "@jest/globals";
 import { JobsCache } from "./jobs.cache";
 import { StakingRewardsWithFiatService } from "../data-aggregation/services/staking-rewards-with-fiat.service";
 import { Job } from "../../model/job";
-import * as getRangeModule from "./get-time-range";
+import * as getRangeModule from "./get-beginning-last-year";
 import { JobConsumer } from "./job.consumer";
 
 jest.mock("../logger/logger", () => ({
@@ -29,7 +29,6 @@ describe("JobConsumer", () => {
     wallet: "wallet1",
     blockchain: "polkadot",
     currency: "USD",
-    timeframe: 2023,
     data: undefined,
   } as any;
 

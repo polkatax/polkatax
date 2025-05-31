@@ -1,13 +1,13 @@
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { Rewards } from '../model/rewards';
+import { StakingRewardsPerYear } from '../model/rewards';
 import {
   formatCurrency,
   formatTokenAmount,
 } from '../util/number-formatters';
 import { formatTimeFrame } from '../util/date-utils';
 
-export const exportPdf = (rewards: Rewards) => {
+export const exportPdf = (rewards: StakingRewardsPerYear) => {
   const doc = new jsPDF();
 
   doc.setFontSize(14);
@@ -21,9 +21,11 @@ export const exportPdf = (rewards: Rewards) => {
     y += distance;
   };
 
+  const timeFrame = rewards.year === new Date().getFullYear() ? `from ${rewards.year}-01-01` : `From ${rewards.year}-01-01 until ${rewards.year}-12-31`
+
   // Add meta info
   doc.setFontSize(10);
-  writeText(`Timeframe: ${formatTimeFrame(rewards.timeFrame)}`);
+  writeText(`Timeframe: ${timeFrame}`);
   writeText(`Blockchain: ${rewards.chain}`);
   writeText(`Token: ${rewards.token}`);
   writeText(`Wallet: ${rewards.address}`);
@@ -74,5 +76,5 @@ export const exportPdf = (rewards: Rewards) => {
     },
   });
 
-  doc.save(`staking-rewards-${rewards.chain}-${rewards.address.substring(0, 5)}-${rewards.timeFrame}.pdf`);
+  doc.save(`staking-rewards-${rewards.chain}-${rewards.address.substring(0, 5)}-${rewards.year}.pdf`);
 };

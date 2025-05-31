@@ -1,6 +1,5 @@
 import ReconnectingWebSocket from 'reconnecting-websocket';
-import { ErrorEvent } from 'reconnecting-websocket';
-import { ReplaySubject, take, Subject } from 'rxjs';
+import { ReplaySubject, take } from 'rxjs';
 import {
   WebSocketIncomingMessage,
   WebSocketOutGoingMessage,
@@ -10,9 +9,6 @@ const socket = new ReconnectingWebSocket('/ws');
 
 const connected$ = new ReplaySubject<boolean>(1);
 export const wsMsgReceived$ = new ReplaySubject<WebSocketIncomingMessage>(1);
-
-export const wsError$ = new Subject<ErrorEvent>();
-socket.addEventListener('error', (err) => wsError$.next(err));
 
 socket.addEventListener('open', () => {
   connected$.next(true);

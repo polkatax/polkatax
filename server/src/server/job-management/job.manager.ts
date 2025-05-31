@@ -6,6 +6,7 @@ import { filter, firstValueFrom } from "rxjs";
 import { determineNextJob } from "./determine-next-job";
 import { AwilixContainer } from "awilix";
 import { isEvmAddress } from "../data-aggregation/helper/is-evm-address";
+import { getBeginningLastYear } from "./get-beginning-last-year";
 
 export class JobManager {
   constructor(
@@ -16,31 +17,29 @@ export class JobManager {
   }
 
   getStakingChains(wallet: string) {
-    const isEvmWallet = isEvmAddress(wallet)
+    const isEvmWallet = isEvmAddress(wallet);
     return subscanChains.chains
       .filter((c) => c.stakingPallets.length > 0 && !c.pseudoStaking)
-      .filter((c) => !isEvmWallet || (c.evmPallet || c.evmAddressSupport))
+      .filter((c) => !isEvmWallet || c.evmPallet || c.evmAddressSupport)
       .map((c) => c.domain);
   }
 
   isOutDated(job: Job) {
     const now = Date.now();
-    const threeDaysMs = 3 * 24 * 60 * 60 * 1000;
-    return (
-      job.timeframe === new Date().getFullYear() &&
-      now - job.lastModified > threeDaysMs
-    );
+    const oneDayMs = 24 * 60 * 60 * 1000;
+    return now - job.lastModified > oneDayMs;
   }
 
   enqueue(
     reqId: string,
     wallet: string,
     type: "staking_rewards" | "transactions",
-    timeframe: number,
     currency: string,
     blockchains: string[] = [],
+    syncFromDate: number = getBeginningLastYear(),
   ): Job[] {
-    blockchains = blockchains.length > 0 ? blockchains : this.getStakingChains(wallet)
+    blockchains =
+      blockchains.length > 0 ? blockchains : this.getStakingChains(wallet);
 
     const matchingJobs = this.jobsCache
       .fetchJobs(wallet)
@@ -48,32 +47,50 @@ export class JobManager {
         (j) =>
           blockchains.includes(j.blockchain) &&
           j.currency === currency &&
-          j.timeframe === timeframe &&
           j.type === type,
       );
 
-    const failedOrOutDated = matchingJobs.filter(
-      (j) => j.status === "error" || this.isOutDated(j),
-    );
-    const validJobs = matchingJobs.filter((j) => !failedOrOutDated.includes(j));
-    const syncedChains = validJobs.map((j) => j.blockchain);
+    const alreadySyncedJobs = [];
+    const newJobs = [];
+    for (let blockchain of blockchains) {
+      const job = matchingJobs.find((j) => j.blockchain === blockchain);
+      // if job is in error or the requesed date is older than the job fromDate -> delete job
+      const jobCannotBeReused = job && (job.status === "error" || job.syncFromDate > syncFromDate)
+      const jobOutdatedButDataReusable = job && job.status === "done" && this.isOutDated(job)
+      if (job && jobCannotBeReused) {
+        this.jobsCache.delete(job);
+      }
+      if (job === undefined || jobCannotBeReused) {
+        newJobs.push(
+          this.jobsCache.addJob(
+            reqId,
+            wallet,
+            blockchain,
+            type,
+            syncFromDate,
+            currency,
+          ),
+        );
+      } else if (jobOutdatedButDataReusable) {
+        // if job is just outdated (stale data), existing data will be reused
+        this.jobsCache.delete(job);
+        newJobs.push(
+          this.jobsCache.addJob(
+            reqId,
+            wallet,
+            blockchain,
+            type,
+            Math.min(syncFromDate, job.syncedUntil),
+            currency,
+            job.data,
+          ),
+        );
+      } else {
+        alreadySyncedJobs.push(job);
+      }
+    }
 
-    failedOrOutDated.forEach((j) => this.jobsCache.delete(j));
-
-    const newJobs = blockchains
-      .filter((chain) => !syncedChains.includes(chain))
-      .map((chain) =>
-        this.jobsCache.addJob(
-          reqId,
-          wallet,
-          chain,
-          type,
-          timeframe,
-          currency
-        ),
-      );
-
-    return [...validJobs, ...newJobs];
+    return [...alreadySyncedJobs, ...newJobs];
   }
 
   async start() {
@@ -87,11 +104,7 @@ export class JobManager {
 
       if (job) {
         previousWallet = job.wallet;
-        try {
-          await this.DIContainer.resolve("jobConsumer").process(job);
-        } catch (error) {
-          logger.error("Error processing job.", error);
-        }
+        await this.DIContainer.resolve("jobConsumer").process(job);
       }
     }
   }

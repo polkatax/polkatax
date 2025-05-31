@@ -41,7 +41,6 @@ describe("JobManager", () => {
       wallet: "wallet1",
       blockchain: "polkadot",
       currency: "USD",
-      timeframe: 2024,
       type: "staking_rewards",
       data: undefined,
     } as any;
@@ -74,7 +73,6 @@ describe("JobManager", () => {
       wallet: "wallet1",
       blockchain: "polkadot",
       currency: "USD",
-      timeframe: new Date().getFullYear(),
       type: "staking_rewards",
       lastModified: Date.now() - 4 * 24 * 60 * 60 * 1000, // 4 days old
       data: undefined,
@@ -108,7 +106,6 @@ describe("JobManager", () => {
       wallet: "wallet1",
       blockchain: "polkadot",
       currency: "USD",
-      timeframe: 2024,
       type: "staking_rewards",
       lastModified: Date.now(),
       data: undefined,

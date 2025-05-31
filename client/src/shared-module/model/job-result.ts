@@ -2,12 +2,13 @@ import { Rewards } from './rewards';
 
 export interface JobResult {
   wallet: string;
-  timeframe: number;
+  syncedUntil?: number;
   currency: string;
   type: 'staking_rewards' | 'transactions';
   error: any;
   data: Rewards;
-  timestamp: number;
+  lastModified: number;
   blockchain: string;
   status: string;
+  syncFromDate: number;
 }

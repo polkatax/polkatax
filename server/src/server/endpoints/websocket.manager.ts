@@ -12,7 +12,6 @@ import {
 interface Subscription {
   wallet: string;
   currency: string;
-  timeframe: number;
 }
 
 export class WebSocketManager {
@@ -24,20 +23,16 @@ export class WebSocketManager {
   ) {}
 
   private subscriptionMachtes(s1: Subscription, s2: Subscription) {
-    return (
-      s1.wallet === s2.wallet &&
-      s1.currency === s2.currency &&
-      s1.timeframe === s2.timeframe
-    );
+    return s1.wallet === s2.wallet && s1.currency === s2.currency;
   }
 
-  async handleIncomingMsg(
+  private async handleFetchDataRequest(
     socket: WebSocket,
     msg: WebSocketIncomingMessage,
   ): Promise<WebSocketOutgoingMessage> {
-    const { wallet, timeframe, currency, blockchains } = msg.payload;
+    const { wallet, syncFromDate, currency, blockchains } = msg.payload;
+    const subscription = { wallet, currency };
 
-    const subscription = { wallet, currency, timeframe };
     if (
       !this.connections.some(
         (c) =>
@@ -52,9 +47,9 @@ export class WebSocketManager {
       msg.reqId,
       wallet,
       "staking_rewards",
-      timeframe,
       currency,
       blockchains,
+      syncFromDate,
     );
 
     return {
@@ -63,6 +58,37 @@ export class WebSocketManager {
       payload: jobs,
       timestamp: Date.now(),
     };
+  }
+
+  private async handleUnsubscribeRequest(
+    socket: WebSocket,
+    msg: WebSocketIncomingMessage,
+  ): Promise<WebSocketOutgoingMessage> {
+    const { wallet, currency } = msg.payload;
+    const subscription = { wallet, currency };
+    this.connections = this.connections.filter(
+      (c) =>
+        c.socket !== socket ||
+        !this.subscriptionMachtes(c.subscription, subscription),
+    );
+    return {
+      type: "acknowledgeUnsubscribe",
+      reqId: msg.reqId,
+      payload: [],
+      timestamp: Date.now(),
+    };
+  }
+
+  async handleIncomingMsg(
+    socket: WebSocket,
+    msg: WebSocketIncomingMessage,
+  ): Promise<WebSocketOutgoingMessage> {
+    switch (msg.type) {
+      case "fetchDataRequest":
+        return this.handleFetchDataRequest(socket, msg);
+      case "unsubscribeRequest":
+        return this.handleUnsubscribeRequest(socket, msg);
+    }
   }
 
   private sendError(socket: WebSocket, error: WsError) {
@@ -89,8 +115,7 @@ export class WebSocketManager {
             .filter(
               (j) =>
                 (j.status === "pending" || j.status === "in_progress") &&
-                j.currency === s.currency &&
-                j.timeframe === s.timeframe,
+                j.currency === s.currency,
             ).length
         );
       },
@@ -116,7 +141,7 @@ export class WebSocketManager {
         });
       }
 
-      if (this.throttle(socket)) {
+      if (msg.type === "fetchDataRequest" && this.throttle(socket)) {
         logger.info(
           "WebSocketManager: Too many pending request for client. Last message " +
             rawMsg,
@@ -159,7 +184,6 @@ export class WebSocketManager {
         .filter((c) =>
           this.subscriptionMachtes(c.subscription, {
             wallet: job.wallet,
-            timeframe: job.timeframe,
             currency: job.currency,
           }),
         )

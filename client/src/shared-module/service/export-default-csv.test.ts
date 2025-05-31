@@ -30,7 +30,6 @@ describe('exportDefaultCsv', () => {
       chain: 'Kusama',
       currency: 'EUR',
       address: '0x123',
-      timeFrame: 2023,
       summary: {
         amount: 100,
         fiatValue: 500,
@@ -73,7 +72,7 @@ describe('exportDefaultCsv', () => {
 
     expect(saveAs).toHaveBeenCalledWith(
       expect.any(Blob),
-      'staking-rewards-Kusama-0x123-2023.csv'
+      'staking-rewards-Kusama-0x123.csv'
     );
   });
 });

@@ -69,7 +69,6 @@ describe("staking rewards via reward_slash endpoint", () => {
       timestamp: 0,
       payload: {
         wallet: "2Fd1UGzT8yuhksiKy98TpDg794dEELvNFqenJjRHFvwfuU83",
-        timeframe: year,
         currency: "USD",
         blockchains: ["polkadot"],
       },
@@ -151,7 +150,6 @@ describe("staking rewards via reward_slash endpoint", () => {
       timestamp: 0,
       payload: {
         wallet: "2Fd1UGzT8yuhksiKy98TpDg794dEELvNFqenJjRHFvwfuU83",
-        timeframe: year,
         currency: "USD",
         blockchains: ["polkadot"],
       },
@@ -224,7 +222,6 @@ describe("staking rewards via reward_slash endpoint", () => {
       timestamp: 0,
       payload: {
         wallet: "2Fd1UGzT8yuhksiKy98TpDg794dEELvNFqenJjRHFvwfuU83",
-        timeframe: year,
         currency: "USD",
         blockchains: ["polkadot"],
       },

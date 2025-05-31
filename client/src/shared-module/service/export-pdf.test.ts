@@ -25,10 +25,6 @@ jest.mock('../util/number-formatters', () => ({
   formatTokenAmount: jest.fn((val: number) => val.toFixed(4)),
 }));
 
-jest.mock('..//util/date-utils', () => ({
-  formatTimeFrame: jest.fn(() => '01/01/2024 - 01/31/2024'),
-}));
-
 describe('exportPdf', () => {
   it('should generate and save a PDF with meta and table data', () => {
     const mockRewards: Rewards = {
@@ -36,7 +32,6 @@ describe('exportPdf', () => {
       chain: 'Polkadot',
       currency: 'USD',
       address: '0x123',
-      timeFrame: 2024,
       summary: {
         amount: 123.4567,
         fiatValue: 987.65,
@@ -49,7 +44,7 @@ describe('exportPdf', () => {
       values: [],
     } as any;
 
-    exportPdf(mockRewards);
+    exportPdf(mockRewards, 2024);
 
     // Basic assertions
     expect(jsPDF).toHaveBeenCalled();

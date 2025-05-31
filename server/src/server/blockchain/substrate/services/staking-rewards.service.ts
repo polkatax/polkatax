@@ -40,11 +40,6 @@ export class StakingRewardsService {
     logger.info(
       `Entry fetchStakingRewards for address ${address} and chain ${chainName}`,
     );
-    const { blockMin, blockMax } = await this.blockTimeService.getMinMaxBlock(
-      chainName,
-      minDate,
-      maxDate,
-    );
     const rewardsSlashes = await (async () => {
       switch (chainName) {
         case "mythos":
@@ -53,8 +48,7 @@ export class StakingRewardsService {
             address,
             "collatorstaking",
             "StakingRewardReceived",
-            blockMin,
-            blockMax,
+            minDate,
           );
         case "energywebx":
           return this.stakingRewardsViaEventsService.fetchStakingRewards(
@@ -62,8 +56,7 @@ export class StakingRewardsService {
             address,
             "parachainstaking",
             "Rewarded",
-            blockMin,
-            blockMax,
+            minDate,
           );
         case "darwinia":
           return this.stakingRewardsViaEventsService.fetchStakingRewards(
@@ -71,8 +64,7 @@ export class StakingRewardsService {
             address,
             "darwiniastaking",
             "RewardAllocated",
-            blockMin,
-            blockMax,
+            minDate,
           );
         case "robonomics-freemium":
           return this.stakingRewardsViaEventsService.fetchStakingRewards(
@@ -80,16 +72,14 @@ export class StakingRewardsService {
             address,
             "staking",
             "reward",
-            blockMin,
-            blockMax,
+            minDate,
           );
         default:
           const token = await this.subscanService.fetchNativeToken(chainName);
           const rawRewards = await this.subscanService.fetchAllStakingRewards(
             chainName,
             address,
-            blockMin,
-            blockMax,
+            minDate,
           );
           return rawRewards.map((reward) => ({
             ...reward,

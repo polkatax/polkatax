@@ -16,7 +16,6 @@ describe("WebSocketIncomingMessageSchema", () => {
     reqId: "abc-123",
     payload: {
       currency: "USD",
-      timeframe: 30,
       blockchains: ["ethereum", "polkadot"],
     },
   };

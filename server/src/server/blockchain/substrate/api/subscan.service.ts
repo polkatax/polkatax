@@ -37,8 +37,7 @@ export class SubscanService {
     address: string,
     module: string,
     event_id: string,
-    block_min?: number,
-    block_max?: number,
+    startDate: number,
   ): Promise<SubscanEvent[]> {
     return this.iterateOverPagesParallel<SubscanEvent>((page) =>
       this.subscanApi.searchEvents(
@@ -47,8 +46,7 @@ export class SubscanService {
         module,
         event_id,
         page,
-        block_min,
-        block_max,
+        startDate,
       ),
     );
   }
@@ -116,11 +114,10 @@ export class SubscanService {
   fetchAllStakingRewards(
     chainName: string,
     address: string,
-    block_min?: number,
-    block_max?: number,
+    startDate: number,
   ): Promise<RawStakingReward[]> {
     logger.info(
-      `fetchAllStakingRewards for ${chainName}, address ${address}, from ${block_min} to ${block_max}`,
+      `fetchAllStakingRewards for ${chainName}, address ${address}, starting from ${new Date(startDate).toISOString()}`,
     );
     return this.iterateOverPagesParallel((page) =>
       this.subscanApi.fetchStakingRewards(
@@ -128,9 +125,8 @@ export class SubscanService {
         address,
         page,
         true,
-        block_min,
-        block_max,
-      ),
+        startDate,
+      ), 3
     );
   }
 
@@ -160,6 +156,48 @@ export class SubscanService {
       `Exit fetchAllExtrinsics for ${chainName} and address ${address}`,
     );
     return result;
+  }
+
+  async fetchAllTransfersFrom(
+    chainName: string,
+    account: string,
+    startDate: number,
+    evm = false,
+  ): Promise<Transfer[]> {
+    logger.info(
+      `fetchAllTransfers for ${chainName} and account ${account} starting from ${new Date(startDate).toISOString()}. Evm: ${evm}`,
+    );
+    const result = await this.iterateOverPagesParallel<
+      RawSubstrateTransferDto & RawEvmTransferDto
+    >(
+      (page) =>
+        this.subscanApi.fetchTransfersFrom(
+          chainName,
+          account,
+          page,
+          startDate,
+          evm,
+        ),
+      3,
+    );
+    logger.info(
+      `Exit fetchAllTransfers for ${chainName} and account ${account}`,
+    );
+    return result.map((transfer) => {
+      return {
+        symbol: transfer.symbol || transfer.asset_symbol,
+        amount: Number(transfer.amount),
+        from: transfer.from,
+        to: transfer.to,
+        label:
+          transfer?.to_display?.evm_contract.contract_name || transfer.module,
+        block: transfer.block_num,
+        timestamp: transfer.block_timestamp || transfer.create_at,
+        hash: transfer.hash,
+        tokenId: transfer.asset_unique_id || transfer.contract,
+        extrinsic_index: transfer.extrinsic_index,
+      };
+    });
   }
 
   async fetchAllTransfers(

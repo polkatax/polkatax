@@ -69,7 +69,6 @@ describe("Proper handling of jobs", () => {
       timestamp: 0,
       payload: {
         wallet: "2Fd1UGzT8yuhksiKy98TpDg794dEELvNFqenJjRHFvwfuU83",
-        timeframe: year,
         currency: "USD",
         blockchains: ["polkadot", "kusama"],
       },
@@ -108,7 +107,6 @@ describe("Proper handling of jobs", () => {
       timestamp: 0,
       payload: {
         wallet: "2Fd1UGzT8yuhksiKy98TpDg794dEELvNFqenJjRHFvwfuU83",
-        timeframe: year,
         currency: "USD",
         blockchains: ["polkadot"],
       },
@@ -122,7 +120,6 @@ describe("Proper handling of jobs", () => {
       timestamp: 0,
       payload: {
         wallet: "2Fd1UGzT8yuhksiKy98TpDg794dEELvNFqenJjRHFvwfuU83",
-        timeframe: year,
         currency: "USD",
         blockchains: ["polkadot"],
       },
@@ -157,7 +154,6 @@ describe("Proper handling of jobs", () => {
       timestamp: 0,
       payload: {
         wallet: "2Fd1UGzT8yuhksiKy98TpDg794dEELvNFqenJjRHFvwfuU83",
-        timeframe: year,
         currency: "USD",
         blockchains: ["polkadot"],
       },
@@ -180,7 +176,6 @@ describe("Proper handling of jobs", () => {
       timestamp: 0,
       payload: {
         wallet: "invalid-address",
-        timeframe: year,
         currency: "USD",
         blockchains: ["polkadot"],
       },
@@ -216,7 +211,6 @@ describe("Proper handling of jobs", () => {
       timestamp: 0,
       payload: {
         wallet: "2Fd1UGzT8yuhksiKy98TpDg794dEELvNFqenJjRHFvwfuU83",
-        timeframe: year,
         currency: "USD",
         blockchains: ["polkadot"],
       },
@@ -230,7 +224,6 @@ describe("Proper handling of jobs", () => {
       timestamp: 0,
       payload: {
         wallet: "2Fd1UGzT8yuhksiKy98TpDg794dEELvNFqenJjRHFvwfuU83",
-        timeframe: year,
         currency: "USD",
         blockchains: ["polkadot"],
       },
@@ -252,7 +245,6 @@ describe("Proper handling of jobs", () => {
       timestamp: 0,
       payload: {
         wallet: "Dnn4xiYdgz3bdRWQaUsvX5noNpcUwmqomKgHg8xzZL1vzfq",
-        timeframe: year,
         currency: "USD",
         blockchains: ["polkadot", "kusama", "hydration"],
       },
@@ -265,7 +257,6 @@ describe("Proper handling of jobs", () => {
       timestamp: 0,
       payload: {
         wallet: "EUKqtB33pRN2cgru8WXiz4zAuZUn4YRuWG25AZqjzPAdVvJ",
-        timeframe: year,
         currency: "USD",
         blockchains: ["polkadot"],
       },

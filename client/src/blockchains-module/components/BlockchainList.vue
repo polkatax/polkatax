@@ -44,11 +44,6 @@
             >
               {{ getLabelForBlockchain(props.row.blockchain) }}
             </q-td>
-            <q-td key="timeframe" :props="props">
-              <q-badge color="purple">
-                {{ props.row.timeframe }}
-              </q-badge>
-            </q-td>
             <q-td key="currency" :props="props">
               <q-badge color="green">
                 {{ props.row.currency }}
@@ -56,13 +51,14 @@
             </q-td>
             <q-td key="amountRewards" :props="props">
               {{
-                props.row?.data?.summary?.amount !== undefined
-                  ? props.row?.data?.summary?.amount.toPrecision(4)
-                  : '-'
+                calculateTotalReward(props.row)
               }}
             </q-td>
             <q-td key="token" :props="props">
               {{ props.row?.data?.token }}
+            </q-td>
+            <q-td key="syncFromDate" :props="props">
+              {{ syncedFrom }}
             </q-td>
             <q-td key="lastSynchronized" :props="props">
               {{
@@ -76,11 +72,12 @@
                 class="text-grey-8 q-gutter-xs"
                 v-if="props.row.status === 'error'"
               >
-                Retry
+                <q-btn color="secondary" flat @click.stop="retry(props.row)"
+                  dense>Retry</q-btn>
               </div>
               <div
                 class="text-grey-8 q-gutter-xs"
-                v-if="props.row.status === 'done'"
+                v-if="props.row.status !== 'error'"
               >
                 <q-btn
                   class="gt-xs"
@@ -89,8 +86,8 @@
                   dense
                   round
                   icon="picture_as_pdf"
-                  @click.stop="pdfExport(props.row)"
-                ><q-tooltip>Export as PDF</q-tooltip></q-btn>
+                  @click.stop="openMenu($event, props.row, 'pdf')"
+                ><q-tooltip anchor="top middle" self="bottom middle">Export as PDF</q-tooltip></q-btn>
                 <q-btn
                   class="gt-xs"
                   size="12px"
@@ -98,17 +95,17 @@
                   dense
                   round
                   icon="view_list"
-                  @click.stop="csvExport(props.row)"
-                ><q-tooltip>Export as CSV</q-tooltip></q-btn>
+                  @click.stop="openMenu($event, props.row, 'CSV')"
+                ><q-tooltip anchor="top middle" self="bottom middle">Export as CSV</q-tooltip></q-btn>
                 <q-btn
+                  ref="btnRef"
                   class="gt-xs"
                   size="12px"
                   flat
                   dense
                   round
-                  icon="receipt"
-                  @click.stop="koinlyExport(props.row)"
-                ><q-tooltip>Koinly export</q-tooltip></q-btn>
+                  icon="receipt" @click.stop="openMenu($event, props.row, 'Koinly')">
+                  <q-tooltip anchor="top middle" self="bottom middle">Kionly export</q-tooltip></q-btn>
               </div>
             </q-td>
           </q-tr>
@@ -124,6 +121,18 @@
       </div>
     </div>
     <div class="q-pa-md"></div>
+    <q-menu v-model="exportMenu" :target="exportMenuTarget" anchor="bottom middle" self="top middle" v-if="exportMenu">
+      <div class="q-pa-sm bg-primary text-white">Select year to export</div>
+      <q-list style="min-width: 150px">
+        <q-item
+          v-for="year in exportYears"
+          :key="year"
+          clickable
+        >
+          <q-item-section class="q-mx-auto text-center" @click.stop="exportStakingRewards(year)">{{ year }}</q-item-section>
+        </q-item>
+      </q-list>
+    </q-menu>
   </q-page>
 </template>
 
@@ -133,14 +142,50 @@ import { useRoute, useRouter } from 'vue-router';
 import { useBlockchainsStore } from '../store/blockchains.store';
 import { JobResult } from '../../shared-module/model/job-result';
 import { useSharedStore } from '../../shared-module/store/shared.store';
-import { tokenAmountFormatter } from '../../shared-module/util/number-formatters';
 import { formatDate } from '../../shared-module/util/date-utils';
 import { exportDefaultCsv } from '../../shared-module/service/export-default-csv';
 import { exportKoinlyCsv } from '../../shared-module/service/export-koinly-csv';
+import { getBeginningAndEndOfYear } from '../../shared-module/helper/get-beginning-and-end-of-year';
+import { extractStakingRewardsPerYear } from '../../shared-module/helper/extract-staking-rewards-per-year';
+
+const exportMenu = ref(false);
+const exportMenuTarget: Ref<HTMLElement | undefined> = ref(undefined);
+let exportType = ''
+let exportData: Ref<JobResult | undefined> = ref(undefined)
 
 const store = useBlockchainsStore();
 const route = useRoute();
 const router = useRouter();
+
+function openMenu(event: Event, _exportData: JobResult, _exportType: string) {
+  console.log("openMenu")
+  event.stopPropagation()
+  exportData.value = _exportData
+  exportType = _exportType
+  exportMenuTarget.value = event.currentTarget as HTMLElement;
+  setTimeout(() => {
+    exportMenu.value = true;
+  }, 0);
+}
+
+async function exportStakingRewards(year: number) {
+  const rewardsForYear = extractStakingRewardsPerYear(exportData.value!.data, year)!
+  switch (exportType) {
+    case 'CSV':
+      return exportDefaultCsv(rewardsForYear);
+    case 'Koinly':
+      return exportKoinlyCsv(rewardsForYear);
+    case 'pdf':
+      const { exportPdf } = await import('../../shared-module/service/export-pdf');
+      exportPdf(rewardsForYear);
+  }
+}
+
+const exportYears = computed(() => {
+  return [new Date().getFullYear(), new Date().getFullYear() - 1].filter(year => {
+    return (exportData.value?.data.summary.perYear || []).find(s => s.year === year)?.amount ?? 0 > 0
+  })
+})
 
 const jobs: Ref<JobResult[]> = ref([]);
 const chains: Ref<{ domain: string; label: string }[]> = ref([]);
@@ -148,7 +193,6 @@ const isSynchronizing: Ref<boolean> = ref(true);
 
 store.setCurrency(route.params.currency as string);
 store.setWallet(route.params.wallet as string);
-store.setTimeframe(Number(route.params.timeframe));
 
 const jobsSubscription = store.syncedChains$.subscribe((jobResults) => {
   jobs.value = jobResults;
@@ -175,13 +219,12 @@ const columns = ref([
   {
     name: 'blockchain',
     align: 'left',
-    label: 'Blockchain',
-    sortable: true,
+    label: 'Blockchain'
   },
-  { name: 'timeframe', label: 'Year' },
   { name: 'currency', label: 'Currency' },
   { name: 'amountRewards', label: 'Total rewards' },
   { name: 'token', label: 'Token symbol' },
+  { name: 'syncFromDate', label: 'Since' },
   { name: 'lastSynchronized', label: 'Synchronized on' },
   { name: 'actions', label: 'Actions' },
 ]);
@@ -192,22 +235,20 @@ function getLabelForBlockchain(domain: string) {
 
 function showTaxableEvents(row: any) {
   router.push(
-    `/wallets/${row.wallet}/${row.timeframe}/${row.currency}/${row.blockchain}`
+    `/wallets/${row.wallet}/${row.currency}/${row.blockchain}`
   );
 }
 
-function csvExport(jobResult: JobResult) {
-  exportDefaultCsv(jobResult.data);
+function calculateTotalReward(jobResult: JobResult) {
+  return jobResult.data?.summary?.amount ?? '-'
 }
 
-function koinlyExport(jobResult: JobResult) {
-  exportKoinlyCsv(jobResult.data);
-}
+const syncedFrom = computed(() => {
+  return formatDate(getBeginningAndEndOfYear(new Date().getFullYear() - 1).beginning * 1000)
+})
 
-async function pdfExport(jobResult: JobResult) {
-  // loading exportPdf on demand due to module size.
-  const { exportPdf } = await import('../../shared-module/service/export-pdf');
-  exportPdf(jobResult.data);
+function retry(job: JobResult) {
+  store.retry(job)
 }
 </script>
 <style lang="scss">

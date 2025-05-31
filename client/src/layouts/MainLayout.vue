@@ -65,7 +65,6 @@ const alert = ref(false);
 const errorMsg = ref('');
 
 const subscription = merge(
-  useSharedStore().webSocketConnectionError$,
   useSharedStore().webSocketResponseError$
 ).subscribe((err) => {
   console.log(JSON.stringify(err));

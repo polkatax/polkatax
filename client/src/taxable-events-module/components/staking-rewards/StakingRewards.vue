@@ -1,5 +1,6 @@
 <template>
   <q-page class="q-px-sm q-mx-auto content">
+
     <div class="text-center q-my-xl" v-if="rewards">
       <reward-summary />
     </div>
@@ -24,22 +25,23 @@ import StakingRewardsTable from './staking-rewards-table/StakingRewardsTable.vue
 import RewardSummary from './reward-summary/RewardSummary.vue';
 import { onUnmounted, Ref, ref } from 'vue';
 import { useStakingRewardsStore } from './store/staking-rewards.store';
-import { Rewards } from '../../../shared-module/model/rewards';
 import { useRoute } from 'vue-router';
+import { StakingRewardsPerYear } from '../../../shared-module/model/rewards';
+
 const rewardsStore = useStakingRewardsStore();
 const route = useRoute();
 
-const rewards: Ref<Rewards | undefined> = ref(undefined);
+const rewards: Ref<StakingRewardsPerYear | undefined> = ref(undefined);
 rewardsStore.setCurrency(route.params.currency as string);
 rewardsStore.setBlockchain(route.params.blockchain as string);
-rewardsStore.setTimeframe(Number(route.params.timeframe));
 rewardsStore.setWallet(route.params.wallet as string);
 
-const rewardsSubscription = rewardsStore.rewards$.subscribe(async (r) => {
+const rewardsSubscription = rewardsStore.rewardsPerYear$.subscribe(async (r) => {
   rewards.value = r;
 });
 
 onUnmounted(() => {
   rewardsSubscription.unsubscribe();
+
 });
 </script>

@@ -119,7 +119,6 @@ describe("fetch staking rewards via the events API", () => {
       timestamp: 0,
       payload: {
         wallet: evmAddress,
-        timeframe: year,
         currency: "EUR",
         blockchains: ["mythos"],
       },
@@ -142,7 +141,6 @@ describe("fetch staking rewards via the events API", () => {
           wallet: evmAddress,
           blockchain: "mythos",
           type: "staking_rewards",
-          timeframe: 2024,
           status: "done",
           currency: "EUR",
           data: {
@@ -243,7 +241,6 @@ describe("fetch staking rewards via the events API", () => {
       timestamp: 0,
       payload: {
         wallet: evmAddress,
-        timeframe: year,
         currency: "EUR",
         blockchains: ["mythos"],
       },
@@ -316,7 +313,6 @@ describe("fetch staking rewards via the events API", () => {
       timestamp: 0,
       payload: {
         wallet: evmAddress,
-        timeframe: year,
         currency: "EUR",
         blockchains: ["mythos"],
       },
@@ -404,7 +400,6 @@ describe("fetch staking rewards via the events API", () => {
       timestamp: 0,
       payload: {
         wallet: evmAddress,
-        timeframe: year,
         currency: "EUR",
         blockchains: ["mythos"],
       },

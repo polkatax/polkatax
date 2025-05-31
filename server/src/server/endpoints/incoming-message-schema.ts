@@ -28,12 +28,15 @@ export const WalletInfoSchema = z.object({
     message: "Wallet must be a valid EVM or Substrate address",
   }),
   currency: z.string(),
-  timeframe: z.number(),
+  syncFromDate: z.number().optional(),
   blockchains: z.array(z.string()).optional(),
 });
 
 export const WebSocketIncomingMessageSchema = z.object({
-  type: z.literal("fetchDataRequest"),
+  type: z.union([
+    z.literal("fetchDataRequest"),
+    z.literal("unsubscribeRequest"),
+  ]),
   timestamp: z.number(),
   reqId: z.string(),
   payload: WalletInfoSchema,

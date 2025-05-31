@@ -4,9 +4,9 @@ export interface WebSocketOutGoingMessage {
   type: 'fetchDataRequest' | 'unsubscribeRequest';
   payload: {
     wallet: string;
-    timeframe: number;
     currency: string;
     blockchains?: string[];
+    syncFromDate?: number;
   };
 }
 

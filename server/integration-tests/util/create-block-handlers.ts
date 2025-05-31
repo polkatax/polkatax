@@ -1,9 +1,9 @@
 import { http, HttpResponse } from "msw";
-import { getYearRange } from "../../src/server/job-management/get-time-range";
+import { getYearRange } from "../../src/server/job-management/get-beginning-last-year";
 import { createMockResponseHandler } from "./create-mock-response-handler";
 
 /**
- * Creates a handler to return two blocks, which correspond to beginning and end of a year 
+ * Creates a handler to return two blocks, which correspond to beginning and end of a year
  * @param year
  * @returns
  */

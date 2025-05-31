@@ -1,5 +1,5 @@
 import { Parser } from '@json2csv/plainjs';
-import { Reward, Rewards } from '../model/rewards';
+import { Reward, StakingRewardsPerYear } from '../model/rewards';
 import { formatDateUTC } from '../util/date-utils';
 import saveAs from 'file-saver';
 
@@ -14,7 +14,7 @@ interface RewardsTableHeader extends Reward {
   utcDate: string;
 }
 
-export const exportDefaultCsv = (rewards: Rewards) => {
+export const exportDefaultCsv = (rewards: StakingRewardsPerYear) => {
   const parser = new Parser();
   const values = [...(rewards.values || [])].map((v) => {
     return {
@@ -30,11 +30,10 @@ export const exportDefaultCsv = (rewards: Rewards) => {
     ...values[0],
     totalAmount: rewards.summary.amount,
     totalValue: rewards.summary.fiatValue,
-    totalValueNow: rewards.summary?.valueNow,
   } as RewardsTableHeader;
   const csv = parser.parse(values);
   saveAs(
     new Blob([csv], { type: 'text/plain;charset=utf-8' }),
-    `staking-rewards-${rewards.chain}-${rewards.address.substring(0, 5)}-${rewards.timeFrame}.csv`
+    `staking-rewards-${rewards.chain}-${rewards.address.substring(0, 5)}_${rewards.year}.csv`
   );
 };

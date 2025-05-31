@@ -110,7 +110,7 @@ export class TokenPriceHistoryService {
     return (
       this.cachedPrices[combinedIdx] &&
       this.cachedPrices[combinedIdx][formatDate(yesterday)]
-    )
+    );
   }
 
   private async fetchQuotesForId(

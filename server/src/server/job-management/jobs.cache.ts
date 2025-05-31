@@ -13,11 +13,12 @@ export class JobsCache {
     wallet: string,
     blockchain: string,
     type: "staking_rewards" | "transactions",
-    timeframe: number,
-    currency: string
+    syncFromDate: number,
+    currency: string,
+    data?: any,
   ) {
     logger.info(
-      `Adding job: ${reqId}, ${wallet}, ${blockchain}, ${type}, ${timeframe}, ${currency}`,
+      `Adding job: ${reqId}, ${wallet}, ${blockchain}, ${type}, syncFromDate: ${new Date(syncFromDate).toISOString()}, ${currency}`,
     );
 
     const job: Job = {
@@ -25,10 +26,11 @@ export class JobsCache {
       wallet,
       blockchain,
       type,
-      timeframe,
       status: "pending",
       lastModified: Date.now(),
-      currency
+      currency,
+      syncFromDate,
+      data,
     };
 
     this.allJobs.push(job);
@@ -38,6 +40,7 @@ export class JobsCache {
 
   delete(job: Job) {
     job.deleted = true;
+    this.publishPendingJobs();
   }
 
   get jobs() {
@@ -50,13 +53,12 @@ export class JobsCache {
         j.wallet === jobId.wallet &&
         j.blockchain === jobId.blockchain &&
         j.type === jobId.type &&
-        j.timeframe === jobId.timeframe &&
         j.currency === jobId.currency,
     );
 
     if (!job) {
       throw new Error(
-        `Job not found: ${jobId.wallet}, ${jobId.blockchain}, ${jobId.type}, ${jobId.timeframe}`,
+        `Job not found: ${jobId.wallet}, ${jobId.blockchain}, ${jobId.type}, ${jobId.currency}`,
       );
     }
 
@@ -67,7 +69,6 @@ export class JobsCache {
     wallet: string,
     blockchain: string,
     type: "staking_rewards" | "transactions",
-    timeframe: number,
     currency: string,
   ): Job | undefined {
     return this.jobs.find(
@@ -75,7 +76,6 @@ export class JobsCache {
         j.wallet === wallet &&
         j.blockchain === blockchain &&
         j.type === type &&
-        j.timeframe === timeframe &&
         j.currency === currency,
     );
   }
@@ -93,6 +93,8 @@ export class JobsCache {
     job.data = data;
     job.status = "done";
     job.lastModified = Date.now();
+    const eightDaysMs = 8 * 24 * 60 * 60 * 1000;
+    job.syncedUntil = Date.now() - eightDaysMs; // "guaranteed" to be synced until 8 days ago, because backend data is not updated daily!
     this.jobUpdate$.next(job);
   }
 

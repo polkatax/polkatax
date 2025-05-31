@@ -12,7 +12,7 @@ import { computed, onUnmounted, ref, Ref } from 'vue';
 import { GChart } from 'vue-google-charts';
 import { useStakingRewardsStore } from '../store/staking-rewards.store';
 import { formatDate } from '../../../../shared-module/util/date-utils';
-import { Rewards } from '../../../../shared-module/model/rewards';
+import { StakingRewardsPerYear } from '../../../../shared-module/model/rewards';
 
 const rewardsStore = useStakingRewardsStore();
 
@@ -21,9 +21,9 @@ const props = defineProps({
   chartType: String,
 });
 
-const rewards: Ref<Rewards | undefined> = ref(undefined);
+const rewards: Ref<StakingRewardsPerYear | undefined> = ref(undefined);
 
-const subscription = rewardsStore.rewards$.subscribe(async (r) => {
+const subscription = rewardsStore.rewardsPerYear$.subscribe(async (r) => {
   rewards.value = r;
 });
 

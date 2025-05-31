@@ -4,7 +4,6 @@
       class="q-my-md flex justify-center align-center items-center row-md row-lg row-xl column-xs row-sm"
     >
       <address-input v-model="store.address" @enter-pressed="startSyncing" />
-      <time-frame-dropdown v-model="store.timeFrame" />
       <q-btn
         color="primary"
         label="Add"
@@ -87,7 +86,6 @@
 <script setup lang="ts">
 import { matSync, matOfflinePin } from '@quasar/extras/material-icons';
 import AddressInput from '../../shared-module/components/address-input/AddressInput.vue';
-import TimeFrameDropdown from '../../shared-module/components/time-frame-dropdown/TimeFrameDropdown.vue';
 import { computed, onUnmounted, Ref, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useSharedStore } from '../../shared-module/store/shared.store';
@@ -99,7 +97,7 @@ const store = useSharedStore();
 const router = useRouter();
 
 const requests: Ref<
-  { wallet: string; timeframe: number; currency: string; done: boolean }[]
+  { wallet: string; currency: string; done: boolean }[]
 > = ref([]);
 
 const jobsSubscription = store.jobs$.subscribe((jobs) => {
@@ -108,13 +106,11 @@ const jobsSubscription = store.jobs$.subscribe((jobs) => {
     const existing = r.find(
       (r) =>
         r.wallet === j.wallet &&
-        r.timeframe === j.timeframe &&
         r.currency === j.currency
     );
     if (!existing) {
       r.push({
         wallet: j.wallet,
-        timeframe: j.timeframe,
         currency: j.currency,
         done: j.status === 'done' || j.status === 'error',
       });
@@ -145,13 +141,12 @@ const meme = ref('img/dollar-4932316_1280.jpg');
 const columns = ref([
   { name: 'done', align: 'left', label: 'Status', field: 'done' },
   { name: 'wallet', align: 'left', label: 'Wallet', field: 'wallet' },
-  { name: 'timeframe', label: 'Year', field: 'timeframe' },
   { name: 'currency', label: 'Currency' },
   { name: 'delete', label: 'Delete' },
 ]);
 
 function navigateToJob(job: any) {
-  router.push(`/wallets/${job.wallet}/${job.timeframe}/${job.currency}`);
+  router.push(`/wallets/${job.wallet}/${job.currency}`);
 }
 
 function confirmDelete (job: JobResult) {

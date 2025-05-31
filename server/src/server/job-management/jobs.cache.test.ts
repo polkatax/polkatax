@@ -143,7 +143,6 @@ describe("JobsCache", () => {
           wallet: "w",
           blockchain: "b",
           type: "staking_rewards",
-          timeframe: 2020,
           currency: "USD",
         },
       ),

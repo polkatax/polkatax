@@ -4,7 +4,6 @@ export interface JobId {
   wallet: string;
   blockchain: string;
   type: "staking_rewards" | "transactions";
-  timeframe: number;
   currency: string;
 }
 
@@ -15,4 +14,6 @@ export interface Job extends JobId {
   error?: WsError;
   lastModified: number;
   deleted?: boolean;
+  syncedUntil?: number;
+  syncFromDate: number;
 }

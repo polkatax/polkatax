@@ -17,7 +17,7 @@ async function getDB() {
 }
 
 const createKey = (job: Job) => {
-  return `job_${job.type}_${job.wallet}_${job.timeframe}_${job.currency}_${job.blockchain}`;
+  return `job_${job.type}_${job.blockchain}_${job.wallet}_${job.currency}`;
 };
 
 const getTx = async () =>  {

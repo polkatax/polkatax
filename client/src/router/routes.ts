@@ -4,11 +4,11 @@ const breadcrumbs = {
   Wallets: () => ({ label: 'Wallets', route: '/wallets' }),
   Blockchains: (route: RouteLocationNormalizedLoaded) => ({
     label: 'Blockchains',
-    route: `/wallets/${route.params.wallet}/${route.params.timeframe}/${route.params.currency}`,
+    route: `/wallets/${route.params.wallet}/${route.params.currency}`,
   }),
   TaxableEvents: (route: RouteLocationNormalizedLoaded) => ({
     label: 'Taxable Events',
-    route: `/wallets/${route.params.wallet}/${route.params.timeframe}/${route.params.currency}/${route.params.blockchain}`,
+    route: `/wallets/${route.params.wallet}/${route.params.currency}/${route.params.blockchain}`,
   }),
 };
 
@@ -31,7 +31,7 @@ const routes: RouteRecordRaw[] = [
       },
       {
         name: 'Blockchains',
-        path: 'wallets/:wallet/:timeframe/:currency',
+        path: 'wallets/:wallet/:currency',
         component: () =>
           import('src/blockchains-module/components/BlockchainList.vue'),
         meta: {
@@ -41,7 +41,7 @@ const routes: RouteRecordRaw[] = [
       },
       {
         name: 'Taxable Events',
-        path: 'wallets/:wallet/:timeframe/:currency/:blockchain',
+        path: 'wallets/:wallet/:currency/:blockchain',
         component: () =>
           import(
             'src/taxable-events-module/components/TaxableEventsTabView.vue'
@@ -53,7 +53,7 @@ const routes: RouteRecordRaw[] = [
             breadcrumbs.TaxableEvents,
           ],
           parent: (route: RouteLocationNormalizedLoaded) =>
-            `/wallets/${route.params.wallet}/${route.params.timeframe}/${route.params.currency}`,
+            `/wallets/${route.params.wallet}/${route.params.currency}`,
         },
       },
     ],
