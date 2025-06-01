@@ -33,7 +33,7 @@ describe('exportDefaultCsv', () => {
       address: '0x123',
       summary: {
         amount: 100,
-        fiatValue: 500
+        fiatValue: 500,
       },
       values: [
         { timestamp: 1700000000, amount: 50, hash: 'hash1' },
@@ -57,7 +57,7 @@ describe('exportDefaultCsv', () => {
         hash: 'hash1',
         utcDate: 'UTC-1700000000',
         totalAmount: 100,
-        totalValue: 500
+        totalValue: 500,
       },
       {
         timestamp: 1700001000,
