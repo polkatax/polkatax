@@ -4,7 +4,7 @@
     <tr>
       <td class="text-left q-pa-sm">Year:</td>
       <td class="text-right q-pa-sm">
-        <TimeFrameDropdown v-model="year" @update:model-value="yearSelected"/>
+        <TimeFrameDropdown v-model="year" @update:model-value="yearSelected" />
       </td>
     </tr>
     <tr>
@@ -43,24 +43,24 @@ import TimeFrameDropdown from '../../time-frame-dropdown/TimeFrameDropdown.vue';
 import { StakingRewardsPerYear } from '../../../../shared-module/model/rewards';
 
 const rewardsStore = useStakingRewardsStore();
-const year: Ref<number | undefined> = ref(undefined)
+const year: Ref<number | undefined> = ref(undefined);
 const rewards: Ref<StakingRewardsPerYear | undefined> = ref(undefined);
 const blockchainLabel: Ref<string> = ref('');
 
-const yearSubscription = rewardsStore.year$.subscribe(y => year.value = y)
+const yearSubscription = rewardsStore.year$.subscribe((y) => (year.value = y));
 
 const subscription = combineLatest([
   useSharedStore().substrateChains$,
   rewardsStore.rewardsPerYear$,
 ]).subscribe(async ([chains, _rewards]) => {
-  rewards.value = _rewards
+  rewards.value = _rewards;
   blockchainLabel.value =
     chains.chains.find((c) => c.domain === _rewards?.chain)?.label ?? '';
 });
 
 onBeforeUnmount(() => {
   subscription.unsubscribe();
-  yearSubscription.unsubscribe()
+  yearSubscription.unsubscribe();
 });
 function formatCurrency(value: number) {
   if (isNaN(value)) {
@@ -88,6 +88,6 @@ function formatTokenAmount(value: number) {
 }
 
 function yearSelected(year: number) {
-  rewardsStore.setYear(year)
+  rewardsStore.setYear(year);
 }
 </script>

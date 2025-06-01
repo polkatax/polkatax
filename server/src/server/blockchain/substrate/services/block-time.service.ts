@@ -27,8 +27,8 @@ export class BlockTimeService {
       chainName,
       estimate,
     );
-    if (Math.abs(currentBlock.block_timestamp - date / 1000) > tolerance) {
-      if (currentBlock?.block_timestamp * 1000 > date) {
+    if (Math.abs(currentBlock.block_timestamp - date) > tolerance) {
+      if (currentBlock?.block_timestamp > date) {
         return this.searchBlock(
           chainName,
           date,
@@ -57,7 +57,7 @@ export class BlockTimeService {
     date: number,
   ): number {
     const timeDiffRel =
-      (date / 1000 - beforeBlock.block_timestamp) /
+      (date - beforeBlock.block_timestamp) /
       (afterBlock.block_timestamp - beforeBlock.block_timestamp);
     return Math.min(
       afterBlock.block_num,
@@ -88,14 +88,14 @@ export class BlockTimeService {
     const lastBlock: Block = blockList[0];
     const blockMin = await this.searchBlock(
       chainName,
-      Math.max(minDate, firstBlock.block_timestamp * 1000),
+      Math.max(minDate, firstBlock.block_timestamp),
       firstBlock,
       lastBlock,
     );
     const blockMax = maxDate
       ? await this.searchBlock(
           chainName,
-          Math.min(maxDate, lastBlock.block_timestamp * 1000),
+          Math.min(maxDate, lastBlock.block_timestamp),
           firstBlock,
           lastBlock,
         )

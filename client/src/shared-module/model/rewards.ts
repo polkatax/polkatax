@@ -7,7 +7,7 @@ export interface Reward extends RewardDto {
 export interface RewardSummary {
   amount: number;
   fiatValue?: number;
-  perYear: { year: number, amount: number, fiatValue?: number }[]
+  perYear: { year: number; amount: number; fiatValue?: number }[];
 }
 
 export interface DailyRewards {
@@ -44,7 +44,7 @@ export interface StakingRewardsPerYear {
   chain: string;
   address: string;
   currency: string;
-  summary: { year: number, amount: number, fiatValue?: number };
+  summary: { year: number; amount: number; fiatValue?: number };
   values: Reward[];
   dailyValues: DailyRewards;
 }

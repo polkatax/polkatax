@@ -55,7 +55,12 @@
               </q-badge>
             </q-td>
             <q-td key="delete" :props="props">
-              <q-btn outline color="primary" icon="delete" @click.stop="confirmDelete(props.row)"></q-btn>
+              <q-btn
+                outline
+                color="primary"
+                icon="delete"
+                @click.stop="confirmDelete(props.row)"
+              ></q-btn>
             </q-td>
           </q-tr>
         </template>
@@ -92,21 +97,18 @@ import { useSharedStore } from '../../shared-module/store/shared.store';
 import { isValidAddress } from '../util/is-valid-address';
 import { useQuasar } from 'quasar';
 import { JobResult } from '../../shared-module/model/job-result';
-const $q = useQuasar()
+const $q = useQuasar();
 const store = useSharedStore();
 const router = useRouter();
 
-const requests: Ref<
-  { wallet: string; currency: string; done: boolean }[]
-> = ref([]);
+const requests: Ref<{ wallet: string; currency: string; done: boolean }[]> =
+  ref([]);
 
 const jobsSubscription = store.jobs$.subscribe((jobs) => {
   const r: any[] = [];
   jobs.forEach((j) => {
     const existing = r.find(
-      (r) =>
-        r.wallet === j.wallet &&
-        r.currency === j.currency
+      (r) => r.wallet === j.wallet && r.currency === j.currency
     );
     if (!existing) {
       r.push({
@@ -149,13 +151,13 @@ function navigateToJob(job: any) {
   router.push(`/wallets/${job.wallet}/${job.currency}`);
 }
 
-function confirmDelete (job: JobResult) {
-      $q.dialog({
-        title: 'Do you want to remove this wallet and its data?',
-        cancel: true,
-        persistent: true
-      }).onOk(() => {
-        store.removeWallet(job)
-      })
-    }
+function confirmDelete(job: JobResult) {
+  $q.dialog({
+    title: 'Do you want to remove this wallet and its data?',
+    cancel: true,
+    persistent: true,
+  }).onOk(() => {
+    store.removeWallet(job);
+  });
+}
 </script>

@@ -7,8 +7,18 @@
           class="row-xl row-lg row-md column-sm column-xs q-pt-xs-sm q-pt-sm-sm q-pt-md-none q-pt-lg-none q-pt-xl-none items-center"
         >
           <div class="flex justify-center items-center">
-            <img src="/white.ico" style="height: 2.25rem; margin: 5px" v-if="!parentRoute"/>
-            <q-btn v-if="parentRoute" outline color="white" label="Back" :to="parentRoute" />
+            <img
+              src="/white.ico"
+              style="height: 2.25rem; margin: 5px"
+              v-if="!parentRoute"
+            />
+            <q-btn
+              v-if="parentRoute"
+              outline
+              color="white"
+              label="Back"
+              :to="parentRoute"
+            />
             <div class="q-ml-sm text-h5">{{ route.name }}</div>
           </div>
         </q-toolbar-title>
@@ -64,23 +74,23 @@ const route = useRoute();
 const alert = ref(false);
 const errorMsg = ref('');
 
-const subscription = merge(
-  useSharedStore().webSocketResponseError$
-).subscribe((err) => {
-  console.log(JSON.stringify(err));
-  switch (err.code) {
-    case 429:
-      errorMsg.value = 'Too many request. Please try again later.';
-      break;
-    case 400:
-      errorMsg.value = 'The data sent to the server is invalid.';
-      break;
-    default:
-      errorMsg.value =
-        'There was an error connecting to the server. Please try again later.';
+const subscription = merge(useSharedStore().webSocketResponseError$).subscribe(
+  (err) => {
+    console.log(JSON.stringify(err));
+    switch (err.code) {
+      case 429:
+        errorMsg.value = 'Too many request. Please try again later.';
+        break;
+      case 400:
+        errorMsg.value = 'The data sent to the server is invalid.';
+        break;
+      default:
+        errorMsg.value =
+          'There was an error connecting to the server. Please try again later.';
+    }
+    alert.value = true;
   }
-  alert.value = true;
-});
+);
 
 onBeforeUnmount(() => {
   subscription.unsubscribe();
@@ -88,7 +98,7 @@ onBeforeUnmount(() => {
 
 const parentRoute = computed(() => {
   return route.meta.parent && typeof route.meta.parent === 'function'
-      ? route.meta.parent(route)
-      : undefined;
+    ? route.meta.parent(route)
+    : undefined;
 });
 </script>

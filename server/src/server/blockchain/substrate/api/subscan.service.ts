@@ -119,14 +119,16 @@ export class SubscanService {
     logger.info(
       `fetchAllStakingRewards for ${chainName}, address ${address}, starting from ${new Date(startDate).toISOString()}`,
     );
-    return this.iterateOverPagesParallel((page) =>
-      this.subscanApi.fetchStakingRewards(
-        chainName,
-        address,
-        page,
-        true,
-        startDate,
-      ), 3
+    return this.iterateOverPagesParallel(
+      (page) =>
+        this.subscanApi.fetchStakingRewards(
+          chainName,
+          address,
+          page,
+          true,
+          startDate,
+        ),
+      3,
     );
   }
 
@@ -168,7 +170,7 @@ export class SubscanService {
       `fetchAllTransfers for ${chainName} and account ${account} starting from ${new Date(startDate).toISOString()}. Evm: ${evm}`,
     );
     const result = await this.iterateOverPagesParallel<
-      RawSubstrateTransferDto & RawEvmTransferDto
+      RawSubstrateTransferDto & RawEvmTransferDto & { timestamp: number }
     >(
       (page) =>
         this.subscanApi.fetchTransfersFrom(
@@ -192,7 +194,7 @@ export class SubscanService {
         label:
           transfer?.to_display?.evm_contract.contract_name || transfer.module,
         block: transfer.block_num,
-        timestamp: transfer.block_timestamp || transfer.create_at,
+        timestamp: transfer.timestamp,
         hash: transfer.hash,
         tokenId: transfer.asset_unique_id || transfer.contract,
         extrinsic_index: transfer.extrinsic_index,
@@ -211,7 +213,7 @@ export class SubscanService {
       `fetchAllTransfers for ${chainName} and account ${account}. Evm: ${evm}`,
     );
     const result = await this.iterateOverPagesParallel<
-      RawSubstrateTransferDto & RawEvmTransferDto
+      RawSubstrateTransferDto & RawEvmTransferDto & { timestamp: number }
     >(
       (page) =>
         this.subscanApi.fetchTransfers(
@@ -236,7 +238,7 @@ export class SubscanService {
         label:
           transfer?.to_display?.evm_contract.contract_name || transfer.module,
         block: transfer.block_num,
-        timestamp: transfer.block_timestamp || transfer.create_at,
+        timestamp: transfer.timestamp,
         hash: transfer.hash,
         tokenId: transfer.asset_unique_id || transfer.contract,
         extrinsic_index: transfer.extrinsic_index,

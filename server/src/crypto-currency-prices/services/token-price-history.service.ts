@@ -11,8 +11,6 @@ import {
   preferredQuoteCurrencyValues,
 } from "../../model/preferred-quote-currency";
 
-const MAX_AGE = 4 * 60 * 60 * 1000;
-
 export class TokenPriceHistoryService {
   private cachedPrices: { [coingeckoId: string]: Quotes } = {};
   private timer;

@@ -19,7 +19,7 @@ export const exportDefaultCsv = (rewards: StakingRewardsPerYear) => {
   const values = [...(rewards.values || [])].map((v) => {
     return {
       ...v,
-      utcDate: formatDateUTC(v.timestamp * 1000),
+      utcDate: formatDateUTC(v.timestamp),
     };
   });
   values[0] = {
@@ -34,6 +34,8 @@ export const exportDefaultCsv = (rewards: StakingRewardsPerYear) => {
   const csv = parser.parse(values);
   saveAs(
     new Blob([csv], { type: 'text/plain;charset=utf-8' }),
-    `staking-rewards-${rewards.chain}-${rewards.address.substring(0, 5)}_${rewards.year}.csv`
+    `staking-rewards-${rewards.chain}-${rewards.address.substring(0, 5)}_${
+      rewards.year
+    }.csv`
   );
 };

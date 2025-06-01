@@ -54,7 +54,9 @@ describe('exportPdf', () => {
       14,
       20
     );
-    expect(mockDocInstance.save).toHaveBeenCalledWith('staking-rewards-Polkadot-0x123-2024.pdf');
+    expect(mockDocInstance.save).toHaveBeenCalledWith(
+      'staking-rewards-Polkadot-0x123-2024.pdf'
+    );
 
     // AutoTable called with correct config
     expect(autoTable).toHaveBeenCalled();

@@ -22,7 +22,7 @@ describe("addFiatValuesToTransferList", () => {
   it("should calculate fiat value using latest price if date is current", () => {
     const transfer: PricedTransfer = {
       amount: 2,
-      timestamp: Math.floor(Date.now() / 1000),
+      timestamp: Math.floor(Date.now()),
       coingeckoId: "bitcoin",
     } as any;
 
@@ -43,7 +43,7 @@ describe("addFiatValuesToTransferList", () => {
 
   it("should use historical price if timestamp is not current date", () => {
     const historicalDate = "2025-05-10";
-    const timestamp = Math.floor(new Date(historicalDate).getTime() / 1000);
+    const timestamp = Math.floor(new Date(historicalDate).getTime());
 
     const transfer: PricedTransfer = {
       amount: 5,
@@ -67,7 +67,7 @@ describe("addFiatValuesToTransferList", () => {
   });
 
   it("should log a warning if no matching quote is found", () => {
-    const timestamp = Math.floor(new Date("2025-05-10").getTime() / 1000);
+    const timestamp = Math.floor(new Date("2025-05-10").getTime());
 
     const transfer: PricedTransfer = {
       amount: 10,
@@ -92,7 +92,7 @@ describe("addFiatValuesToTransferList", () => {
   it("should skip transfer if coingeckoId is missing", () => {
     const transfer: PricedTransfer = {
       amount: 1,
-      timestamp: Math.floor(Date.now() / 1000),
+      timestamp: Math.floor(Date.now()),
     } as any;
 
     const quotes = {};

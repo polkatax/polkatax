@@ -33,11 +33,15 @@ const sortJobs = (jobs: JobResult[]) => {
     if (a.wallet > b.wallet) {
       return 1;
     }
-    return a.wallet < b.wallet ? -1 : 1
+    return a.wallet < b.wallet ? -1 : 1;
   });
 };
 
-const mapRawValuesToRewards = (job: JobResult, tokenSymbol: string, rewards: Reward[]): Rewards => {
+const mapRawValuesToRewards = (
+  job: JobResult,
+  tokenSymbol: string,
+  rewards: Reward[]
+): Rewards => {
   const result = {
     values: rewards,
     summary: calculateRewardSummary(rewards),
@@ -56,18 +60,17 @@ const jobs$ = new BehaviorSubject<JobResult[]>([]);
 fetchAllJobsFromIndexedDB().then((jobs) => {
   const storedJobs = jobs.filter((job) => job.type === 'staking_rewards');
   if (storedJobs.length > 1) {
-    storedJobs
-      .forEach((s) => {
-        wsSendMsg({
-          type: 'fetchDataRequest',
-          payload: {
-            currency: s.currency,
-            wallet: s.wallet,
-            blockchains: [s.blockchain],
-            syncFromDate: s.status === 'done' ? s.syncedUntil : undefined
-          },
-        });
+    storedJobs.forEach((s) => {
+      wsSendMsg({
+        type: 'fetchDataRequest',
+        payload: {
+          currency: s.currency,
+          wallet: s.wallet,
+          blockchains: [s.blockchain],
+          syncFromDate: s.status === 'done' ? s.syncedUntil : undefined,
+        },
       });
+    });
   }
   jobs$.next(sortJobs(storedJobs));
 });
@@ -88,21 +91,33 @@ wsMsgReceived$
     );
     if (matching) {
       if (job.status === 'done' && job.data) {
-        const newValues = (job.data.values ?? []).filter(v => v.timestamp >= job.syncFromDate/1000!)
-        const olderValues = (matching.data?.values ?? []).filter(v => v.timestamp < job.syncFromDate/1000!)
+        const newValues = (job.data.values ?? []).filter(
+          (v) => v.timestamp >= job.syncFromDate!
+        );
+        const olderValues = (matching.data?.values ?? []).filter(
+          (v) => v.timestamp < job.syncFromDate!
+        );
         job.data.values = addIsoDate(newValues).concat(olderValues);
-        filterFromBeginningLastYear(job.data)
-        matching.data = mapRawValuesToRewards(matching, job.data.token, job.data.values);
-        matching.syncedUntil = job.syncedUntil
+        filterFromBeginningLastYear(job.data);
+        matching.data = mapRawValuesToRewards(
+          matching,
+          job.data.token,
+          job.data.values
+        );
+        matching.syncedUntil = job.syncedUntil;
       }
-      matching.lastModified = job.lastModified
+      matching.lastModified = job.lastModified;
       matching.status = job.status;
       matching.error = job.error;
       await createOrUpdateJobInIndexedDB(matching);
     } else {
       if (job.data) {
-        filterFromBeginningLastYear(job.data)
-        job.data = mapRawValuesToRewards(job, job.data.token, addIsoDate(job.data.values));
+        filterFromBeginningLastYear(job.data);
+        job.data = mapRawValuesToRewards(
+          job,
+          job.data.token,
+          addIsoDate(job.data.values)
+        );
       }
       jobs.push(job);
       await createOrUpdateJobInIndexedDB(job);
@@ -143,7 +158,7 @@ export const useSharedStore = defineStore('shared', {
           wallet: this.address.trim(),
           currency: await firstValueFrom(
             useSharedStore().currency$.pipe(filter((c) => c !== undefined))
-          )
+          ),
         },
       });
     },
@@ -152,13 +167,21 @@ export const useSharedStore = defineStore('shared', {
         type: 'unsubscribeRequest',
         payload: {
           wallet: job.wallet,
-          currency: job.currency
-        }
-      })
-      await firstValueFrom(wsMsgReceived$.pipe(filter(m => m.type === 'acknowledgeUnsubscribe' && m.reqId === reqId)))
-      const toDelete = (await firstValueFrom(this.jobs$)).filter(j => j.wallet === job.wallet && job.currency === j.currency)
-      await Promise.all(toDelete.map(j => removeJobFromIndexedDB(j)))
-      jobs$.next(await fetchAllJobsFromIndexedDB())
-    }
+          currency: job.currency,
+        },
+      });
+      await firstValueFrom(
+        wsMsgReceived$.pipe(
+          filter(
+            (m) => m.type === 'acknowledgeUnsubscribe' && m.reqId === reqId
+          )
+        )
+      );
+      const toDelete = (await firstValueFrom(this.jobs$)).filter(
+        (j) => j.wallet === job.wallet && job.currency === j.currency
+      );
+      await Promise.all(toDelete.map((j) => removeJobFromIndexedDB(j)));
+      jobs$.next(await fetchAllJobsFromIndexedDB());
+    },
   },
 });

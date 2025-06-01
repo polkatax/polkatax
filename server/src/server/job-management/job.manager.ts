@@ -55,8 +55,10 @@ export class JobManager {
     for (let blockchain of blockchains) {
       const job = matchingJobs.find((j) => j.blockchain === blockchain);
       // if job is in error or the requesed date is older than the job fromDate -> delete job
-      const jobCannotBeReused = job && (job.status === "error" || job.syncFromDate > syncFromDate)
-      const jobOutdatedButDataReusable = job && job.status === "done" && this.isOutDated(job)
+      const jobCannotBeReused =
+        job && (job.status === "error" || job.syncFromDate > syncFromDate);
+      const jobOutdatedButDataReusable =
+        job && job.status === "done" && this.isOutDated(job);
       if (job && jobCannotBeReused) {
         this.jobsCache.delete(job);
       }

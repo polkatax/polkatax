@@ -1,5 +1,11 @@
 import { defineStore } from 'pinia';
-import { BehaviorSubject, combineLatest, map, Observable, ReplaySubject } from 'rxjs';
+import {
+  BehaviorSubject,
+  combineLatest,
+  map,
+  Observable,
+  ReplaySubject,
+} from 'rxjs';
 import { useSharedStore } from '../../../../shared-module/store/shared.store';
 import { extractStakingRewardsPerYear } from '../../../../shared-module/helper/extract-staking-rewards-per-year';
 import { StakingRewardsPerYear } from '../../../../shared-module/model/rewards';
@@ -7,7 +13,7 @@ const blockchain$ = new ReplaySubject<string>(1);
 const wallet$ = new ReplaySubject<string>(1);
 const currency$ = new ReplaySubject<string>(1);
 
-const year$ = new BehaviorSubject(new Date().getFullYear() -1)
+const year$ = new BehaviorSubject(new Date().getFullYear() - 1);
 
 const totalRewards$ = combineLatest([
   useSharedStore().jobs$,
@@ -26,15 +32,18 @@ const totalRewards$ = combineLatest([
   map((jobResult) => jobResult?.data)
 );
 
-const rewardsPerYear$: Observable<StakingRewardsPerYear | undefined> = combineLatest([totalRewards$, year$]).pipe(map(([rewards, year]) => {
-  return extractStakingRewardsPerYear(rewards, year)
-}))
+const rewardsPerYear$: Observable<StakingRewardsPerYear | undefined> =
+  combineLatest([totalRewards$, year$]).pipe(
+    map(([rewards, year]) => {
+      return extractStakingRewardsPerYear(rewards, year);
+    })
+  );
 
 export const useStakingRewardsStore = defineStore('rewards', {
   state: () => {
     return {
       rewardsPerYear$,
-      year$: year$.asObservable()
+      year$: year$.asObservable(),
     };
   },
   actions: {
@@ -48,7 +57,7 @@ export const useStakingRewardsStore = defineStore('rewards', {
       currency$.next(currency);
     },
     setYear(year: number) {
-      year$.next(year)
-    }
+      year$.next(year);
+    },
   },
 });

@@ -15,7 +15,7 @@ socket.addEventListener('open', () => {
 });
 
 export const wsSendMsg = (msg: WebSocketOutGoingMessage) => {
-  const reqId = crypto.randomUUID()
+  const reqId = crypto.randomUUID();
   connected$.pipe(take(1)).subscribe(() => {
     socket.send(
       JSON.stringify({
@@ -25,7 +25,7 @@ export const wsSendMsg = (msg: WebSocketOutGoingMessage) => {
       })
     );
   });
-  return reqId
+  return reqId;
 };
 
 socket.addEventListener('message', (event) => {

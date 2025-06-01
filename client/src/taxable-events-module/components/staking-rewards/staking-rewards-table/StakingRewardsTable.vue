@@ -8,13 +8,25 @@
       :pagination="initialPagination"
     >
       <template v-slot:top>
-        <q-btn color="primary" class="q-mr-sm" @click="exportRewardsAsPdf" :disable="noRewards"
+        <q-btn
+          color="primary"
+          class="q-mr-sm"
+          @click="exportRewardsAsPdf"
+          :disable="noRewards"
           >Export Pdf
         </q-btn>
-        <q-btn color="primary" class="q-mr-sm" @click="exportRewardsAsCsv" :disable="noRewards"
+        <q-btn
+          color="primary"
+          class="q-mr-sm"
+          @click="exportRewardsAsCsv"
+          :disable="noRewards"
           >Export CSV
         </q-btn>
-        <q-btn color="primary" class="q-mr-sm" @click="exportRewardsAsKoinlyCsv" :disable="noRewards"
+        <q-btn
+          color="primary"
+          class="q-mr-sm"
+          @click="exportRewardsAsKoinlyCsv"
+          :disable="noRewards"
           >Koinly Export
         </q-btn>
       </template>
@@ -23,7 +35,10 @@
 </template>
 <script setup lang="ts">
 import { computed, onUnmounted, Ref, ref } from 'vue';
-import { Reward, StakingRewardsPerYear } from '../../../../shared-module/model/rewards';
+import {
+  Reward,
+  StakingRewardsPerYear,
+} from '../../../../shared-module/model/rewards';
 import { useStakingRewardsStore } from '../store/staking-rewards.store';
 import {
   tokenAmountFormatter,
@@ -45,8 +60,8 @@ onUnmounted(() => {
 });
 
 const noRewards = computed(() => {
-  return !rewards.value || rewards.value?.values.length === 0
-})
+  return !rewards.value || rewards.value?.values.length === 0;
+});
 
 const columns = computed(() => [
   {
@@ -54,7 +69,7 @@ const columns = computed(() => [
     required: true,
     label: 'Date',
     align: 'left',
-    field: (row: Reward) => formatDate(row.timestamp * 1000),
+    field: (row: Reward) => formatDate(row.timestamp),
     sortable: true,
   },
   {
@@ -130,7 +145,9 @@ function exportRewardsAsKoinlyCsv() {
 
 async function exportRewardsAsPdf() {
   // loading exportPdf on demand due to module size.
-  const { exportPdf } = await import('../../../../shared-module/service/export-pdf');
+  const { exportPdf } = await import(
+    '../../../../shared-module/service/export-pdf'
+  );
   exportPdf(rewards.value!);
 }
 const amountFormatter = computed(() => tokenAmountFormatter(tokenDigits.value));

@@ -40,7 +40,8 @@ export const cryptoCurrencyPricesServer = {
         const yesterday = new Date();
         yesterday.setDate(yesterday.getDate() - 1);
         if (
-          quotes?.quotes && quotes?.quotes[formatDate(yesterday)] &&
+          quotes?.quotes &&
+          quotes?.quotes[formatDate(yesterday)] &&
           !quotes.quotes[todayFormatted]
         ) {
           // use yesterday eod quotes if current day not finished yet

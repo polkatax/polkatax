@@ -1,6 +1,5 @@
 <template>
   <q-page class="q-px-sm q-mx-auto content">
-
     <div class="text-center q-my-xl" v-if="rewards">
       <reward-summary />
     </div>
@@ -36,12 +35,13 @@ rewardsStore.setCurrency(route.params.currency as string);
 rewardsStore.setBlockchain(route.params.blockchain as string);
 rewardsStore.setWallet(route.params.wallet as string);
 
-const rewardsSubscription = rewardsStore.rewardsPerYear$.subscribe(async (r) => {
-  rewards.value = r;
-});
+const rewardsSubscription = rewardsStore.rewardsPerYear$.subscribe(
+  async (r) => {
+    rewards.value = r;
+  }
+);
 
 onUnmounted(() => {
   rewardsSubscription.unsubscribe();
-
 });
 </script>

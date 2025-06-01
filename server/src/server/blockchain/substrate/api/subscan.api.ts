@@ -62,12 +62,14 @@ export class SubscanApi {
         finalized: true,
       },
     );
-    const data = response.data?.events ?? [];
+    const data = (response.data?.events ?? []).map((e) => ({
+      ...e,
+      block_timestamp: e.block_timestamp * 1000,
+    }));
     return {
       list: data,
       hasNext:
-        data.length >= 100 &&
-        data[data.length - 1].block_timestamp * 1000 >= minDate,
+        data.length >= 100 && data[data.length - 1].block_timestamp >= minDate,
     };
   }
 
@@ -101,7 +103,7 @@ export class SubscanApi {
         return {
           hash: entry.extrinsic_hash,
           account: entry.account_display.address,
-          block_timestamp: entry.block_timestamp,
+          block_timestamp: entry.block_timestamp * 1000,
           block_num: entry.block_num,
           label:
             (entry.call_module || "") + (entry.call_module_function || "."),
@@ -154,7 +156,12 @@ export class SubscanApi {
         only_head: true,
       },
     );
-    return response.data;
+    return response.data
+      ? {
+          ...response.data,
+          block_timestamp: response.data.block_timestamp * 1000,
+        }
+      : response.data;
   }
 
   async fetchBlockList(chainName: string, page = 0, row = 1): Promise<Block[]> {
@@ -166,7 +173,10 @@ export class SubscanApi {
         row,
       },
     );
-    return response.data.blocks;
+    return response.data.blocks.map((b) => ({
+      ...b,
+      block_timestamp: b.block_timestamp * 1000,
+    }));
   }
 
   private mapStakingRewards(
@@ -176,7 +186,7 @@ export class SubscanApi {
       return {
         event_id: entry.event_id,
         amount: BigNumber(entry.amount),
-        timestamp: entry.block_timestamp,
+        timestamp: entry.block_timestamp * 1000, // convert from sec to ms
         block: entry.extrinsic_index.split("-")[0],
         hash: entry.extrinsic_hash,
       };
@@ -200,12 +210,10 @@ export class SubscanApi {
         is_stash: isStash,
       },
     );
-    const list = responseBody.data?.list || [];
+    const list = this.mapStakingRewards(responseBody.data?.list || []);
     return {
-      list: this.mapStakingRewards(list),
-      hasNext:
-        list.length >= 100 &&
-        list[list.length - 1].block_timestamp * 1000 >= minDate,
+      list,
+      hasNext: list.length >= 100 && list[list.length - 1].timestamp >= minDate,
     };
   }
 
@@ -268,7 +276,7 @@ export class SubscanApi {
           hash: entry.extrinsic_hash,
           from: entry.account_display.address,
           to: entry.to,
-          timestamp: entry.block_timestamp,
+          timestamp: entry.block_timestamp * 1000, // sec -> ms
           block_num: entry.block_num,
           label: entry.call_module ?? "" + entry.call_module_function ?? "",
           amount: entry.value ? Number(entry.value) : 0,
@@ -288,7 +296,8 @@ export class SubscanApi {
     minDate: number,
     evm = false,
   ): Promise<{
-    list: (RawSubstrateTransferDto & RawEvmTransferDto)[];
+    list: (RawSubstrateTransferDto &
+      RawEvmTransferDto & { timestamp: number })[];
     hasNext: boolean;
   }> {
     const endpoint = evm
@@ -304,15 +313,17 @@ export class SubscanApi {
         success: true,
       },
     );
-    const list = responseBody.data?.transfers || responseBody.data?.list || [];
+    const list = (
+      responseBody.data?.transfers ||
+      responseBody.data?.list ||
+      []
+    ).map((t) => ({
+      ...t,
+      timestamp: (t.block_timestamp || t.create_at) * 1000,
+    }));
     return {
       list,
-      hasNext:
-        list.length >= 100 &&
-        (list[list.length - 1].block_timestamp ??
-          list[list.length - 1].create_at) *
-          1000 >=
-          minDate,
+      hasNext: list.length >= 100 && list[list.length - 1].timestamp >= minDate,
     };
   }
 
@@ -324,7 +335,8 @@ export class SubscanApi {
     block_max?: number,
     evm = false,
   ): Promise<{
-    list: (RawSubstrateTransferDto & RawEvmTransferDto)[];
+    list: (RawSubstrateTransferDto &
+      RawEvmTransferDto & { timestamp: number })[];
     hasNext: boolean;
   }> {
     const endpoint = evm
@@ -344,7 +356,14 @@ export class SubscanApi {
             : undefined,
       },
     );
-    const list = responseBody.data?.transfers || responseBody.data?.list || [];
+    const list = (
+      responseBody.data?.transfers ||
+      responseBody.data?.list ||
+      []
+    ).map((t) => ({
+      ...t,
+      timestamp: (t.block_timestamp || t.create_at) * 1000,
+    }));
     return {
       list,
       hasNext: list.length >= 100,

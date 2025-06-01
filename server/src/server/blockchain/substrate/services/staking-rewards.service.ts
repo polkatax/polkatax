@@ -19,9 +19,7 @@ export class StakingRewardsService {
   ): Promise<StakingReward[]> {
     return rewards
       .filter(
-        (r) =>
-          (!maxDate || r.timestamp <= maxDate / 1000) &&
-          r.timestamp >= minDate / 1000,
+        (r) => (!maxDate || r.timestamp <= maxDate) && r.timestamp >= minDate,
       )
       .map((reward) => ({
         block: reward.block,

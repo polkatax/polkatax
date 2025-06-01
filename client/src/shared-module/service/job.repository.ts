@@ -20,14 +20,14 @@ const createKey = (job: Job) => {
   return `job_${job.type}_${job.blockchain}_${job.wallet}_${job.currency}`;
 };
 
-const getTx = async () =>  {
+const getTx = async () => {
   const db = await getDB();
   const tx = db.transaction(STORE_NAME, 'readwrite');
   return { tx, store: tx.objectStore(STORE_NAME) };
-}
+};
 
 export const createOrUpdateJobInIndexedDB = async (job: Job) => {
-  const { tx, store } = await getTx()
+  const { tx, store } = await getTx();
   const jobWithId = { ...job, id: createKey(job) };
   await store.put(jobWithId);
   await tx.done;
@@ -38,8 +38,8 @@ export const fetchAllJobsFromIndexedDB = async (): Promise<Job[]> => {
   return await db.getAll(STORE_NAME);
 };
 
-export const removeJobFromIndexedDB =  async (job: Job) => {
-  const { tx, store } = await getTx()
+export const removeJobFromIndexedDB = async (job: Job) => {
+  const { tx, store } = await getTx();
   const jobWithId = createKey(job);
   await store.delete(jobWithId);
   await tx.done;

@@ -42,7 +42,7 @@ export class JobConsumer {
       if (job.data) {
         const previouslySyncedValues = (
           job.data as StakingRewardsResponse
-        ).values.filter((v) => v.timestamp * 1000 < job.syncFromDate);
+        ).values.filter((v) => v.timestamp < job.syncFromDate);
         result.values = result.values.concat(previouslySyncedValues);
       }
       this.jobsCache.setDone(result, job);

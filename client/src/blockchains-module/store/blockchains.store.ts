@@ -13,22 +13,14 @@ const jobsMatchingWallet$ = combineLatest([
   currency$,
 ]).pipe(
   map(([jobs, wallet, currency]) => {
-    return jobs.filter(
-      (j) =>
-        j.wallet === wallet &&
-        j.currency === currency
-    );
+    return jobs.filter((j) => j.wallet === wallet && j.currency === currency);
   })
 );
 
 const syncedChains$ = jobsMatchingWallet$.pipe(
   map((jobs) => {
     return jobs
-      .filter(
-        (j) =>
-          j.status === 'error' ||
-          (j.data?.summary?.amount ?? 0 > 0)
-      )
+      .filter((j) => j.status === 'error' || (j.data?.summary?.amount ?? 0 > 0))
       .sort((a, b) => (a.blockchain > b.blockchain ? 1 : -1));
   })
 );
@@ -59,9 +51,9 @@ export const useBlockchainsStore = defineStore('blockchains', {
         payload: {
           wallet: job.wallet,
           blockchains: [job.blockchain],
-          currency: job.currency
-        }
-      })
-    }
+          currency: job.currency,
+        },
+      });
+    },
   },
 });
