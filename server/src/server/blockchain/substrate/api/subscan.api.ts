@@ -13,6 +13,7 @@ import {
 } from "../model/raw-transfer";
 import { logger } from "../../../logger/logger";
 import { apiThrottleQueue } from "./request-queue";
+import { HttpError } from "../../../../common/error/HttpError";
 
 export class SubscanApi {
   private requestHelper: RequestHelper;
@@ -40,7 +41,7 @@ export class SubscanApi {
         return await query();
       } catch (e) {
         logger.warn(e);
-        if (i === retries - 1) throw e;
+        if (i === retries - 1 || (e as HttpError).statusCode !== 429) throw e;
         await new Promise((res) => setTimeout(res, backOff[i]));
       }
     }

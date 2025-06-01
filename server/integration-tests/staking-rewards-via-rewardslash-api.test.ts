@@ -5,8 +5,6 @@ import { startStub as startPricesStub } from "../src/crypto-currency-prices/stub
 import { startStub as startFiatStub } from "../src/fiat-exchange-rates/stub";
 import { FastifyInstance } from "fastify";
 import { passThroughHandlers } from "./util/pass-through-handlers";
-import { metaDataHandler } from "./util/metadata-handler";
-import { createBlockHandlers } from "./util/create-block-handlers";
 import { scanTokenHandler } from "./util/scan-token-handler";
 import { createPaginatedMockResponseHandler } from "./util/create-paginated-mock-response-handler";
 import { WsWrapper } from "./util/ws-wrapper";
@@ -16,18 +14,12 @@ describe("staking rewards via reward_slash endpoint", () => {
   let server: SetupServerApi;
   let wsWrapper: WsWrapper;
 
-  let year: number;
-  const createDefaultHandlers = (year = 2024) => {
-    return [
-      ...createBlockHandlers(year),
-      metaDataHandler,
-      ...passThroughHandlers,
-      scanTokenHandler,
-    ];
+  let year: number = new Date().getFullYear() - 1;
+  const createDefaultHandlers = () => {
+    return [...passThroughHandlers, scanTokenHandler];
   };
 
   beforeEach(async () => {
-    year = 2024;
     process.env["SUBSCAN_API_KEY"] = "bla";
     fastiyInstances.push(
       ...[
@@ -65,7 +57,7 @@ describe("staking rewards via reward_slash endpoint", () => {
     await wsWrapper.connect();
     wsWrapper.send({
       type: "fetchDataRequest",
-      requestId: "xyz",
+      reqId: "xyz",
       timestamp: 0,
       payload: {
         wallet: "2Fd1UGzT8yuhksiKy98TpDg794dEELvNFqenJjRHFvwfuU83",
@@ -76,7 +68,7 @@ describe("staking rewards via reward_slash endpoint", () => {
     await wsWrapper.waitForNMessages(3);
     const msg = wsWrapper.receivedMessages;
 
-    expect(msg[0].correspondingRequestId).toBe("xyz");
+    expect(msg[0].reqId).toBe("xyz");
     expect(msg[0].payload.length).toBe(1);
     expect(msg[1].payload.length).toBe(1);
     expect(msg[1].payload[0].status).toBe("in_progress");
@@ -85,14 +77,13 @@ describe("staking rewards via reward_slash endpoint", () => {
       values: [
         {
           block: "999",
-          timestamp: mockStakingRewards[0].block_timestamp,
+          timestamp: mockStakingRewards[0].block_timestamp * 1000,
           amount: 123,
           hash: "0xa",
           price: 10,
           fiatValue: 1230,
         },
       ],
-      priceEndDay: 10,
       token: "DOT",
     });
   });
@@ -110,7 +101,7 @@ describe("staking rewards via reward_slash endpoint", () => {
         event_id: "Reward",
         amount: "2000000000000",
         block_timestamp:
-          new Date(`${year + 1}-04-04 00:00:00`).getTime() / 1000, // shoud be removed due to timestamp
+          new Date(`${year - 2}-04-04 00:00:00`).getTime() / 1000, // shoud be removed due to timestamp
         extrinsic_index: "997-6",
         extrinsic_hash: "0xb",
       },
@@ -146,7 +137,7 @@ describe("staking rewards via reward_slash endpoint", () => {
     await wsWrapper.connect();
     wsWrapper.send({
       type: "fetchDataRequest",
-      requestId: "xyz",
+      reqId: "xyz",
       timestamp: 0,
       payload: {
         wallet: "2Fd1UGzT8yuhksiKy98TpDg794dEELvNFqenJjRHFvwfuU83",
@@ -162,7 +153,7 @@ describe("staking rewards via reward_slash endpoint", () => {
       values: [
         {
           block: "999",
-          timestamp: mockStakingRewards[0].block_timestamp,
+          timestamp: mockStakingRewards[0].block_timestamp * 1000,
           amount: 100,
           hash: "0xa",
           price: 10,
@@ -170,7 +161,7 @@ describe("staking rewards via reward_slash endpoint", () => {
         },
         {
           block: "997",
-          timestamp: mockStakingRewards[2].block_timestamp,
+          timestamp: mockStakingRewards[2].block_timestamp * 1000,
           amount: 200,
           hash: "0xb",
           price: 10,
@@ -178,14 +169,13 @@ describe("staking rewards via reward_slash endpoint", () => {
         },
         {
           block: "998",
-          timestamp: mockStakingRewards[3].block_timestamp,
+          timestamp: mockStakingRewards[3].block_timestamp * 1000,
           amount: -300,
           hash: "0xc",
           price: 10,
           fiatValue: -3000,
         },
       ],
-      priceEndDay: 10,
       token: "DOT",
     });
   });
@@ -218,7 +208,7 @@ describe("staking rewards via reward_slash endpoint", () => {
     await wsWrapper.connect();
     wsWrapper.send({
       type: "fetchDataRequest",
-      requestId: "xyz",
+      reqId: "xyz",
       timestamp: 0,
       payload: {
         wallet: "2Fd1UGzT8yuhksiKy98TpDg794dEELvNFqenJjRHFvwfuU83",

@@ -281,7 +281,7 @@ const columns = ref([
     label: 'Blockchain',
   },
   { name: 'currency', label: 'Currency' },
-  { name: 'amountRewards', label: 'Total rewards' },
+  { name: 'amountRewards', label: 'Total staking rewards' },
   { name: 'syncFromDate', label: 'Since' },
   { name: 'lastSynchronized', label: 'Synchronized on' },
   { name: 'actions', label: 'Actions' },

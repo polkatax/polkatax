@@ -5,8 +5,6 @@ import { startStub as startPricesStub } from "../src/crypto-currency-prices/stub
 import { startStub as startFiatStub } from "../src/fiat-exchange-rates/stub";
 import { FastifyInstance } from "fastify";
 import { passThroughHandlers } from "./util/pass-through-handlers";
-import { metaDataHandler } from "./util/metadata-handler";
-import { createBlockHandlers } from "./util/create-block-handlers";
 import { scanTokenHandler } from "./util/scan-token-handler";
 import { SubscanEvent } from "../src/server/blockchain/substrate/model/subscan-event";
 import { RawSubstrateTransferDto } from "../src/server/blockchain/substrate/model/raw-transfer";
@@ -18,6 +16,7 @@ describe("fetch staking rewards via the events API", () => {
   let fastiyInstances: FastifyInstance[] = [];
   let server: SetupServerApi;
   let wsWrapper: WsWrapper;
+  const year = new Date().getFullYear() - 1;
 
   const evmAddress = "0x58F17ebFe6B126E9f196e7a87f74e9f026a27A1F";
   const substrateAddress = "EUKqtB33pRN2cgru8WXiz4zAuZUn4YRuWG25AZqjzPAdVvJ";
@@ -30,13 +29,8 @@ describe("fetch staking rewards via the events API", () => {
     },
   );
 
-  const createDefaultHandlers = (year) => {
-    return [
-      ...createBlockHandlers(year),
-      metaDataHandler,
-      ...passThroughHandlers,
-      scanTokenHandler,
-    ];
+  const createDefaultHandlers = () => {
+    return [...passThroughHandlers, scanTokenHandler];
   };
 
   beforeEach(async () => {
@@ -51,8 +45,6 @@ describe("fetch staking rewards via the events API", () => {
   });
 
   test("simple example with only 1 reward", async () => {
-    const year = 2024;
-
     const mockEvents: SubscanEvent[] = [
       {
         id: 1,
@@ -104,7 +96,7 @@ describe("fetch staking rewards via the events API", () => {
     );
 
     server = setupServer(
-      ...createDefaultHandlers(2024),
+      ...createDefaultHandlers(),
       transfersMock,
       eventsMock,
       mapToSubstrateAccountMock,
@@ -115,7 +107,7 @@ describe("fetch staking rewards via the events API", () => {
     await wsWrapper.connect();
     wsWrapper.send({
       type: "fetchDataRequest",
-      requestId: "abc123",
+      reqId: "abc123",
       timestamp: 0,
       payload: {
         wallet: evmAddress,
@@ -131,34 +123,39 @@ describe("fetch staking rewards via the events API", () => {
     expect(msg[1].payload[0].status).toBe("in_progress");
     expect(msg[2].payload[0].status).toBe("done");
 
-    delete msg[2].payload[0].lastModified;
-    delete msg[2].timestamp;
+    expect(msg[2].reqId).toEqual("abc123");
+    const expectedSyncFromDate = new Date(
+      Date.UTC(year - 1, 11, 31, 0, 0, 0, 0),
+    ).getTime();
     expect(msg[2]).toEqual({
       reqId: "abc123",
       payload: [
         {
           reqId: "abc123",
-          wallet: evmAddress,
+          wallet: "0x58F17ebFe6B126E9f196e7a87f74e9f026a27A1F",
           blockchain: "mythos",
           type: "staking_rewards",
           status: "done",
+          lastModified: expect.any(Number),
           currency: "EUR",
+          syncFromDate: expectedSyncFromDate,
           data: {
             values: [
               {
                 block: 1000,
-                timestamp: 1712181600,
+                timestamp: 1712181600000,
                 amount: 450,
                 hash: "0x_reward_hash",
                 price: 10,
                 fiatValue: 4500,
               },
             ],
-            priceEndDay: 10,
             token: "MYTH",
           },
+          syncedUntil: expect.any(Number),
         },
       ],
+      timestamp: expect.any(Number),
       type: "data",
     });
   });
@@ -213,7 +210,7 @@ describe("fetch staking rewards via the events API", () => {
         from: "0xfoo",
         to: substrateAddress,
         block_timestamp:
-          new Date(`${year - 1}-06-04 00:00:00`).getTime() / 1000, // old event
+          new Date(`${year - 1}-06-04 00:00:00`).getTime() / 1000, // old transfer
         amount: "100",
         hash: "0x_reward_hash2",
         extrinsic_index: "1001-4",
@@ -226,7 +223,7 @@ describe("fetch staking rewards via the events API", () => {
     );
 
     server = setupServer(
-      ...createDefaultHandlers(2024),
+      ...createDefaultHandlers(),
       transfersMock,
       eventsMock,
       mapToSubstrateAccountMock,
@@ -237,7 +234,7 @@ describe("fetch staking rewards via the events API", () => {
     await wsWrapper.connect();
     wsWrapper.send({
       type: "fetchDataRequest",
-      requestId: "abc123",
+      reqId: "abc123",
       timestamp: 0,
       payload: {
         wallet: evmAddress,
@@ -254,14 +251,13 @@ describe("fetch staking rewards via the events API", () => {
       values: [
         {
           block: 1000,
-          timestamp: mockTransfers[0].block_timestamp,
+          timestamp: mockTransfers[0].block_timestamp * 1000,
           amount: 450,
           hash: "0x_reward_hash1",
           price: 10,
           fiatValue: 4500,
         },
       ],
-      priceEndDay: 10,
       token: "MYTH",
     });
   });
@@ -298,7 +294,7 @@ describe("fetch staking rewards via the events API", () => {
     );
 
     server = setupServer(
-      ...createDefaultHandlers(year),
+      ...createDefaultHandlers(),
       transfersMock,
       eventsMock,
       mapToSubstrateAccountMock,
@@ -309,7 +305,7 @@ describe("fetch staking rewards via the events API", () => {
     await wsWrapper.connect();
     wsWrapper.send({
       type: "fetchDataRequest",
-      requestId: "abc123",
+      reqId: "abc123",
       timestamp: 0,
       payload: {
         wallet: evmAddress,
@@ -326,7 +322,6 @@ describe("fetch staking rewards via the events API", () => {
     expect(msg[2].payload[0].status).toBe("done");
     expect(msg[2].payload[0].data).toEqual({
       values: [],
-      priceEndDay: 10,
       token: "MYTH",
     });
   });
@@ -385,7 +380,7 @@ describe("fetch staking rewards via the events API", () => {
     );
 
     server = setupServer(
-      ...createDefaultHandlers(year),
+      ...createDefaultHandlers(),
       transfersMock,
       eventsMock,
       mapToSubstrateAccountMock,
@@ -396,7 +391,7 @@ describe("fetch staking rewards via the events API", () => {
     await wsWrapper.connect();
     wsWrapper.send({
       type: "fetchDataRequest",
-      requestId: "abc123",
+      reqId: "abc123",
       timestamp: 0,
       payload: {
         wallet: evmAddress,

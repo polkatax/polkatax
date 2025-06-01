@@ -5,8 +5,6 @@ import { startStub as startPricesStub } from "../src/crypto-currency-prices/stub
 import { startStub as startFiatStub } from "../src/fiat-exchange-rates/stub";
 import { FastifyInstance } from "fastify";
 import { passThroughHandlers } from "./util/pass-through-handlers";
-import { metaDataHandler } from "./util/metadata-handler";
-import { createBlockHandlers } from "./util/create-block-handlers";
 import { scanTokenHandler } from "./util/scan-token-handler";
 import { createPaginatedMockResponseHandler } from "./util/create-paginated-mock-response-handler";
 import { WsWrapper } from "./util/ws-wrapper";
@@ -17,14 +15,9 @@ describe("Proper handling of jobs", () => {
   let server: SetupServerApi;
   let wsWrapper: WsWrapper;
 
-  let year: number;
-  const createDefaultHandlers = (year = 2024) => {
-    return [
-      ...createBlockHandlers(year),
-      metaDataHandler,
-      ...passThroughHandlers,
-      scanTokenHandler,
-    ];
+  let year = new Date().getFullYear() - 1;
+  const createDefaultHandlers = () => {
+    return [...passThroughHandlers, scanTokenHandler];
   };
 
   const mockStakingRewards = [
@@ -47,7 +40,6 @@ describe("Proper handling of jobs", () => {
   );
 
   beforeEach(async () => {
-    year = 2024;
     process.env["SUBSCAN_API_KEY"] = "bla";
     fastiyInstances.push(
       ...[
@@ -65,7 +57,7 @@ describe("Proper handling of jobs", () => {
     await wsWrapper.connect();
     wsWrapper.send({
       type: "fetchDataRequest",
-      requestId: "xyz",
+      reqId: "xyz",
       timestamp: 0,
       payload: {
         wallet: "2Fd1UGzT8yuhksiKy98TpDg794dEELvNFqenJjRHFvwfuU83",
@@ -103,7 +95,7 @@ describe("Proper handling of jobs", () => {
     await wsWrapper.connect();
     wsWrapper.send({
       type: "fetchDataRequest",
-      requestId: "xyz",
+      reqId: "xyz",
       timestamp: 0,
       payload: {
         wallet: "2Fd1UGzT8yuhksiKy98TpDg794dEELvNFqenJjRHFvwfuU83",
@@ -116,7 +108,7 @@ describe("Proper handling of jobs", () => {
 
     wsWrapper.send({
       type: "fetchDataRequest",
-      requestId: "xyz",
+      reqId: "xyz",
       timestamp: 0,
       payload: {
         wallet: "2Fd1UGzT8yuhksiKy98TpDg794dEELvNFqenJjRHFvwfuU83",
@@ -130,27 +122,19 @@ describe("Proper handling of jobs", () => {
 
   test("handle errors", async () => {
     const errorMock = http.post(
-      "https://*.api.subscan.io/api/scan/metadata",
+      "https://*.api.subscan.io/api/scan/account/reward_slash",
       () => {
-        // Similate a network error.
-        return HttpResponse.error();
+        return HttpResponse.json({ error: "Invalid input" }, { status: 400 });
       },
     );
-    server = setupServer(
-      ...[
-        ...createBlockHandlers(year),
-        ...passThroughHandlers,
-        scanTokenHandler,
-      ],
-      errorMock,
-    );
+    server = setupServer(...passThroughHandlers, scanTokenHandler, errorMock);
 
     await server.listen();
     wsWrapper = new WsWrapper();
     await wsWrapper.connect();
     wsWrapper.send({
       type: "fetchDataRequest",
-      requestId: "xyz",
+      reqId: "xyz",
       timestamp: 0,
       payload: {
         wallet: "2Fd1UGzT8yuhksiKy98TpDg794dEELvNFqenJjRHFvwfuU83",
@@ -161,7 +145,7 @@ describe("Proper handling of jobs", () => {
     await wsWrapper.waitForNMessages(3);
 
     expect(wsWrapper.receivedMessages[2].payload[0].status).toBe("error");
-    expect(wsWrapper.receivedMessages[2].payload[0].error.code).toBe(500);
+    expect(wsWrapper.receivedMessages[2].payload[0].error.code).toBe(400);
   });
 
   test("handle invalid wallet address", async () => {
@@ -172,7 +156,7 @@ describe("Proper handling of jobs", () => {
     await wsWrapper.connect();
     wsWrapper.send({
       type: "fetchDataRequest",
-      requestId: "xyz",
+      reqId: "xyz",
       timestamp: 0,
       payload: {
         wallet: "invalid-address",
@@ -187,18 +171,13 @@ describe("Proper handling of jobs", () => {
 
   test("retry failed jobs", async () => {
     const errorMock = http.post(
-      "https://*.api.subscan.io/api/scan/metadata",
+      "https://*.api.subscan.io/api/scan/account/reward_slash",
       () => {
-        // Similate a network error.
-        return HttpResponse.error();
+        return HttpResponse.json({ error: "Invalid input" }, { status: 400 });
       },
     );
     server = setupServer(
-      ...[
-        ...createBlockHandlers(year),
-        ...passThroughHandlers,
-        scanTokenHandler,
-      ],
+      ...[...passThroughHandlers, scanTokenHandler],
       errorMock,
     );
     await server.listen();
@@ -207,7 +186,7 @@ describe("Proper handling of jobs", () => {
     await wsWrapper.connect();
     wsWrapper.send({
       type: "fetchDataRequest",
-      requestId: "xyz",
+      reqId: "xyz",
       timestamp: 0,
       payload: {
         wallet: "2Fd1UGzT8yuhksiKy98TpDg794dEELvNFqenJjRHFvwfuU83",
@@ -220,7 +199,7 @@ describe("Proper handling of jobs", () => {
 
     wsWrapper.send({
       type: "fetchDataRequest",
-      requestId: "xyz",
+      reqId: "xyz",
       timestamp: 0,
       payload: {
         wallet: "2Fd1UGzT8yuhksiKy98TpDg794dEELvNFqenJjRHFvwfuU83",
@@ -233,15 +212,19 @@ describe("Proper handling of jobs", () => {
   });
 
   test("should perform round robin", async () => {
-    server = setupServer(...createDefaultHandlers(), rewardsAndSlashMock);
+    server = setupServer(
+      ...createDefaultHandlers(),
+      scanTokenHandler,
+      rewardsAndSlashMock,
+    );
     await server.listen();
     wsWrapper = new WsWrapper();
     await wsWrapper.connect();
 
-    // Send first data fetch request (multiple blockchains)
+    // Send first fetchDataRequest (multiple blockchains)
     wsWrapper.send({
       type: "fetchDataRequest",
-      requestId: "xyz",
+      reqId: "xyz",
       timestamp: 0,
       payload: {
         wallet: "Dnn4xiYdgz3bdRWQaUsvX5noNpcUwmqomKgHg8xzZL1vzfq",
@@ -250,10 +233,10 @@ describe("Proper handling of jobs", () => {
       },
     });
 
-    // Send second data fetch request (single blockchain)
+    // Send second fetchDataRequest (single blockchain)
     wsWrapper.send({
       type: "fetchDataRequest",
-      requestId: "abc",
+      reqId: "abc",
       timestamp: 0,
       payload: {
         wallet: "EUKqtB33pRN2cgru8WXiz4zAuZUn4YRuWG25AZqjzPAdVvJ",
@@ -277,18 +260,21 @@ describe("Proper handling of jobs", () => {
     expect(
       completedJobs[0].payload[0].wallet !== completedJobs[1].payload[0].wallet,
     ).toBe(true);
-  });
+
+    // expect 4 more messages for the remaining two jobs...
+    await wsWrapper.waitForNMessages(4);
+  }, 15000);
 
   afterEach(async () => {
     if (wsWrapper) {
       await wsWrapper.close();
     }
+    for (let fastiyInstance of fastiyInstances) {
+      await fastiyInstance.close();
+    }
     if (server) {
       server.resetHandlers();
       server.close();
-    }
-    for (let fastiyInstance of fastiyInstances) {
-      await fastiyInstance.close();
     }
   });
 });
