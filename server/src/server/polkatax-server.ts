@@ -9,6 +9,7 @@ import * as fs from "fs";
 import { HttpError } from "../common/error/HttpError";
 import { WebSocketManager } from "./endpoints/websocket.manager";
 import { createDIContainer } from "./di-container";
+import { JobManager } from "./job-management/job.manager";
 
 export const polkataxServer = {
   init: async () => {
@@ -53,13 +54,14 @@ export const polkataxServer = {
     });
 
     fastify.setNotFoundHandler((request, reply) => {
-      // TODO: implement better solution
       reply.header("Content-Type", "text/html");
       reply
         .send(fs.readFileSync(staticFilesFolder + "/index.html", "utf-8"))
         .status(200);
     });
 
+    const jobManager: JobManager = DIContainer.resolve("jobManager");
+    jobManager.start();
     const webSocketManager: WebSocketManager =
       DIContainer.resolve("webSocketManager");
     fastify.get("/ws", { websocket: true }, webSocketManager.wsHandler);

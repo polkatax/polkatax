@@ -3,7 +3,6 @@ import { StakingRewardsService } from "../../blockchain/substrate/services/staki
 import { StakingRewardsRequest } from "../model/staking-rewards.request";
 import { TokenPriceConversionService } from "./token-price-conversion.service";
 import { StakingRewardsResponse } from "../model/staking-rewards.response";
-import { formatDate } from "../../../common/util/date-utils";
 import { addFiatValuesToStakingRewards } from "../helper/add-fiat-values-to-staking-rewards";
 import { StakingReward } from "../../blockchain/substrate/model/staking-reward";
 import { findCoingeckoIdForNativeToken } from "../helper/find-coingecko-id-for-native-token";

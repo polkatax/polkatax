@@ -1,6 +1,5 @@
 import { JobsCache } from "./jobs.cache";
 import * as subscanChains from "../../../res/gen/subscan-chains.json";
-import { logger } from "../logger/logger";
 import { Job } from "../../model/job";
 import { filter, firstValueFrom } from "rxjs";
 import { determineNextJob } from "./determine-next-job";
@@ -12,9 +11,7 @@ export class JobManager {
   constructor(
     private jobsCache: JobsCache,
     private DIContainer: AwilixContainer,
-  ) {
-    this.start();
-  }
+  ) {}
 
   getStakingChains(wallet: string) {
     const isEvmWallet = isEvmAddress(wallet);
@@ -38,31 +35,35 @@ export class JobManager {
     blockchains: string[] = [],
     syncFromDate: number = getBeginningLastYear(),
   ): Job[] {
-    blockchains =
-      blockchains.length > 0 ? blockchains : this.getStakingChains(wallet);
+    const chains = blockchains.length
+      ? blockchains
+      : this.getStakingChains(wallet);
 
     const matchingJobs = this.jobsCache
       .fetchJobs(wallet)
       .filter(
         (j) =>
-          blockchains.includes(j.blockchain) &&
+          chains.includes(j.blockchain) &&
           j.currency === currency &&
           j.type === type,
       );
 
-    const alreadySyncedJobs = [];
-    const newJobs = [];
-    for (let blockchain of blockchains) {
+    const alreadySyncedJobs: Job[] = [];
+    const newJobs: Job[] = [];
+
+    for (const blockchain of chains) {
       const job = matchingJobs.find((j) => j.blockchain === blockchain);
-      // if job is in error or the requesed date is older than the job fromDate -> delete job
+
       const jobCannotBeReused =
         job && (job.status === "error" || job.syncFromDate > syncFromDate);
       const jobOutdatedButDataReusable =
         job && job.status === "done" && this.isOutDated(job);
+
       if (job && jobCannotBeReused) {
         this.jobsCache.delete(job);
       }
-      if (job === undefined || jobCannotBeReused) {
+
+      if (!job || jobCannotBeReused) {
         newJobs.push(
           this.jobsCache.addJob(
             reqId,
@@ -74,7 +75,6 @@ export class JobManager {
           ),
         );
       } else if (jobOutdatedButDataReusable) {
-        // if job is just outdated (stale data), existing data will be reused
         this.jobsCache.delete(job);
         newJobs.push(
           this.jobsCache.addJob(
@@ -82,7 +82,7 @@ export class JobManager {
             wallet,
             blockchain,
             type,
-            Math.min(syncFromDate, job.syncedUntil),
+            Math.min(syncFromDate, job.syncedUntil || syncFromDate),
             currency,
             job.data,
           ),

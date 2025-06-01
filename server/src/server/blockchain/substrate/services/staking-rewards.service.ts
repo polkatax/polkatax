@@ -1,4 +1,3 @@
-import { BlockTimeService } from "./block-time.service";
 import { BigNumber } from "bignumber.js";
 import { SubscanService } from "../api/subscan.service";
 import { StakingReward } from "../model/staking-reward";
@@ -7,7 +6,6 @@ import { StakingRewardsViaEventsService } from "./staking-rewards-via-events.ser
 
 export class StakingRewardsService {
   constructor(
-    private blockTimeService: BlockTimeService,
     private subscanService: SubscanService,
     private stakingRewardsViaEventsService: StakingRewardsViaEventsService,
   ) {}
