@@ -1,5 +1,5 @@
-import { Reward, RewardSummary } from '../model/rewards';
-import { getBeginningAndEndOfYear } from './get-beginning-and-end-of-year';
+import { Reward, RewardSummary } from '../../model/rewards';
+import { getBeginningAndEndOfYear } from '../../util/date-utils';
 
 export const calculateRewardSummary = (rewards: Reward[]): RewardSummary => {
   const currentYear = new Date().getFullYear();

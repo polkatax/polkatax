@@ -1,4 +1,4 @@
-import { Reward } from '../model/rewards';
+import { Reward } from '../../model/rewards';
 
 export function groupRewardsByDay(rewards: Reward[]) {
   return rewards.reduce<{

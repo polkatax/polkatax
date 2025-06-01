@@ -1,5 +1,5 @@
 import { openDB } from 'idb';
-import { Job } from '../model/job-result';
+import { JobResult } from '../model/job-result';
 
 const DB_NAME = 'JobsDB';
 const STORE_NAME = 'jobs';
@@ -16,7 +16,7 @@ async function getDB() {
   });
 }
 
-const createKey = (job: Job) => {
+const createKey = (job: JobResult) => {
   return `job_${job.type}_${job.blockchain}_${job.wallet}_${job.currency}`;
 };
 
@@ -26,19 +26,19 @@ const getTx = async () => {
   return { tx, store: tx.objectStore(STORE_NAME) };
 };
 
-export const createOrUpdateJobInIndexedDB = async (job: Job) => {
+export const createOrUpdateJobInIndexedDB = async (job: JobResult) => {
   const { tx, store } = await getTx();
   const jobWithId = { ...job, id: createKey(job) };
   await store.put(jobWithId);
   await tx.done;
 };
 
-export const fetchAllJobsFromIndexedDB = async (): Promise<Job[]> => {
+export const fetchAllJobsFromIndexedDB = async (): Promise<JobResult[]> => {
   const db = await getDB();
   return await db.getAll(STORE_NAME);
 };
 
-export const removeJobFromIndexedDB = async (job: Job) => {
+export const removeJobFromIndexedDB = async (job: JobResult) => {
   const { tx, store } = await getTx();
   const jobWithId = createKey(job);
   await store.delete(jobWithId);

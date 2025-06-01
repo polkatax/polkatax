@@ -1,6 +1,6 @@
 import { expect, test, describe } from '@jest/globals';
-import { Reward } from '../model/rewards';
 import { groupRewardsByDay } from './group-rewards-by-day';
+import { Reward } from '../../model/rewards';
 
 describe('groupRewardsByDay', () => {
   test('should group rewards by isoDate and sum values correctly', () => {

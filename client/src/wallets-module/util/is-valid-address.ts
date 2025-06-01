@@ -19,5 +19,8 @@ function isValidSubstrateAddress(addr: string): boolean {
 }
 
 export const isValidAddress = (address: string) => {
+  if (!address) {
+    return false;
+  }
   return isValidEvmAddress(address) || isValidSubstrateAddress(address);
 };

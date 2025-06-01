@@ -1,8 +1,7 @@
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { StakingRewardsPerYear } from '../model/rewards';
-import { formatCurrency, formatTokenAmount } from '../util/number-formatters';
-import { formatTimeFrame } from '../util/date-utils';
+import { formatCryptoAmount, formatCurrency } from '../util/number-formatters';
 
 export const exportPdf = (rewards: StakingRewardsPerYear) => {
   const doc = new jsPDF();
@@ -37,9 +36,8 @@ export const exportPdf = (rewards: StakingRewardsPerYear) => {
     }`
   );
   writeText(
-    `Total rewards in ${rewards.token}: ${formatTokenAmount(
-      rewards.summary.amount,
-      4
+    `Total rewards in ${rewards.token}: ${formatCryptoAmount(
+      rewards.summary.amount
     )}`
   );
 
@@ -51,7 +49,7 @@ export const exportPdf = (rewards: StakingRewardsPerYear) => {
       const value = rewards.dailyValues[key];
       return [
         key,
-        formatTokenAmount(value.amount, 4),
+        formatCryptoAmount(value.amount),
         value.fiatValue
           ? formatCurrency(value.fiatValue, rewards.currency)
           : '?',

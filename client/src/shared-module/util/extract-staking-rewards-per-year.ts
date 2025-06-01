@@ -1,5 +1,5 @@
 import { Rewards, StakingRewardsPerYear } from '../model/rewards';
-import { getBeginningAndEndOfYear } from './get-beginning-and-end-of-year';
+import { getBeginningAndEndOfYear } from './date-utils';
 
 export const extractStakingRewardsPerYear = (
   rewards: Rewards | undefined,

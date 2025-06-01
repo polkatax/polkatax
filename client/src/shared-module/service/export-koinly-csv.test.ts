@@ -31,6 +31,7 @@ describe('exportKoinlyCsv', () => {
     const mockRewards = {
       chain: 'Kusama',
       address: '0x234',
+      year: 2027,
       token: 'ABC',
       values: [
         { timestamp: 1650000000, amount: 10, hash: 'hash123' },
@@ -44,14 +45,14 @@ describe('exportKoinlyCsv', () => {
 
     const expectedRows = [
       {
-        'Koinly Date': 'formatted-1650000000000',
+        'Koinly Date': 'formatted-1650000000',
         Amount: 10,
         Currency: 'ABC',
         Label: 'Reward',
         TxHash: 'hash123',
       },
       {
-        'Koinly Date': 'formatted-1650001000000',
+        'Koinly Date': 'formatted-1650001000',
         Amount: -5,
         Currency: 'ABC',
         Label: 'Cost',
@@ -65,7 +66,7 @@ describe('exportKoinlyCsv', () => {
     // Assert saveAs is called with Blob containing CSV
     expect(saveAs).toHaveBeenCalledWith(
       expect.any(Blob),
-      'staking-rewards-koinly-Kusama-0x234.csv'
+      'staking-rewards-koinly-Kusama-0x234_2027.csv'
     );
   });
 });

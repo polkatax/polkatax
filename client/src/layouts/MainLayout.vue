@@ -7,11 +7,7 @@
           class="row-xl row-lg row-md column-sm column-xs q-pt-xs-sm q-pt-sm-sm q-pt-md-none q-pt-lg-none q-pt-xl-none items-center"
         >
           <div class="flex justify-center items-center">
-            <img
-              src="/white.ico"
-              style="height: 2.25rem; margin: 5px"
-              v-if="!parentRoute"
-            />
+            <img src="/white.ico" class="header-logo" v-if="!parentRoute" />
             <q-btn
               v-if="parentRoute"
               outline
@@ -37,7 +33,7 @@
       <router-view />
     </q-page-container>
 
-    <q-dialog v-model="alert">
+    <q-dialog v-model="showErrorDialog">
       <q-card>
         <q-card-section class="q-pt-none q-mt-md">
           {{ errorMsg }}
@@ -54,51 +50,60 @@
         <div>
           Price data provided by <a href="https://coingecko.com">CoinGecko</a>
         </div>
-        <q-toolbar-title class="flex justify-end"
-          ><a href="https://github.com/loanMaster/polkatax" class="flex"
-            ><img src="/img/github.png" /></a
-        ></q-toolbar-title>
+        <q-toolbar-title class="flex justify-end">
+          <a href="https://github.com/loanMaster/polkatax" class="flex">
+            <img src="/img/github.png" alt="GitHub repository" />
+          </a>
+        </q-toolbar-title>
       </q-toolbar>
     </q-footer>
   </q-layout>
 </template>
+
 <script setup lang="ts">
 import { computed, onBeforeUnmount, ref } from 'vue';
 import CurrencyDropdown from '../shared-module/components/currency-dropdown/CurrencyDropdown.vue';
 import BreadCrumbs from '../shared-module/components/bread-crumbs/BreadCrumbs.vue';
 import { useSharedStore } from '../shared-module/store/shared.store';
-import { merge } from 'rxjs';
+import { Subscription } from 'rxjs';
 import { useRoute } from 'vue-router';
 
 const route = useRoute();
-const alert = ref(false);
+const showErrorDialog = ref(false);
 const errorMsg = ref('');
 
-const subscription = merge(useSharedStore().webSocketResponseError$).subscribe(
-  (err) => {
-    console.log(JSON.stringify(err));
-    switch (err.code) {
-      case 429:
-        errorMsg.value = 'Too many request. Please try again later.';
-        break;
-      case 400:
-        errorMsg.value = 'The data sent to the server is invalid.';
-        break;
-      default:
-        errorMsg.value =
-          'There was an error connecting to the server. Please try again later.';
-    }
-    alert.value = true;
+const subscription: Subscription =
+  useSharedStore().webSocketResponseError$.subscribe(handleError);
+
+function handleError(err: any) {
+  console.error(JSON.stringify(err));
+  switch (err.code) {
+    case 429:
+      errorMsg.value = 'Too many requests. Please try again later.';
+      break;
+    case 400:
+      errorMsg.value = 'The data sent to the server is invalid.';
+      break;
+    default:
+      errorMsg.value =
+        'There was an error connecting to the server. Please try again later.';
   }
-);
+  showErrorDialog.value = true;
+}
 
 onBeforeUnmount(() => {
-  subscription.unsubscribe();
+  subscription?.unsubscribe();
 });
 
 const parentRoute = computed(() => {
-  return route.meta.parent && typeof route.meta.parent === 'function'
-    ? route.meta.parent(route)
-    : undefined;
+  const parent = route.meta.parent;
+  return typeof parent === 'function' ? parent(route) : undefined;
 });
 </script>
+
+<style scoped>
+.header-logo {
+  height: 2.25rem;
+  margin: 5px;
+}
+</style>

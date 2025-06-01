@@ -160,7 +160,7 @@ export class WebSocketManager {
       try {
         const response = await this.handleIncomingMsg(socket, msg);
         logger.info(
-          `WebSocketManager: sending msg. RequestId: ${response.reqId}, type: ${response.type}, jobs: ${response.payload.length}`,
+          `WebSocketManager: sending msg. RequestId: ${response.reqId}, type: ${response.type}, payload.length: ${response.payload.length}`,
         );
         socket.send(JSON.stringify(response));
       } catch (error) {

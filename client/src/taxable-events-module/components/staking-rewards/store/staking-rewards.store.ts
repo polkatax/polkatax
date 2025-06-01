@@ -7,7 +7,7 @@ import {
   ReplaySubject,
 } from 'rxjs';
 import { useSharedStore } from '../../../../shared-module/store/shared.store';
-import { extractStakingRewardsPerYear } from '../../../../shared-module/helper/extract-staking-rewards-per-year';
+import { extractStakingRewardsPerYear } from '../../../../shared-module/util/extract-staking-rewards-per-year';
 import { StakingRewardsPerYear } from '../../../../shared-module/model/rewards';
 const blockchain$ = new ReplaySubject<string>(1);
 const wallet$ = new ReplaySubject<string>(1);

@@ -1,15 +1,4 @@
-export const tokenAmountFormatter = (digits: number) => {
-  return new Intl.NumberFormat(navigator.language || 'en-US', {
-    minimumFractionDigits: digits,
-    maximumFractionDigits: digits,
-  });
-};
-
-export const formatTokenAmount = (value: number, digits: number) => {
-  return tokenAmountFormatter(digits).format(value);
-};
-
-export const valueFormatter = new Intl.NumberFormat(
+export const currencyFormatterWithoutSymbol = new Intl.NumberFormat(
   navigator.language || 'en-US',
   {
     minimumFractionDigits: 2,
@@ -17,11 +6,11 @@ export const valueFormatter = new Intl.NumberFormat(
   }
 );
 
-export const formatValue = (value: number | undefined) => {
+export const formatCurrencyWithoutSymbol = (value: number) => {
   if (value === undefined || isNaN(value)) {
     return '-';
   }
-  return valueFormatter.format(value);
+  return currencyFormatterWithoutSymbol.format(value);
 };
 
 export const currencyFormatter = (currency: string | undefined) =>
@@ -38,4 +27,38 @@ export const formatCurrency = (value: number, currency: string) => {
     return '-';
   }
   return currencyFormatter(currency).format(value);
+};
+
+export const formatCryptoAmount = (value: number): string => {
+  if (value >= 1000000) {
+    return value.toLocaleString(undefined, {
+      maximumFractionDigits: 0,
+    });
+  }
+
+  if (value >= 1) {
+    return value.toLocaleString(undefined, {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+  }
+
+  if (value >= 0.01) {
+    return value.toLocaleString(undefined, {
+      minimumFractionDigits: 3,
+      maximumFractionDigits: 4,
+    });
+  }
+
+  if (value >= 0.0001) {
+    return value.toLocaleString(undefined, {
+      minimumFractionDigits: 4,
+      maximumFractionDigits: 6,
+    });
+  }
+
+  return value.toLocaleString(undefined, {
+    minimumFractionDigits: 6,
+    maximumFractionDigits: 8,
+  });
 };

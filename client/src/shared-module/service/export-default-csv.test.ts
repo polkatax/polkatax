@@ -27,13 +27,13 @@ describe('exportDefaultCsv', () => {
   it('should format rewards and export to CSV correctly', () => {
     const rewards = {
       token: 'XYZ',
+      year: 2024,
       chain: 'Kusama',
       currency: 'EUR',
       address: '0x123',
       summary: {
         amount: 100,
-        fiatValue: 500,
-        valueNow: 550,
+        fiatValue: 500
       },
       values: [
         { timestamp: 1700000000, amount: 50, hash: 'hash1' },
@@ -55,16 +55,15 @@ describe('exportDefaultCsv', () => {
         timestamp: 1700000000,
         amount: 50,
         hash: 'hash1',
-        utcDate: 'UTC-1700000000000',
+        utcDate: 'UTC-1700000000',
         totalAmount: 100,
-        totalValue: 500,
-        totalValueNow: 550,
+        totalValue: 500
       },
       {
         timestamp: 1700001000,
         amount: 50,
         hash: 'hash2',
-        utcDate: 'UTC-1700001000000',
+        utcDate: 'UTC-1700001000',
       },
     ];
 
@@ -72,7 +71,7 @@ describe('exportDefaultCsv', () => {
 
     expect(saveAs).toHaveBeenCalledWith(
       expect.any(Blob),
-      'staking-rewards-Kusama-0x123.csv'
+      'staking-rewards-Kusama-0x123_2024.csv'
     );
   });
 });

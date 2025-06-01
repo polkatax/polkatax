@@ -72,22 +72,6 @@ export class SubscanService {
     );
   }
 
-  private async retry<T>(
-    query: () => Promise<T>,
-    retries = 2,
-    backOff = [5000, 10000],
-  ): Promise<T> {
-    for (let i = 0; i < retries; i++) {
-      try {
-        return await query();
-      } catch (e) {
-        logger.warn(e);
-        if (i === retries - 1) throw e;
-        await new Promise((res) => setTimeout(res, backOff[i]));
-      }
-    }
-  }
-
   private async iterateOverPagesParallel<T>(
     fetchPages: (page) => Promise<{ list: T[]; hasNext: boolean }>,
     count = 5,
@@ -100,7 +84,7 @@ export class SubscanService {
     let hasNext = false;
     do {
       const intermediate_results = await Promise.all(
-        parallelFn.map((fn) => this.retry(() => fn(page))),
+        parallelFn.map((fn) => fn(page)),
       );
       intermediate_results.forEach((intermediate) =>
         result.push(...intermediate.list),
@@ -127,8 +111,7 @@ export class SubscanService {
           page,
           true,
           startDate,
-        ),
-      3,
+        )
     );
   }
 
@@ -151,8 +134,7 @@ export class SubscanService {
           block_min,
           block_max,
           evm,
-        ),
-      3,
+        )
     );
     logger.info(
       `Exit fetchAllExtrinsics for ${chainName} and address ${address}`,
@@ -179,8 +161,7 @@ export class SubscanService {
           page,
           startDate,
           evm,
-        ),
-      3,
+        )
     );
     logger.info(
       `Exit fetchAllTransfers for ${chainName} and account ${account}`,
@@ -223,8 +204,7 @@ export class SubscanService {
           block_min,
           block_max,
           evm,
-        ),
-      3,
+        )
     );
     logger.info(
       `Exit fetchAllTransfers for ${chainName} and account ${account}`,

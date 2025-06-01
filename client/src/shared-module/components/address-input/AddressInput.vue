@@ -7,9 +7,10 @@
       label="Wallet address"
       data-testid="wallet-input"
       @keyup.enter="onEnterPressed"
+      aria-describedby="wallet-info-tooltip"
     >
       <template v-slot:after>
-        <q-icon name="info">
+        <q-icon name="info" aria-describedby="wallet-info-tooltip">
           <q-tooltip
             anchor="top middle"
             self="bottom middle"

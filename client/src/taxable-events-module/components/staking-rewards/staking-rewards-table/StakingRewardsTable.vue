@@ -3,7 +3,7 @@
     <q-table
       :rows="rows"
       :columns="columns"
-      row-key="name"
+      row-key="hash"
       no-data-label="No rewards found"
       :pagination="initialPagination"
     >
@@ -41,8 +41,8 @@ import {
 } from '../../../../shared-module/model/rewards';
 import { useStakingRewardsStore } from '../store/staking-rewards.store';
 import {
-  tokenAmountFormatter,
-  valueFormatter,
+  formatCurrencyWithoutSymbol,
+  formatCryptoAmount,
 } from '../../../../shared-module/util/number-formatters';
 import { formatDate } from '../../../../shared-module/util/date-utils';
 import { exportDefaultCsv } from '../../../../shared-module/service/export-default-csv';
@@ -84,7 +84,7 @@ const columns = computed(() => [
     align: 'right',
     label: `Reward (${rewardToken.value})`,
     field: 'amount',
-    format: (num: number) => amountFormatter.value.format(num),
+    format: (num: number) => formatCryptoAmount(num),
     sortable: true,
   },
   {
@@ -92,7 +92,7 @@ const columns = computed(() => [
     align: 'right',
     label: `Price (${rewards.value?.currency})`,
     field: 'price',
-    format: (num: number) => valueFormatter.format(num),
+    format: (num: number) => formatCurrencyWithoutSymbol(num),
     sortable: true,
   },
   {
@@ -100,29 +100,12 @@ const columns = computed(() => [
     align: 'right',
     label: `Value (${rewards.value?.currency})`,
     field: 'fiatValue',
-    format: (num: number) => valueFormatter.format(num),
+    format: (num: number) => formatCurrencyWithoutSymbol(num),
     sortable: true,
   },
 ]);
 
-const rows = computed(() => {
-  return rewards.value?.values;
-});
-
-const tokenDigits = computed(() => {
-  let max = 0;
-  rewards.value?.values.forEach((v: Reward) => {
-    const parts = v.amount.toString().split('.');
-    if (parts.length < 2) {
-      return 0;
-    }
-    const digits = parts[1].length;
-    if (digits > max) {
-      max = digits;
-    }
-  });
-  return max;
-});
+const rows = computed(() => rewards.value?.values ?? []);
 
 const rewardToken = computed(() => {
   return rewards.value?.token;
@@ -136,19 +119,21 @@ const initialPagination = ref({
 });
 
 function exportRewardsAsCsv() {
-  exportDefaultCsv(rewards.value!);
+  if (!rewards.value) return;
+  exportDefaultCsv(rewards.value);
 }
 
 function exportRewardsAsKoinlyCsv() {
-  exportKoinlyCsv(rewards.value!);
+  if (!rewards.value) return;
+  exportKoinlyCsv(rewards.value);
 }
 
 async function exportRewardsAsPdf() {
+  if (!rewards.value) return;
   // loading exportPdf on demand due to module size.
   const { exportPdf } = await import(
     '../../../../shared-module/service/export-pdf'
   );
-  exportPdf(rewards.value!);
+  exportPdf(rewards.value);
 }
-const amountFormatter = computed(() => tokenAmountFormatter(tokenDigits.value));
 </script>

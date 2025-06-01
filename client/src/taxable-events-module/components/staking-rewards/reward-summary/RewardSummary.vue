@@ -22,13 +22,13 @@
     <tr v-if="rewards?.summary">
       <td class="text-left q-pa-sm">Total rewards:</td>
       <td class="text-right q-pa-sm" data-testid="total-rewards">
-        {{ formatTokenAmount(rewards.summary!.amount) + ' ' + rewards!.token }}
+        {{ formatCryptoAmount(rewards.summary!.amount) + ' ' + rewards!.token }}
       </td>
     </tr>
     <tr v-if="rewards?.summary">
       <td class="text-left q-pa-sm">Value at payout time:</td>
       <td class="text-right q-pa-sm" data-testid="value-at-payout-time">
-        {{ formatCurrency(rewards.summary.fiatValue ?? -0) }}
+        {{ formatCurrency(rewards.summary.fiatValue ?? 0, rewards.currency) }}
       </td>
     </tr>
   </table>
@@ -41,6 +41,10 @@ import { useSharedStore } from '../../../../shared-module/store/shared.store';
 import { combineLatest } from 'rxjs';
 import TimeFrameDropdown from '../../time-frame-dropdown/TimeFrameDropdown.vue';
 import { StakingRewardsPerYear } from '../../../../shared-module/model/rewards';
+import {
+  formatCurrency,
+  formatCryptoAmount,
+} from '../../../../shared-module/util/number-formatters';
 
 const rewardsStore = useStakingRewardsStore();
 const year: Ref<number | undefined> = ref(undefined);
@@ -62,30 +66,6 @@ onBeforeUnmount(() => {
   subscription.unsubscribe();
   yearSubscription.unsubscribe();
 });
-function formatCurrency(value: number) {
-  if (isNaN(value)) {
-    return '?';
-  }
-  return new Intl.NumberFormat(navigator.language || 'en-US', {
-    style: 'currency',
-    currency: rewards.value!.currency.toUpperCase(),
-  }).format(value);
-}
-
-function formatPrice(value: number) {
-  return new Intl.NumberFormat(navigator.language || 'en-US', {
-    style: 'currency',
-    currency: rewards.value!.currency.toUpperCase(),
-    maximumSignificantDigits: 4,
-  }).format(value);
-}
-
-function formatTokenAmount(value: number) {
-  return new Intl.NumberFormat(navigator.language || 'en-US', {
-    minimumFractionDigits: 4,
-    maximumFractionDigits: 4,
-  }).format(value);
-}
 
 function yearSelected(year: number) {
   rewardsStore.setYear(year);

@@ -12,9 +12,12 @@
         :disable="isDisabled"
       />
     </div>
-    <div class="table q-my-md flex justify-center" v-if="requests?.length > 0">
+    <div
+      class="table q-my-md flex justify-center"
+      v-if="wallets && wallets.length > 0"
+    >
       <q-table
-        :rows="requests"
+        :rows="wallets"
         :columns="columns"
         row-key="name"
         :table-style="{ overflow: 'hidden' }"
@@ -66,7 +69,7 @@
         </template>
       </q-table>
     </div>
-    <div v-if="!requests || requests.length === 0" class="q-my-xl">
+    <div v-if="wallets && wallets.length === 0" class="q-my-xl">
       <div class="text-h6 text-center">
         Export your staking rewards as CSV or PDF
       </div>
@@ -74,8 +77,7 @@
         A wide range of substrate chains and fiat currencies are supported.
       </div>
       <div class="text-h6 text-center">
-        Select a a fiat currency, a time frame and enter your wallet address.
-        Then press submit.
+        Select a enter your wallet address and press submit.
       </div>
       <div class="text-center q-my-md">
         This program returns the staking rewards earned as nominator. This
@@ -101,8 +103,9 @@ const $q = useQuasar();
 const store = useSharedStore();
 const router = useRouter();
 
-const requests: Ref<{ wallet: string; currency: string; done: boolean }[]> =
-  ref([]);
+const wallets: Ref<
+  { wallet: string; currency: string; done: boolean }[] | undefined
+> = ref(undefined);
 
 const jobsSubscription = store.jobs$.subscribe((jobs) => {
   const r: any[] = [];
@@ -121,7 +124,7 @@ const jobsSubscription = store.jobs$.subscribe((jobs) => {
         existing.done && (j.status === 'done' || j.status === 'error');
     }
   });
-  requests.value = r;
+  wallets.value = r;
 });
 
 onUnmounted(() => {

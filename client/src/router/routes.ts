@@ -1,14 +1,25 @@
-import { RouteLocationNormalizedLoaded, RouteRecordRaw } from 'vue-router';
+import type { RouteLocationNormalizedLoaded, RouteRecordRaw } from 'vue-router';
 
-const breadcrumbs = {
-  Wallets: () => ({ label: 'Wallets', route: '/wallets' }),
-  Blockchains: (route: RouteLocationNormalizedLoaded) => ({
-    label: 'Blockchains',
-    route: `/wallets/${route.params.wallet}/${route.params.currency}`,
+type Breadcrumb = (route: RouteLocationNormalizedLoaded) => {
+  label: string;
+  route: string;
+};
+
+// Helper to build base wallet route path
+const walletBasePath = (route: RouteLocationNormalizedLoaded) =>
+  `/wallets/${route.params.wallet ?? ''}/${route.params.currency ?? ''}`;
+
+const breadcrumbs: Record<string, Breadcrumb> = {
+  wallets: () => ({ label: 'Wallets', route: '/wallets' }),
+
+  blockchains: (route) => ({
+    label: 'Connected blockchains',
+    route: walletBasePath(route),
   }),
-  TaxableEvents: (route: RouteLocationNormalizedLoaded) => ({
+
+  taxableEvents: (route) => ({
     label: 'Taxable Events',
-    route: `/wallets/${route.params.wallet}/${route.params.currency}/${route.params.blockchain}`,
+    route: `${walletBasePath(route)}/${route.params.blockchain ?? ''}`,
   }),
 };
 
@@ -20,27 +31,29 @@ const routes: RouteRecordRaw[] = [
       {
         path: '',
         redirect: 'wallets',
-        meta: { breadcrumbs: [breadcrumbs.Wallets] },
+        meta: { breadcrumbs: [breadcrumbs.wallets] },
       },
       {
         name: 'Wallets',
         path: 'wallets',
         component: () =>
           import('src/wallets-module/components/WalletsDashboard.vue'),
-        meta: { breadcrumbs: [breadcrumbs.Wallets] },
+        meta: { breadcrumbs: [breadcrumbs.wallets] },
       },
       {
-        name: 'Blockchains',
+        name: 'Connected blockchains',
         path: 'wallets/:wallet/:currency',
         component: () =>
-          import('src/blockchains-module/components/BlockchainList.vue'),
+          import(
+            'src/connected-blockchains-module/components/ConnectedBlockchainsList.vue'
+          ),
         meta: {
-          breadcrumbs: [breadcrumbs.Wallets, breadcrumbs.Blockchains],
+          breadcrumbs: [breadcrumbs.wallets, breadcrumbs.blockchains],
           parent: () => '/wallets',
         },
       },
       {
-        name: 'Taxable Events',
+        name: 'TaxableEvents',
         path: 'wallets/:wallet/:currency/:blockchain',
         component: () =>
           import(
@@ -48,12 +61,12 @@ const routes: RouteRecordRaw[] = [
           ),
         meta: {
           breadcrumbs: [
-            breadcrumbs.Wallets,
-            breadcrumbs.Blockchains,
-            breadcrumbs.TaxableEvents,
+            breadcrumbs.wallets,
+            breadcrumbs.blockchains,
+            breadcrumbs.taxableEvents,
           ],
           parent: (route: RouteLocationNormalizedLoaded) =>
-            `/wallets/${route.params.wallet}/${route.params.currency}`,
+            walletBasePath(route),
         },
       },
     ],

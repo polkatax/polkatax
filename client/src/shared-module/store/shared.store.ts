@@ -1,6 +1,5 @@
 import { defineStore } from 'pinia';
 import {
-  BehaviorSubject,
   filter,
   firstValueFrom,
   from,
@@ -12,50 +11,16 @@ import {
 } from 'rxjs';
 import { fetchCurrency } from '../service/fetch-currency';
 import {
-  createOrUpdateJobInIndexedDB,
   fetchAllJobsFromIndexedDB,
   removeJobFromIndexedDB,
 } from '../service/job.repository';
 import { wsMsgReceived$, wsSendMsg } from '../service/ws-connection';
 import { JobResult } from '../model/job-result';
-import { Reward, Rewards } from '../model/rewards';
-import { addIsoDate } from '../helper/add-iso-date';
-import { groupRewardsByDay } from '../helper/group-rewards-by-day';
 import { fetchSubscanChains } from '../service/fetch-subscan-chains';
-import { filterFromBeginningLastYear } from '../helper/filter-from-beginning-last-year';
-import { calculateRewardSummary } from '../helper/calculate-reward-summary';
+import { updateJobList } from './helper/update-job-list';
+import { sortJobs } from './helper/job.service';
 
-const sortRewards = (rewards: Rewards) =>
-  rewards.values.sort((a, b) => a.block - b.block);
-
-const sortJobs = (jobs: JobResult[]) => {
-  return jobs.sort((a, b) => {
-    if (a.wallet > b.wallet) {
-      return 1;
-    }
-    return a.wallet < b.wallet ? -1 : 1;
-  });
-};
-
-const mapRawValuesToRewards = (
-  job: JobResult,
-  tokenSymbol: string,
-  rewards: Reward[]
-): Rewards => {
-  const result = {
-    values: rewards,
-    summary: calculateRewardSummary(rewards),
-    chain: job.blockchain,
-    token: tokenSymbol,
-    currency: job.currency,
-    address: job.wallet,
-    dailyValues: groupRewardsByDay(rewards),
-  };
-  sortRewards(result);
-  return result;
-};
-
-const jobs$ = new BehaviorSubject<JobResult[]>([]);
+const jobs$ = new ReplaySubject<JobResult[]>(1);
 
 fetchAllJobsFromIndexedDB().then((jobs) => {
   const storedJobs = jobs.filter((job) => job.type === 'staking_rewards');
@@ -81,48 +46,10 @@ wsMsgReceived$
     map((msg) => msg.payload),
     mergeMap((array) => from(array))
   )
-  .subscribe(async (job) => {
+  .subscribe(async (newJobResult) => {
     const jobs = await firstValueFrom(jobs$);
-    const matching = jobs.find(
-      (j) =>
-        j.wallet === job.wallet &&
-        j.blockchain === job.blockchain &&
-        j.currency === job.currency
-    );
-    if (matching) {
-      if (job.status === 'done' && job.data) {
-        const newValues = (job.data.values ?? []).filter(
-          (v) => v.timestamp >= job.syncFromDate!
-        );
-        const olderValues = (matching.data?.values ?? []).filter(
-          (v) => v.timestamp < job.syncFromDate!
-        );
-        job.data.values = addIsoDate(newValues).concat(olderValues);
-        filterFromBeginningLastYear(job.data);
-        matching.data = mapRawValuesToRewards(
-          matching,
-          job.data.token,
-          job.data.values
-        );
-        matching.syncedUntil = job.syncedUntil;
-      }
-      matching.lastModified = job.lastModified;
-      matching.status = job.status;
-      matching.error = job.error;
-      await createOrUpdateJobInIndexedDB(matching);
-    } else {
-      if (job.data) {
-        filterFromBeginningLastYear(job.data);
-        job.data = mapRawValuesToRewards(
-          job,
-          job.data.token,
-          addIsoDate(job.data.values)
-        );
-      }
-      jobs.push(job);
-      await createOrUpdateJobInIndexedDB(job);
-    }
-    jobs$.next([...sortJobs(jobs)]);
+    const updatedJobList = await updateJobList(newJobResult, jobs);
+    jobs$.next([...updatedJobList]);
   });
 
 const webSocketResponseError$ = wsMsgReceived$.pipe(
