@@ -47,11 +47,9 @@ export class SubscanApi {
   }
 
   private request(url: string, method: string, body: any) {
-    return apiThrottleQueue.add(() => this.retry(() => this.requestHelper.req(
-      url,
-      method,
-      body,
-    )));
+    return apiThrottleQueue.add(() =>
+      this.retry(() => this.requestHelper.req(url, method, body)),
+    );
   }
 
   async mapToSubstrateAccount(

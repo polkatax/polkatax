@@ -103,15 +103,14 @@ export class SubscanService {
     logger.info(
       `fetchAllStakingRewards for ${chainName}, address ${address}, starting from ${new Date(startDate).toISOString()}`,
     );
-    return this.iterateOverPagesParallel(
-      (page) =>
-        this.subscanApi.fetchStakingRewards(
-          chainName,
-          address,
-          page,
-          true,
-          startDate,
-        )
+    return this.iterateOverPagesParallel((page) =>
+      this.subscanApi.fetchStakingRewards(
+        chainName,
+        address,
+        page,
+        true,
+        startDate,
+      ),
     );
   }
 
@@ -125,16 +124,15 @@ export class SubscanService {
     logger.info(
       `fetchAllExtrinsics for ${chainName} and address ${address}. Evm ${evm}`,
     );
-    const result = this.iterateOverPagesParallel<Transaction>(
-      (page) =>
-        this.subscanApi.fetchExtrinsics(
-          chainName,
-          address,
-          page,
-          block_min,
-          block_max,
-          evm,
-        )
+    const result = this.iterateOverPagesParallel<Transaction>((page) =>
+      this.subscanApi.fetchExtrinsics(
+        chainName,
+        address,
+        page,
+        block_min,
+        block_max,
+        evm,
+      ),
     );
     logger.info(
       `Exit fetchAllExtrinsics for ${chainName} and address ${address}`,
@@ -153,15 +151,14 @@ export class SubscanService {
     );
     const result = await this.iterateOverPagesParallel<
       RawSubstrateTransferDto & RawEvmTransferDto & { timestamp: number }
-    >(
-      (page) =>
-        this.subscanApi.fetchTransfersFrom(
-          chainName,
-          account,
-          page,
-          startDate,
-          evm,
-        )
+    >((page) =>
+      this.subscanApi.fetchTransfersFrom(
+        chainName,
+        account,
+        page,
+        startDate,
+        evm,
+      ),
     );
     logger.info(
       `Exit fetchAllTransfers for ${chainName} and account ${account}`,
@@ -195,16 +192,15 @@ export class SubscanService {
     );
     const result = await this.iterateOverPagesParallel<
       RawSubstrateTransferDto & RawEvmTransferDto & { timestamp: number }
-    >(
-      (page) =>
-        this.subscanApi.fetchTransfers(
-          chainName,
-          account,
-          page,
-          block_min,
-          block_max,
-          evm,
-        )
+    >((page) =>
+      this.subscanApi.fetchTransfers(
+        chainName,
+        account,
+        page,
+        block_min,
+        block_max,
+        evm,
+      ),
     );
     logger.info(
       `Exit fetchAllTransfers for ${chainName} and account ${account}`,
