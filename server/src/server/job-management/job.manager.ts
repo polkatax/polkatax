@@ -6,6 +6,7 @@ import { determineNextJob } from "./determine-next-job";
 import { AwilixContainer } from "awilix";
 import { isEvmAddress } from "../data-aggregation/helper/is-evm-address";
 import { getBeginningLastYear } from "./get-beginning-last-year";
+import { logger } from "../logger/logger";
 
 export class JobManager {
   constructor(
@@ -35,6 +36,10 @@ export class JobManager {
     blockchains: string[] = [],
     syncFromDate: number = getBeginningLastYear(),
   ): Job[] {
+    if (syncFromDate < getBeginningLastYear()) {
+      logger.warn("Client tried to set date to " + syncFromDate + ", which is less than beginning of last year.")
+      syncFromDate = getBeginningLastYear()
+    }
     const chains = blockchains.length
       ? blockchains
       : this.getStakingChains(wallet);
