@@ -37,8 +37,12 @@ export class JobManager {
     syncFromDate: number = getBeginningLastYear(),
   ): Job[] {
     if (syncFromDate < getBeginningLastYear()) {
-      logger.warn("Client tried to set date to " + syncFromDate + ", which is less than beginning of last year.")
-      syncFromDate = getBeginningLastYear()
+      logger.warn(
+        "Client tried to set date to " +
+          syncFromDate +
+          ", which is less than beginning of last year.",
+      );
+      syncFromDate = getBeginningLastYear();
     }
     const chains = blockchains.length
       ? blockchains

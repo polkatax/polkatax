@@ -119,7 +119,7 @@ describe("JobManager", () => {
   describe("enqueue", () => {
     it("adds new job if no matching job found", () => {
       jobsCache.fetchJobs = jest.fn<any>().mockReturnValue([]);
-      const syncFrom = new Date().getTime() - 60_000_000
+      const syncFrom = new Date().getTime() - 60_000_000;
       const addedJobs = jobManager.enqueue(
         "req1",
         "wallet1",

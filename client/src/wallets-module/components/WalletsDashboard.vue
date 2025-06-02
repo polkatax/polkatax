@@ -24,6 +24,7 @@
         table-class="flex"
         class="content"
         hide-bottom
+        data-testid="wallet-data-table"
       >
         <template v-slot:body="props">
           <q-tr
@@ -36,6 +37,7 @@
                 :name="matSync"
                 size="md"
                 class="spinner"
+                data-testid="wallet-status-icon"
                 v-if="!props.row.done"
               />
               <q-icon :name="matOfflinePin" size="md" v-if="props.row.done" />
@@ -44,6 +46,7 @@
               key="wallet"
               :props="props"
               style="overflow-wrap: anywhere !important"
+              data-testid="wallet-address"
             >
               {{ props.row.wallet }}
             </q-td>
