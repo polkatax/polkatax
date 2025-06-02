@@ -143,7 +143,7 @@ describe("fetch staking rewards via the events API", () => {
             values: [
               {
                 block: 1000,
-                timestamp: 1712181600000,
+                timestamp: mockTransfers[0].block_timestamp * 1000,
                 amount: 450,
                 hash: "0x_reward_hash",
                 price: 10,

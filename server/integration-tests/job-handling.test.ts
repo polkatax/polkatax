@@ -124,7 +124,7 @@ describe("Proper handling of jobs", () => {
     const errorMock = http.post(
       "https://*.api.subscan.io/api/scan/account/reward_slash",
       () => {
-        return HttpResponse.json({ error: "Invalid input" }, { status: 400 });
+        return HttpResponse.json({ error: "Just testing error handling. Don't worry about this error." }, { status: 400 });
       },
     );
     server = setupServer(...passThroughHandlers, scanTokenHandler, errorMock);
@@ -173,7 +173,7 @@ describe("Proper handling of jobs", () => {
     const errorMock = http.post(
       "https://*.api.subscan.io/api/scan/account/reward_slash",
       () => {
-        return HttpResponse.json({ error: "Invalid input" }, { status: 400 });
+        return HttpResponse.json({ error: "Just testing error handling. Don't worry about this error." }, { status: 400 });
       },
     );
     server = setupServer(
@@ -207,7 +207,7 @@ describe("Proper handling of jobs", () => {
         blockchains: ["polkadot"],
       },
     });
-    await wsWrapper.waitForNMessages(2);
+    await wsWrapper.waitForNMessages(3);
     expect(wsWrapper.receivedMessages[4].payload[0].status).toBe("in_progress");
   });
 
