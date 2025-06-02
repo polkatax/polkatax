@@ -21,6 +21,8 @@ const knownChainProperties = [
   { domain: "interlay", pseudoStaking: true },
   { domain: "kintsugi", pseudoStaking: true },
   { domain: "basilisk", pseudoStaking: true },
+  { domain: "mythos", evmAddressSupport: true },
+  { domain: "neuroweb", token: "NEURO" },
 ];
 
 const determineTokenAndChainName = async (domain) => {

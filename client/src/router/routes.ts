@@ -1,4 +1,27 @@
-import { RouteRecordRaw } from 'vue-router';
+import type { RouteLocationNormalizedLoaded, RouteRecordRaw } from 'vue-router';
+
+type Breadcrumb = (route: RouteLocationNormalizedLoaded) => {
+  label: string;
+  route: string;
+};
+
+// Helper to build base wallet route path
+const walletBasePath = (route: RouteLocationNormalizedLoaded) =>
+  `/wallets/${route.params.wallet ?? ''}/${route.params.currency ?? ''}`;
+
+const breadcrumbs: Record<string, Breadcrumb> = {
+  wallets: () => ({ label: 'Wallets', route: '/wallets' }),
+
+  blockchains: (route) => ({
+    label: 'Connected blockchains',
+    route: walletBasePath(route),
+  }),
+
+  taxableEvents: (route) => ({
+    label: 'Taxable Events',
+    route: `${walletBasePath(route)}/${route.params.blockchain ?? ''}`,
+  }),
+};
 
 const routes: RouteRecordRaw[] = [
   {
@@ -7,21 +30,44 @@ const routes: RouteRecordRaw[] = [
     children: [
       {
         path: '',
-        redirect: 'staking-rewards',
+        redirect: 'wallets',
+        meta: { breadcrumbs: [breadcrumbs.wallets] },
       },
       {
-        path: 'transfers',
+        name: 'Wallets',
+        path: 'wallets',
         component: () =>
-          import('src/transfers-module/components/TransfersAndSwaps.vue'),
+          import('src/wallets-module/components/WalletsDashboard.vue'),
+        meta: { breadcrumbs: [breadcrumbs.wallets] },
       },
       {
-        path: 'staking-rewards',
+        name: 'Connected blockchains',
+        path: 'wallets/:wallet/:currency',
         component: () =>
-          import('src/staking-rewards-module/components/StakingRewards.vue'),
+          import(
+            'src/connected-blockchains-module/components/ConnectedBlockchainsList.vue'
+          ),
+        meta: {
+          breadcrumbs: [breadcrumbs.wallets, breadcrumbs.blockchains],
+          parent: () => '/wallets',
+        },
       },
       {
-        path: 'trades',
-        component: () => import('src/swap-module/components/TokenSwaps.vue'),
+        name: 'TaxableEvents',
+        path: 'wallets/:wallet/:currency/:blockchain',
+        component: () =>
+          import(
+            'src/taxable-events-module/components/TaxableEventsTabView.vue'
+          ),
+        meta: {
+          breadcrumbs: [
+            breadcrumbs.wallets,
+            breadcrumbs.blockchains,
+            breadcrumbs.taxableEvents,
+          ],
+          parent: (route: RouteLocationNormalizedLoaded) =>
+            walletBasePath(route),
+        },
       },
     ],
   },

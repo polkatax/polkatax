@@ -25,9 +25,13 @@ jobs:
         working-directory: server
         run: npm install
 
-      - name: Run Server Tests
+      - name: Run Server Unit Tests
         working-directory: server
         run: npm run test
+
+      - name: Run Server Integration Tests
+        working-directory: server
+        run: npm run integration-tests
 
   client-tests:
     runs-on: ubuntu-latest

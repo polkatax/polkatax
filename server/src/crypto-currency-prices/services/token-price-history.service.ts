@@ -11,8 +11,6 @@ import {
   preferredQuoteCurrencyValues,
 } from "../../model/preferred-quote-currency";
 
-const MAX_AGE = 4 * 60 * 60 * 1000;
-
 export class TokenPriceHistoryService {
   private cachedPrices: { [coingeckoId: string]: Quotes } = {};
   private timer;
@@ -53,7 +51,15 @@ export class TokenPriceHistoryService {
       for (let coingeckoId of coingeckoIdsToSync) {
         try {
           if (!this.informationUpToDate(coingeckoId, currency)) {
-            await this.fetchQuotesForId(coingeckoId, currency);
+            const quotes = await this.fetchQuotesForId(coingeckoId, currency);
+            if (!quotes) {
+              logger.warn(
+                `Syncing for ${coingeckoId} failed. Removing token from sync list`,
+              );
+              this.tokensToSync = this.tokensToSync.filter(
+                (t) => t !== coingeckoId,
+              );
+            }
             logger.info(
               `TokenPriceHistoryService syncing done for token ${coingeckoId} and currency ${currency}`,
             );
@@ -101,9 +107,7 @@ export class TokenPriceHistoryService {
 
     return (
       this.cachedPrices[combinedIdx] &&
-      (this.cachedPrices[combinedIdx][formatDate(yesterday)] ||
-        new Date().getTime() - this.cachedPrices[combinedIdx].timestamp <
-          MAX_AGE)
+      this.cachedPrices[combinedIdx][formatDate(yesterday)]
     );
   }
 

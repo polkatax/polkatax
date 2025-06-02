@@ -2,21 +2,12 @@ import Fastify, { FastifyRequest } from "fastify";
 import { logger } from "./logger/logger";
 import dotenv from "dotenv";
 dotenv.config({ path: __dirname + "/../../.env" });
-import { CurrentPriceRequest } from "../model/crypto-currency-prices/current-price-request";
 import { CurrencyQuotes } from "../model/crypto-currency-prices/crypto-currency-quotes";
-
-const createMockData = (symbols): { [symbol: string]: number } => {
-  const result = {};
-  for (let symbol of symbols) {
-    result[symbol] = 20.0;
-  }
-  return result;
-};
 
 const createHistoricMockdata = (currency): CurrencyQuotes => {
   const result: CurrencyQuotes = {
     currency,
-    quotes: { timestamp: Date.now(), latest: 20.0 },
+    quotes: { timestamp: Date.now() },
   };
   const now = new Date();
   const startDate = new Date(now);
@@ -37,16 +28,7 @@ const createHistoricMockdata = (currency): CurrencyQuotes => {
 
 export const startStub = async () => {
   const fastify = Fastify({
-    logger,
-  });
-
-  fastify.route({
-    method: "POST",
-    url: "/crypto-current-prices",
-    handler: async (request: FastifyRequest<{ Body: CurrentPriceRequest }>) => {
-      const { tokenIds } = request.body;
-      return createMockData(tokenIds);
-    },
+    loggerInstance: logger,
   });
 
   fastify.route({

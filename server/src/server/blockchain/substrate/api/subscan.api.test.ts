@@ -1,88 +1,109 @@
-import { beforeEach, expect, it, jest, describe } from "@jest/globals";
-import { SubscanApi } from "./subscan.api";
+import { expect, it, jest, describe, beforeEach } from "@jest/globals";
+
+import { SubscanApi } from "../api/subscan.api";
 import { RequestHelper } from "../../../../common/util/request.helper";
 
-// Mock environment variable
-process.env.SUBSCAN_API_KEY = "fake-api-key";
-
-// Mock RequestHelper class
 jest.mock("../../../../common/util/request.helper");
-const mockReq = jest.fn() as any;
-
-(RequestHelper as jest.Mock).mockImplementation(() => {
-  return {
-    req: mockReq,
-    defaultHeader: {},
-  };
-});
 
 describe("SubscanApi", () => {
-  let subscanApi: SubscanApi;
+  let api: SubscanApi;
 
   beforeEach(() => {
-    subscanApi = new SubscanApi();
-    mockReq.mockReset();
-  });
-
-  it("should throw an error if SUBSCAN_API_KEY is not set", () => {
-    delete process.env.SUBSCAN_API_KEY;
-    expect(() => new SubscanApi()).toThrow("Subscan api key not found");
-    process.env.SUBSCAN_API_KEY = "fake-api-key";
-  });
-
-  it("mapToSubstrateAccount returns substrate address", async () => {
-    mockReq.mockResolvedValue({
-      data: { account: { substrate_account: { address: "substrate-addr" } } },
-    });
-    const result = await subscanApi.mapToSubstrateAccount("kusama", "addr");
-    expect(result).toBe("substrate-addr");
-    expect(mockReq).toHaveBeenCalledWith(
-      "https://kusama.api.subscan.io/api/v2/scan/search",
-      "post",
-      { key: "addr" },
+    process.env.SUBSCAN_API_KEY = "test-key";
+    (RequestHelper as jest.Mock).mockImplementation(() => ({
+      req: jest.fn(),
+      defaultHeader: {},
+    }));
+    api = new SubscanApi();
+    // Override internal request method to avoid throttling
+    (api as any).request = jest.fn((url, method, body) =>
+      Promise.resolve({ data: mockResponses[url as any] || {} }),
     );
   });
 
-  it("fetchMetadata returns proper MetaData", async () => {
-    mockReq.mockResolvedValue({
-      data: { avgBlockTime: "6", blockNum: "123456" },
-    });
-    const result = await subscanApi.fetchMetadata("kusama");
-    expect(result).toEqual({ avgBlockTime: 6, blockNum: 123456 });
-  });
-
-  it("fetchNativeToken returns native token info", async () => {
-    mockReq.mockResolvedValue({
-      data: {
-        detail: {
-          KSM: {
-            asset_type: "native",
-            symbol: "KSM",
-            decimals: 12,
-          },
-          USDT: {
-            asset_type: "token",
-            symbol: "USDT",
-          },
+  const mockResponses = {
+    "https://testchain.api.subscan.io/api/scan/metadata": {
+      avgBlockTime: 6,
+      blockNum: 100000,
+    },
+    "https://testchain.api.subscan.io/api/scan/token": {
+      detail: {
+        DOT: {
+          asset_type: "native",
+          symbol: "DOT",
+          price: 5.0,
+          decimals: 10,
         },
       },
-    });
-    const result = await subscanApi.fetchNativeToken("kusama");
-    expect(result).toEqual({
-      asset_type: "native",
-      symbol: "KSM",
-      decimals: 12,
-    });
+    },
+    "https://testchain.api.subscan.io/api/scan/block": {
+      block_num: 123,
+      block_timestamp: 1717171,
+    },
+    "https://testchain.api.subscan.io/api/v2/scan/blocks": {
+      blocks: [{ block_num: 1, block_timestamp: 1717000 }],
+    },
+    "https://testchain.api.subscan.io/api/v2/scan/extrinsics": {
+      extrinsics: [
+        {
+          extrinsic_hash: "0x123",
+          account_display: { address: "addr1" },
+          block_timestamp: 1710000,
+          block_num: 10,
+          call_module: "balances",
+          call_module_function: "transfer",
+        },
+      ],
+    },
+    "https://testchain.api.subscan.io/api/scan/account/reward_slash": {
+      list: [
+        {
+          event_id: "staking.Reward",
+          amount: "10000000000",
+          block_timestamp: 1710000,
+          extrinsic_index: "10-1",
+          extrinsic_hash: "0xabc",
+        },
+      ],
+    },
+  };
+
+  it("fetches metadata", async () => {
+    const result = await api.fetchMetadata("testchain");
+    expect(result).toEqual({ avgBlockTime: 6, blockNum: 100000 });
   });
 
-  it("fetchTransfers returns list and hasNext", async () => {
-    mockReq.mockResolvedValue({
-      data: {
-        list: [{ to: "to1", from: "from1", value: "1000" }],
-      },
-    });
-    const result = await subscanApi.fetchTransfers("kusama", "addr", 0);
+  it("fetches native token", async () => {
+    const result = await api.fetchNativeToken("testchain");
+    expect(result.price).toBe(5.0);
+  });
+
+  it("fetches a block", async () => {
+    const result = await api.fetchBlock("testchain", 123);
+    expect(result.block_num).toBe(123);
+    expect(result.block_timestamp).toBe(1717171000); // ms
+  });
+
+  it("fetches block list", async () => {
+    const result = await api.fetchBlockList("testchain");
+    expect(result.length).toBeGreaterThan(0);
+    expect(result[0].block_timestamp).toBe(1717000000); // ms
+  });
+
+  it("fetches extrinsics", async () => {
+    const result = await api.fetchExtrinsics("testchain", "addr1");
     expect(result.list.length).toBe(1);
-    expect(result.hasNext).toBe(false);
+    expect(result.list[0].label).toContain("balances");
+  });
+
+  it("fetches staking rewards", async () => {
+    const result = await api.fetchStakingRewards(
+      "testchain",
+      "addr1",
+      0,
+      false,
+      1700000,
+    );
+    expect(result.list[0].amount.toString()).toBe("10000000000");
   });
 });

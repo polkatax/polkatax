@@ -97,9 +97,9 @@
       "domain": "robonomics-freemium",
       "label": "Robonomics Freemium",
       "token": "XRT",
-      "stakingPallets": ["Staking"],
+      "stakingPallets": [],
       "evmPallet": false,
-      "standardStaking": true,
+      "standardStaking": false,
       "parachainStaking": false,
       "delegatedStaking": false
     },
@@ -206,7 +206,7 @@
     {
       "domain": "neuroweb",
       "label": "NeuroWeb",
-      "token": "OTP",
+      "token": "NEURO",
       "stakingPallets": [],
       "evmPallet": true,
       "standardStaking": false,
@@ -221,7 +221,8 @@
       "evmPallet": false,
       "standardStaking": false,
       "parachainStaking": false,
-      "delegatedStaking": false
+      "delegatedStaking": false,
+      "evmAddressSupport": true
     },
     {
       "domain": "moonriver",
@@ -313,17 +314,6 @@
       "standardStaking": false,
       "parachainStaking": true,
       "delegatedStaking": false
-    },
-    {
-      "domain": "interlay",
-      "label": "Interlay",
-      "token": "INTR",
-      "stakingPallets": ["VaultStaking"],
-      "evmPallet": true,
-      "standardStaking": false,
-      "parachainStaking": false,
-      "delegatedStaking": false,
-      "pseudoStaking": true
     },
     {
       "domain": "integritee",

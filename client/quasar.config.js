@@ -87,6 +87,12 @@ module.exports = configure(function (/* ctx */) {
     devServer: {
       open: false,
       proxy: {
+        '/ws': {
+          target: 'ws://localhost:3001', // Your backend WebSocket server
+          ws: true,
+          changeOrigin: true,
+          secure: false,
+        },
         '/api': {
           target: 'http://localhost:3001',
           changeOrigin: true,
@@ -113,7 +119,7 @@ module.exports = configure(function (/* ctx */) {
       // directives: [],
 
       // Quasar plugins
-      plugins: ['Loading', 'Dialog'],
+      plugins: ['Dialog'],
     },
 
     // animations: 'all', // --- includes all animations

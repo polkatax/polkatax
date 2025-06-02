@@ -2,20 +2,23 @@ import Fastify from "fastify";
 import path from "path";
 import { logger } from "./logger/logger";
 import dotenv from "dotenv";
+import websocketPlugin from "@fastify/websocket";
+import rateLimit from "@fastify/rate-limit";
 dotenv.config({ path: __dirname + "/../../.env" });
-
 import * as fs from "fs";
-import { stakingRewardsEndpoint } from "./endpoints/staking-rewards.endoint";
-import { paymentsEndpoint } from "./endpoints/payments.endpoint";
 import { HttpError } from "../common/error/HttpError";
+import { WebSocketManager } from "./endpoints/websocket.manager";
+import { createDIContainer } from "./di-container";
+import { JobManager } from "./job-management/job.manager";
 
 export const polkataxServer = {
   init: async () => {
     const fastify = Fastify({
-      logger,
+      loggerInstance: logger,
     });
-
-    await fastify.register(import("@fastify/rate-limit"), { global: false });
+    const DIContainer = createDIContainer();
+    await fastify.register(websocketPlugin);
+    await fastify.register(rateLimit, { global: false });
 
     const staticFilesFolder = path.join(__dirname, "../../public");
     if (fs.existsSync(staticFilesFolder)) {
@@ -50,16 +53,19 @@ export const polkataxServer = {
       }
     });
 
-    fastify.route(stakingRewardsEndpoint as any);
-    fastify.route(paymentsEndpoint as any);
-
     fastify.setNotFoundHandler((request, reply) => {
-      // TODO: implement better solution
       reply.header("Content-Type", "text/html");
       reply
         .send(fs.readFileSync(staticFilesFolder + "/index.html", "utf-8"))
         .status(200);
     });
+
+    const jobManager: JobManager = DIContainer.resolve("jobManager");
+    jobManager.start();
+    const webSocketManager: WebSocketManager =
+      DIContainer.resolve("webSocketManager");
+    fastify.get("/ws", { websocket: true }, webSocketManager.wsHandler);
+    webSocketManager.startJobNotificationChannel();
 
     fastify.listen(
       { port: Number(process.env["PORT"] || 3001), host: "0.0.0.0" },

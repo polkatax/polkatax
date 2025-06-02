@@ -37,8 +37,7 @@ export class SubscanService {
     address: string,
     module: string,
     event_id: string,
-    block_min?: number,
-    block_max?: number,
+    startDate: number,
   ): Promise<SubscanEvent[]> {
     return this.iterateOverPagesParallel<SubscanEvent>((page) =>
       this.subscanApi.searchEvents(
@@ -47,8 +46,7 @@ export class SubscanService {
         module,
         event_id,
         page,
-        block_min,
-        block_max,
+        startDate,
       ),
     );
   }
@@ -74,22 +72,6 @@ export class SubscanService {
     );
   }
 
-  private async retry<T>(
-    query: () => Promise<T>,
-    retries = 2,
-    backOff = [5000, 10000],
-  ): Promise<T> {
-    for (let i = 0; i < retries; i++) {
-      try {
-        return await query();
-      } catch (e) {
-        logger.warn(e);
-        if (i === retries - 1) throw e;
-        await new Promise((res) => setTimeout(res, backOff[i]));
-      }
-    }
-  }
-
   private async iterateOverPagesParallel<T>(
     fetchPages: (page) => Promise<{ list: T[]; hasNext: boolean }>,
     count = 5,
@@ -102,7 +84,7 @@ export class SubscanService {
     let hasNext = false;
     do {
       const intermediate_results = await Promise.all(
-        parallelFn.map((fn) => this.retry(() => fn(page))),
+        parallelFn.map((fn) => fn(page)),
       );
       intermediate_results.forEach((intermediate) =>
         result.push(...intermediate.list),
@@ -116,11 +98,10 @@ export class SubscanService {
   fetchAllStakingRewards(
     chainName: string,
     address: string,
-    block_min?: number,
-    block_max?: number,
+    startDate: number,
   ): Promise<RawStakingReward[]> {
     logger.info(
-      `fetchAllStakingRewards for ${chainName}, address ${address}, from ${block_min} to ${block_max}`,
+      `fetchAllStakingRewards for ${chainName}, address ${address}, starting from ${new Date(startDate).toISOString()}`,
     );
     return this.iterateOverPagesParallel((page) =>
       this.subscanApi.fetchStakingRewards(
@@ -128,8 +109,7 @@ export class SubscanService {
         address,
         page,
         true,
-        block_min,
-        block_max,
+        startDate,
       ),
     );
   }
@@ -144,17 +124,15 @@ export class SubscanService {
     logger.info(
       `fetchAllExtrinsics for ${chainName} and address ${address}. Evm ${evm}`,
     );
-    const result = this.iterateOverPagesParallel<Transaction>(
-      (page) =>
-        this.subscanApi.fetchExtrinsics(
-          chainName,
-          address,
-          page,
-          block_min,
-          block_max,
-          evm,
-        ),
-      3,
+    const result = this.iterateOverPagesParallel<Transaction>((page) =>
+      this.subscanApi.fetchExtrinsics(
+        chainName,
+        address,
+        page,
+        block_min,
+        block_max,
+        evm,
+      ),
     );
     logger.info(
       `Exit fetchAllExtrinsics for ${chainName} and address ${address}`,
@@ -162,32 +140,28 @@ export class SubscanService {
     return result;
   }
 
-  async fetchAllTransfers(
+  async fetchAllTransfersFrom(
     chainName: string,
     account: string,
-    block_min?: number,
-    block_max?: number,
+    startDate: number,
     evm = false,
   ): Promise<Transfer[]> {
     logger.info(
-      `fetchAllTransfersAs for ${chainName} and account ${account}. Evm: ${evm}`,
+      `fetchAllTransfers for ${chainName} and account ${account} starting from ${new Date(startDate).toISOString()}. Evm: ${evm}`,
     );
     const result = await this.iterateOverPagesParallel<
-      RawSubstrateTransferDto & RawEvmTransferDto
-    >(
-      (page) =>
-        this.subscanApi.fetchTransfers(
-          chainName,
-          account,
-          page,
-          block_min,
-          block_max,
-          evm,
-        ),
-      3,
+      RawSubstrateTransferDto & RawEvmTransferDto & { timestamp: number }
+    >((page) =>
+      this.subscanApi.fetchTransfersFrom(
+        chainName,
+        account,
+        page,
+        startDate,
+        evm,
+      ),
     );
     logger.info(
-      `Exit fetchAllTransfersAs for ${chainName} and account ${account}`,
+      `Exit fetchAllTransfers for ${chainName} and account ${account}`,
     );
     return result.map((transfer) => {
       return {
@@ -198,7 +172,49 @@ export class SubscanService {
         label:
           transfer?.to_display?.evm_contract.contract_name || transfer.module,
         block: transfer.block_num,
-        timestamp: transfer.block_timestamp || transfer.create_at,
+        timestamp: transfer.timestamp,
+        hash: transfer.hash,
+        tokenId: transfer.asset_unique_id || transfer.contract,
+        extrinsic_index: transfer.extrinsic_index,
+      };
+    });
+  }
+
+  async fetchAllTransfers(
+    chainName: string,
+    account: string,
+    block_min?: number,
+    block_max?: number,
+    evm = false,
+  ): Promise<Transfer[]> {
+    logger.info(
+      `fetchAllTransfers for ${chainName} and account ${account}. Evm: ${evm}`,
+    );
+    const result = await this.iterateOverPagesParallel<
+      RawSubstrateTransferDto & RawEvmTransferDto & { timestamp: number }
+    >((page) =>
+      this.subscanApi.fetchTransfers(
+        chainName,
+        account,
+        page,
+        block_min,
+        block_max,
+        evm,
+      ),
+    );
+    logger.info(
+      `Exit fetchAllTransfers for ${chainName} and account ${account}`,
+    );
+    return result.map((transfer) => {
+      return {
+        symbol: transfer.symbol || transfer.asset_symbol,
+        amount: Number(transfer.amount),
+        from: transfer.from,
+        to: transfer.to,
+        label:
+          transfer?.to_display?.evm_contract.contract_name || transfer.module,
+        block: transfer.block_num,
+        timestamp: transfer.timestamp,
         hash: transfer.hash,
         tokenId: transfer.asset_unique_id || transfer.contract,
         extrinsic_index: transfer.extrinsic_index,

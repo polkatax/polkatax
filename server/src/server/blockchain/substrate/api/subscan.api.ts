@@ -11,6 +11,9 @@ import {
   RawEvmTransferDto,
   RawSubstrateTransferDto,
 } from "../model/raw-transfer";
+import { logger } from "../../../logger/logger";
+import { apiThrottleQueue } from "./request-queue";
+import { HttpError } from "../../../../common/error/HttpError";
 
 export class SubscanApi {
   private requestHelper: RequestHelper;
@@ -28,11 +31,33 @@ export class SubscanApi {
     };
   }
 
+  private async retry<T>(
+    query: () => Promise<T>,
+    retries = 2,
+    backOff = [3000, 5000],
+  ): Promise<T> {
+    for (let i = 0; i < retries; i++) {
+      try {
+        return await query();
+      } catch (e) {
+        logger.warn(e);
+        if (i === retries - 1 || (e as HttpError).statusCode !== 429) throw e;
+        await new Promise((res) => setTimeout(res, backOff[i]));
+      }
+    }
+  }
+
+  private request(url: string, method: string, body: any) {
+    return apiThrottleQueue.add(() =>
+      this.retry(() => this.requestHelper.req(url, method, body)),
+    );
+  }
+
   async mapToSubstrateAccount(
     chainName: string,
     account: string,
   ): Promise<string> {
-    const response = await this.requestHelper.req(
+    const response = await this.request(
       `https://${chainName}.api.subscan.io/api/v2/scan/search`,
       "post",
       { key: account },
@@ -47,10 +72,9 @@ export class SubscanApi {
     module: string,
     event_id: string,
     page: number,
-    block_min: number,
-    block_max?: number,
+    minDate: number,
   ): Promise<{ list: SubscanEvent[]; hasNext: boolean }> {
-    const response = await this.requestHelper.req(
+    const response = await this.request(
       `https://${chainName}.api.subscan.io/api/v2/scan/events`,
       "post",
       {
@@ -60,17 +84,17 @@ export class SubscanApi {
         module,
         event_id,
         success: true,
-        block_range:
-          block_min !== undefined && block_max !== undefined
-            ? `${block_min}-${block_max}`
-            : undefined,
         finalized: true,
       },
     );
-    const data = response.data;
+    const data = (response.data?.events ?? []).map((e) => ({
+      ...e,
+      block_timestamp: e.block_timestamp * 1000,
+    }));
     return {
-      list: data?.events ?? [],
-      hasNext: (data?.events ?? []).length >= 100,
+      list: data,
+      hasNext:
+        data.length >= 100 && data[data.length - 1].block_timestamp >= minDate,
     };
   }
 
@@ -83,7 +107,7 @@ export class SubscanApi {
     block_min: number,
     block_max?: number,
   ): Promise<{ list: Transaction[]; hasNext: boolean }> {
-    const responseBody = await this.requestHelper.req(
+    const responseBody = await this.request(
       `https://${chainName}.api.subscan.io/api/v2/scan/extrinsics`,
       `post`,
       {
@@ -104,7 +128,7 @@ export class SubscanApi {
         return {
           hash: entry.extrinsic_hash,
           account: entry.account_display.address,
-          block_timestamp: entry.block_timestamp,
+          block_timestamp: entry.block_timestamp * 1000,
           block_num: entry.block_num,
           label:
             (entry.call_module || "") + (entry.call_module_function || "."),
@@ -115,7 +139,7 @@ export class SubscanApi {
   }
 
   async fetchMetadata(chainName: string): Promise<MetaData> {
-    const response = await this.requestHelper.req(
+    const response = await this.request(
       `https://${chainName}.api.subscan.io/api/scan/metadata`,
       `post`,
       {},
@@ -128,7 +152,7 @@ export class SubscanApi {
   }
 
   async fetchRuntimeMetadata(chainName: string): Promise<RuntimeMetaData> {
-    const response = await this.requestHelper.req(
+    const response = await this.request(
       `https://${chainName}.api.subscan.io/api/scan/runtime/metadata`,
       `post`,
       {},
@@ -137,7 +161,7 @@ export class SubscanApi {
   }
 
   async fetchNativeToken(chainName: string): Promise<Token> {
-    const response = await this.requestHelper.req(
+    const response = await this.request(
       `https://${chainName}.api.subscan.io/api/scan/token`,
       `post`,
       {},
@@ -149,7 +173,7 @@ export class SubscanApi {
   }
 
   async fetchBlock(chainName: string, blockNum: number): Promise<Block> {
-    const response = await this.requestHelper.req(
+    const response = await this.request(
       `https://${chainName}.api.subscan.io/api/scan/block`,
       `post`,
       {
@@ -157,11 +181,16 @@ export class SubscanApi {
         only_head: true,
       },
     );
-    return response.data;
+    return response.data
+      ? {
+          ...response.data,
+          block_timestamp: response.data.block_timestamp * 1000,
+        }
+      : response.data;
   }
 
   async fetchBlockList(chainName: string, page = 0, row = 1): Promise<Block[]> {
-    const response = await this.requestHelper.req(
+    const response = await this.request(
       `https://${chainName}.api.subscan.io/api/v2/scan/blocks`,
       `post`,
       {
@@ -169,7 +198,10 @@ export class SubscanApi {
         row,
       },
     );
-    return response.data.blocks;
+    return response.data.blocks.map((b) => ({
+      ...b,
+      block_timestamp: b.block_timestamp * 1000,
+    }));
   }
 
   private mapStakingRewards(
@@ -179,7 +211,7 @@ export class SubscanApi {
       return {
         event_id: entry.event_id,
         amount: BigNumber(entry.amount),
-        timestamp: entry.block_timestamp,
+        timestamp: entry.block_timestamp * 1000, // convert from sec to ms
         block: entry.extrinsic_index.split("-")[0],
         hash: entry.extrinsic_hash,
       };
@@ -191,10 +223,9 @@ export class SubscanApi {
     address: string,
     page: number = 0,
     isStash: boolean,
-    block_min?: number,
-    block_max?: number,
+    minDate: number,
   ): Promise<{ list: RawStakingReward[]; hasNext: boolean }> {
-    const responseBody = await this.requestHelper.req(
+    const responseBody = await this.request(
       `https://${chainName}.api.subscan.io/api/scan/account/reward_slash`,
       `post`,
       {
@@ -202,20 +233,17 @@ export class SubscanApi {
         page,
         address,
         is_stash: isStash,
-        block_range:
-          block_min !== undefined && block_max !== undefined
-            ? `${block_min}-${block_max}`
-            : undefined,
       },
     );
+    const list = this.mapStakingRewards(responseBody.data?.list || []);
     return {
-      list: this.mapStakingRewards(responseBody.data?.list),
-      hasNext: (responseBody.data?.list || []).length >= 100,
+      list,
+      hasNext: list.length >= 100 && list[list.length - 1].timestamp >= minDate,
     };
   }
 
   async fetchAccounts(address: string, chainName: string): Promise<string[]> {
-    const json = await this.requestHelper.req(
+    const json = await this.request(
       `https://${chainName}.api.subscan.io/api/v2/scan/accounts`,
       `post`,
       {
@@ -237,7 +265,7 @@ export class SubscanApi {
     const endpoint = evm
       ? "api/scan/evm/v2/transactions"
       : "api/v2/scan/extrinsics";
-    const responseBody = await this.requestHelper.req(
+    const responseBody = await this.request(
       `https://${chainName}.api.subscan.io/${endpoint}`,
       `post`,
       {
@@ -273,7 +301,7 @@ export class SubscanApi {
           hash: entry.extrinsic_hash,
           from: entry.account_display.address,
           to: entry.to,
-          timestamp: entry.block_timestamp,
+          timestamp: entry.block_timestamp * 1000, // sec -> ms
           block_num: entry.block_num,
           label: entry.call_module ?? "" + entry.call_module_function ?? "",
           amount: entry.value ? Number(entry.value) : 0,
@@ -286,6 +314,44 @@ export class SubscanApi {
     };
   }
 
+  async fetchTransfersFrom(
+    chainName: string,
+    account: string,
+    page: number = 0,
+    minDate: number,
+    evm = false,
+  ): Promise<{
+    list: (RawSubstrateTransferDto &
+      RawEvmTransferDto & { timestamp: number })[];
+    hasNext: boolean;
+  }> {
+    const endpoint = evm
+      ? "api/scan/evm/token/transfer"
+      : "api/v2/scan/transfers";
+    const responseBody = await this.request(
+      `https://${chainName}.api.subscan.io/${endpoint}`,
+      `post`,
+      {
+        row: 100,
+        page,
+        address: account,
+        success: true,
+      },
+    );
+    const list = (
+      responseBody.data?.transfers ||
+      responseBody.data?.list ||
+      []
+    ).map((t) => ({
+      ...t,
+      timestamp: (t.block_timestamp || t.create_at) * 1000,
+    }));
+    return {
+      list,
+      hasNext: list.length >= 100 && list[list.length - 1].timestamp >= minDate,
+    };
+  }
+
   async fetchTransfers(
     chainName: string,
     account: string,
@@ -294,13 +360,14 @@ export class SubscanApi {
     block_max?: number,
     evm = false,
   ): Promise<{
-    list: (RawSubstrateTransferDto & RawEvmTransferDto)[];
+    list: (RawSubstrateTransferDto &
+      RawEvmTransferDto & { timestamp: number })[];
     hasNext: boolean;
   }> {
     const endpoint = evm
       ? "api/scan/evm/token/transfer"
       : "api/v2/scan/transfers";
-    const responseBody = await this.requestHelper.req(
+    const responseBody = await this.request(
       `https://${chainName}.api.subscan.io/${endpoint}`,
       `post`,
       {
@@ -314,7 +381,14 @@ export class SubscanApi {
             : undefined,
       },
     );
-    const list = responseBody.data?.transfers || responseBody.data?.list || [];
+    const list = (
+      responseBody.data?.transfers ||
+      responseBody.data?.list ||
+      []
+    ).map((t) => ({
+      ...t,
+      timestamp: (t.block_timestamp || t.create_at) * 1000,
+    }));
     return {
       list,
       hasNext: list.length >= 100,

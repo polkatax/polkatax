@@ -1,7 +1,7 @@
 import { expect, it, jest, describe, beforeEach } from "@jest/globals";
 import { Transaction } from "../model/transaction";
 import { Transfer } from "../model/raw-transfer";
-import * as helper from "../../../endpoints/helper/is-evm-address";
+import * as helper from "../../../data-aggregation/helper/is-evm-address";
 import * as util from "../util/has-chain-evm-support";
 import { SwapsAndTransfersService } from "./swaps-and-transfers.service";
 
@@ -9,7 +9,7 @@ import { SwapsAndTransfersService } from "./swaps-and-transfers.service";
 jest.mock("../../../logger/logger", () => ({
   logger: { info: jest.fn() },
 }));
-jest.mock("../../../endpoints/helper/is-evm-address", () => ({
+jest.mock("../../../data-aggregation/helper/is-evm-address", () => ({
   isEvmAddress: jest.fn(),
 }));
 jest.mock("../util/has-chain-evm-support", () => ({

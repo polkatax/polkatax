@@ -4,9 +4,9 @@ import dotenv from "dotenv";
 dotenv.config({ path: __dirname + "/../../.env" });
 import { TokenPriceHistoryService } from "./services/token-price-history.service";
 import { TokenPriceService } from "./services/token-price.service";
-import { CurrentPriceRequest } from "../model/crypto-currency-prices/current-price-request";
 import { DIContainer } from "./di-container";
 import { PreferredQuoteCurrency } from "../model/preferred-quote-currency";
+import { formatDate } from "../common/util/date-utils";
 
 export const cryptoCurrencyPricesServer = {
   init: async () => {
@@ -18,18 +18,7 @@ export const cryptoCurrencyPricesServer = {
     tokenPriceHistoryService.init();
 
     const fastify = Fastify({
-      logger,
-    });
-
-    fastify.route({
-      method: "POST",
-      url: "/crypto-current-prices",
-      handler: async (
-        request: FastifyRequest<{ Body: CurrentPriceRequest }>,
-      ) => {
-        const { tokenIds, currency } = request.body;
-        return tokenPriceService.fetchCurrentPrices(tokenIds, currency);
-      },
+      loggerInstance: logger,
     });
 
     fastify.route({
@@ -43,7 +32,22 @@ export const cryptoCurrencyPricesServer = {
       ) => {
         const { tokenId } = request.params;
         const { currency } = request.query;
-        return tokenPriceHistoryService.getHistoricPrices(tokenId, currency);
+        const quotes = await tokenPriceHistoryService.getHistoricPrices(
+          tokenId,
+          currency,
+        );
+        const todayFormatted = formatDate(new Date());
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+        if (
+          quotes?.quotes &&
+          quotes?.quotes[formatDate(yesterday)] &&
+          !quotes.quotes[todayFormatted]
+        ) {
+          // use yesterday eod quotes if current day not finished yet
+          quotes.quotes[todayFormatted] = quotes.quotes[formatDate(yesterday)];
+        }
+        return quotes;
       },
     });
 

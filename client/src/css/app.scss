@@ -4,23 +4,24 @@
   min-height: 0 !important;
 }
 
-@media (max-width: 600px) {
-  .dropdown,
-  .datepicker {
-    width: 100%;
-  }
-}
-
-.mobile-only2 {
-  display: none;
-  @media (max-width: 600px) {
-    display: block;
-  }
-}
-
 .desktop-only {
   display: block;
   @media (max-width: 600px) {
     display: none;
+  }
+}
+
+.spinner {
+  animation: spin 2s linear infinite;
+  display: inline-block;
+  transition: 1s all;
+}
+.spinner.fast {
+  animation: spin 0.65s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(-360deg);
   }
 }

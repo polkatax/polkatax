@@ -1,5 +1,4 @@
 import { CoingeckoRestService } from "../coingecko-api/coingecko.rest-service";
-import { logger } from "../logger/logger";
 
 const MAX_AGE = 6 * 60 * 60 * 1000;
 

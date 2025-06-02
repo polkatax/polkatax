@@ -211,7 +211,7 @@ export const startStub = async () => {
   const mockData = generateMockData();
 
   const fastify = Fastify({
-    logger,
+    loggerInstance: logger,
   });
 
   fastify.route({

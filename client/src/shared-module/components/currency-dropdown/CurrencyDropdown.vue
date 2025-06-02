@@ -1,9 +1,11 @@
 <template>
-  <div class="q-pa-md">
+  <div>
     <q-btn-dropdown color="primary" no-caps>
       <template v-slot:label>
-        <span v-html="currency?.flag" />
-        {{ currency?.name }}
+        <div :style="{ opacity: currency ? 1 : 0 }">
+          <span v-html="currency?.flag ?? '&#x1F1FA;&#x1F1F8;'" />
+          {{ currency?.name ?? 'XXX' }}
+        </div>
       </template>
       <q-list>
         <q-item

@@ -1,76 +1,39 @@
-import { expect, beforeAll, test, jest, describe } from '@jest/globals';
+import { expect, it, describe } from '@jest/globals';
 import {
   formatDate,
   formatDateUTC,
-  getEndDate,
-  getFirstDayOfYear,
-  getStartDate,
-  getStartOfCurrentDay,
+  getBeginningAndEndOfYear,
 } from './date-utils';
 
-const mockDate = new Date(2023, 4, 15); // May 15, 2023
-
-describe('Timeframe Functions', () => {
-  beforeAll(() => {
-    jest.useFakeTimers().setSystemTime(mockDate);
+describe('formatDateUTC', () => {
+  it('should format timestamp to UTC date string', () => {
+    const timestamp = Date.UTC(2024, 4, 31, 14, 30, 45); // 2024-05-31T14:30:45Z
+    expect(formatDateUTC(timestamp)).toBe('2024-05-31T14:30:45Z');
   });
+});
 
-  describe('getStartOfCurrentDay', () => {
-    test('should return the start of the current day', () => {
-      const startOfDay = getStartOfCurrentDay();
-      expect(startOfDay.getHours()).toBe(0);
-      expect(startOfDay.getMinutes()).toBe(0);
-      expect(startOfDay.getSeconds()).toBe(0);
-      expect(startOfDay.getMilliseconds()).toBe(0);
-    });
+describe('formatDate', () => {
+  it('should format timestamp to YYYY-MM-DD string', () => {
+    const timestamp = new Date(2025, 0, 2).getTime(); // 2025-01-02
+    expect(formatDate(timestamp)).toBe('2025-01-02');
   });
+});
 
-  describe('getFirstDayOfYear', () => {
-    test('should return the first day of the current year', () => {
-      const firstDayOfYear = getFirstDayOfYear();
-      expect(firstDayOfYear.getFullYear()).toBe(2023);
-      expect(firstDayOfYear.getMonth()).toBe(0);
-      expect(firstDayOfYear.getDate()).toBe(1);
-    });
-  });
+describe('getBeginningAndEndOfYear', () => {
+  it('should return correct timestamps for start and end of year', () => {
+    const year = 2023;
+    const { beginning, end } = getBeginningAndEndOfYear(year);
+    const beginningDate = new Date(beginning);
+    const endDate = new Date(end);
 
-  describe('getStartDate', () => {
-    test('should return the correct start date for "This Year"', () => {
-      const startDate = getStartDate(2023);
-      expect(startDate).toBe(new Date(2023, 0, 1).getTime());
-    });
+    expect(beginningDate.getFullYear()).toBe(2023);
+    expect(beginningDate.getMonth()).toBe(0); // Jan
+    expect(beginningDate.getDate()).toBe(1);
+    expect(beginningDate.getHours()).toBe(0);
 
-    test('should return the correct start date for a last year', () => {
-      const startDate = getStartDate(2022);
-      expect(startDate).toBe(new Date(2022, 0, 1).getTime()); // January 1, 2022
-    });
-  });
-
-  describe('getEndDate', () => {
-    test('should return the correct end date for "This Year"', () => {
-      const endDate = getEndDate(2023);
-      const expectedEndDate = new Date(2023, 4, 16);
-      expect(endDate).toBe(expectedEndDate.getTime());
-    });
-
-    test('should return the correct end date for "2022"', () => {
-      const endDate = getEndDate(2022);
-      const expectedEndDate = new Date(2023, 0, 1);
-      expect(endDate).toBe(expectedEndDate.getTime());
-    });
-  });
-
-  describe.skip('formatDateUTC', () => {
-    test('should correctly format a date in UTC format', () => {
-      const utcDate = formatDateUTC(new Date(2023, 4, 15).getTime());
-      expect(utcDate).toBe('2023-05-14T22:00:00Z');
-    });
-  });
-
-  describe('formatDate', () => {
-    test('should format a date correctly', () => {
-      const formattedDate = formatDate(new Date(2023, 4, 15).getTime());
-      expect(formattedDate).toBe('2023-05-15');
-    });
+    expect(endDate.getFullYear()).toBe(2023);
+    expect(endDate.getMonth()).toBe(11); // Dec
+    expect(endDate.getDate()).toBe(31);
+    expect(endDate.getHours()).toBe(23);
   });
 });

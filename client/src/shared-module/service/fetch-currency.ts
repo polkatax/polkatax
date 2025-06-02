@@ -11,7 +11,7 @@ function getCurrencyByCountry(countryCode: string) {
 
 export const fetchCurrency = async (): Promise<string> => {
   try {
-    const response = await fetch('https://ipapi.co/json/');
+    const response = await fetch('https://ipinfo.io/json');
     const body = await response.json();
     const countryCode = body.country; // e.g., "US"
     const currency = getCurrencyByCountry(countryCode);
