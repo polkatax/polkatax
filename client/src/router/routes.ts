@@ -26,6 +26,10 @@ const breadcrumbs: Record<string, Breadcrumb> = {
 const routes: RouteRecordRaw[] = [
   {
     path: '/',
+    component: () => import('src/layouts/WelcomeAll.vue'),
+  },
+  {
+    path: '/',
     component: () => import('src/layouts/MainLayout.vue'),
     children: [
       {
