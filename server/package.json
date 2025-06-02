@@ -24,7 +24,7 @@
   "license": "ISC",
   "dependencies": {
     "@fastify/rate-limit": "^10.3.0",
-    "@fastify/static": "^6.10.2",
+    "@fastify/static": "^8.2.0",
     "@fastify/websocket": "^11.0.2",
     "@polkadot/util-crypto": "^13.5.1",
     "awilix": "^12.0.5",
