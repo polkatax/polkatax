@@ -81,7 +81,7 @@
         A wide range of substrate chains and fiat currencies are supported.
       </div>
       <div class="text-h6 text-center">
-        Select a enter your wallet address and press submit.
+        Enter your wallet address and press submit.
       </div>
       <div class="text-center q-my-md">
         This program returns the staking rewards earned as nominator. This
