@@ -30,10 +30,13 @@ export const updateJobList = async (
       match.syncedUntil = incomingJob.syncedUntil;
     }
 
+    if (incomingJob.status === 'done' || incomingJob.status === 'error') {
+      match.error = incomingJob.error;
+    }
+
     Object.assign(match, {
       lastModified: incomingJob.lastModified,
       status: incomingJob.status,
-      error: incomingJob.error,
     });
 
     await createOrUpdateJobInIndexedDB(match);

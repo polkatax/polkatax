@@ -1,36 +1,43 @@
 <template>
   <div class="text-h6">Summary of Staking Rewards</div>
   <table class="q-my-lg q-mx-auto" v-if="rewards">
-    <tr>
-      <td class="text-left q-pa-sm">Year:</td>
-      <td class="text-right q-pa-sm">
-        <TimeFrameDropdown v-model="year" @update:model-value="yearSelected" />
-      </td>
-    </tr>
-    <tr>
-      <td class="text-left q-pa-sm">Blockchain:</td>
-      <td class="text-right q-pa-sm">
-        {{ blockchainLabel ?? rewards.chain }}
-      </td>
-    </tr>
-    <tr>
-      <td class="text-left q-pa-sm">Wallet:</td>
-      <td class="text-right q-pa-sm" style="overflow-wrap: anywhere">
-        {{ rewards.address }}
-      </td>
-    </tr>
-    <tr v-if="rewards?.summary">
-      <td class="text-left q-pa-sm">Total rewards:</td>
-      <td class="text-right q-pa-sm" data-testid="total-rewards">
-        {{ formatCryptoAmount(rewards.summary!.amount) + ' ' + rewards!.token }}
-      </td>
-    </tr>
-    <tr v-if="rewards?.summary">
-      <td class="text-left q-pa-sm">Value at payout time:</td>
-      <td class="text-right q-pa-sm" data-testid="value-at-payout-time">
-        {{ formatCurrency(rewards.summary.fiatValue ?? 0, rewards.currency) }}
-      </td>
-    </tr>
+    <tbody>
+      <tr>
+        <td class="text-left q-pa-sm">Year:</td>
+        <td class="text-right q-pa-sm">
+          <TimeFrameDropdown
+            v-model="year"
+            @update:model-value="yearSelected"
+          />
+        </td>
+      </tr>
+      <tr>
+        <td class="text-left q-pa-sm">Blockchain:</td>
+        <td class="text-right q-pa-sm">
+          {{ blockchainLabel ?? rewards.chain }}
+        </td>
+      </tr>
+      <tr>
+        <td class="text-left q-pa-sm">Wallet:</td>
+        <td class="text-right q-pa-sm" style="overflow-wrap: anywhere">
+          {{ rewards.address }}
+        </td>
+      </tr>
+      <tr v-if="rewards?.summary">
+        <td class="text-left q-pa-sm">Total rewards:</td>
+        <td class="text-right q-pa-sm" data-testid="total-rewards">
+          {{
+            formatCryptoAmount(rewards.summary!.amount) + ' ' + rewards!.token
+          }}
+        </td>
+      </tr>
+      <tr v-if="rewards?.summary">
+        <td class="text-left q-pa-sm">Value at payout time:</td>
+        <td class="text-right q-pa-sm" data-testid="value-at-payout-time">
+          {{ formatCurrency(rewards.summary.fiatValue ?? 0, rewards.currency) }}
+        </td>
+      </tr>
+    </tbody>
   </table>
 </template>
 
@@ -54,7 +61,7 @@ const blockchainLabel: Ref<string> = ref('');
 const yearSubscription = rewardsStore.year$.subscribe((y) => (year.value = y));
 
 const subscription = combineLatest([
-  useSharedStore().substrateChains$,
+  useSharedStore().subscanChains$,
   rewardsStore.rewardsPerYear$,
 ]).subscribe(async ([chains, _rewards]) => {
   rewards.value = _rewards;

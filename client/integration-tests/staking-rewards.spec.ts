@@ -67,7 +67,7 @@ test.describe('Wallet', () => {
 
     await mockCountry(page, 'IT');
     await mockSubscanChainList(page);
-    await page.goto('http://localhost:9000');
+    await page.goto('http://localhost:9000/wallets');
     await page.fill(
       '[data-testid="wallet-input"]',
       '2Fd1UGzT8yuhksiKy98TpDg794dEELvNFqenJjRHFvwfuU83'

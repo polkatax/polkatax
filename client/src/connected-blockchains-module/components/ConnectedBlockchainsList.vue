@@ -1,25 +1,11 @@
 <template>
   <q-page class="q-px-sm q-mx-auto content">
-    <div class="flex justify-center q-pa-md">
-      <q-btn
-        color="purple"
-        label="Synchronizing"
-        icon="sync"
-        class="icon-spinner synchronizing-btn"
-        aria-live="polite"
-        aria-atomic="true"
-        :aria-hidden="!isSynchronizing"
-        tabindex="-1"
-      />
-    </div>
-    <div class="table q-my-md flex justify-center" v-if="jobs?.length > 0">
+    <div class="q-my-xl" v-if="jobs?.length > 0">
       <q-table
         :rows="jobs"
         :columns="columns"
         :pagination="{ rowsPerPage: 0 }"
         row-key="name"
-        table-class="flex"
-        class="content"
         hide-bottom
       >
         <template v-slot:body="props">
@@ -32,6 +18,39 @@
             @keydown.enter.prevent="showTaxableEvents(props.row)"
             @keydown.space.prevent="showTaxableEvents(props.row)"
           >
+            <q-td key="status" :props="props" style="overflow: hidden">
+              <q-icon
+                :name="matSync"
+                size="md"
+                class="spinner"
+                data-testid="wallet-status-icon"
+                v-if="
+                  props.row.status === 'in_progress' ||
+                  props.row.status === 'pending'
+                "
+              />
+              <q-icon
+                :name="matOfflinePin"
+                size="md"
+                v-if="props.row.status === 'done'"
+              />
+              <q-icon
+                :name="matError"
+                size="md"
+                v-if="props.row.status === 'error'"
+                @click.stop
+              >
+                <q-tooltip
+                  anchor="top middle"
+                  self="bottom middle"
+                  aria-label="Error infor tooltip"
+                  >{{
+                    props.row.error?.msg ??
+                    'An error occured when fetching data.'
+                  }}</q-tooltip
+                ></q-icon
+              >
+            </q-td>
             <q-td key="wallet" :props="props" class="wallet-cell">
               {{ props.row.wallet.substring(0, 5) + '...' }}
               <q-tooltip aria-label="Full wallet address">{{
@@ -79,10 +98,9 @@
               </div>
               <div
                 class="text-grey-8 q-gutter-xs"
-                v-if="props.row.status !== 'error'"
+                v-if="props.row.status === 'done'"
               >
                 <q-btn
-                  class="gt-xs"
                   size="12px"
                   flat
                   dense
@@ -99,7 +117,6 @@
                   >
                 </q-btn>
                 <q-btn
-                  class="gt-xs"
                   size="12px"
                   flat
                   dense
@@ -117,7 +134,6 @@
                 </q-btn>
                 <q-btn
                   ref="btnRef"
-                  class="gt-xs"
                   size="12px"
                   flat
                   dense
@@ -180,6 +196,18 @@
       </q-list>
     </q-menu>
   </q-page>
+  <div class="flex justify-center q-pa-md">
+    <q-btn
+      color="purple"
+      label="Synchronizing"
+      icon="sync"
+      class="icon-spinner synchronizing-btn"
+      aria-live="polite"
+      aria-atomic="true"
+      :aria-hidden="!isSynchronizing"
+      tabindex="-1"
+    />
+  </div>
 </template>
 <script setup lang="ts">
 import { computed, onUnmounted, Ref, ref } from 'vue';
@@ -190,6 +218,11 @@ import {
   formatDate,
   getBeginningAndEndOfYear,
 } from '../../shared-module/util/date-utils';
+import {
+  matSync,
+  matOfflinePin,
+  matError,
+} from '@quasar/extras/material-icons';
 import { exportDefaultCsv } from '../../shared-module/service/export-default-csv';
 import { exportKoinlyCsv } from '../../shared-module/service/export-koinly-csv';
 import { extractStakingRewardsPerYear } from '../../shared-module/util/extract-staking-rewards-per-year';
@@ -261,9 +294,9 @@ const syncSubscription = store.isSynchronizing$.subscribe((synchronizing) => {
   isSynchronizing.value = synchronizing;
 });
 
-const blockchainsSubscription = useSharedStore().substrateChains$.subscribe(
-  (substrateChains) => {
-    chains.value = substrateChains.chains;
+const blockchainsSubscription = useSharedStore().subscanChains$.subscribe(
+  (subscanChains) => {
+    chains.value = subscanChains.chains;
   }
 );
 
@@ -274,6 +307,7 @@ onUnmounted(() => {
 });
 
 const columns = ref([
+  { name: 'status', align: 'left', label: 'Status' },
   { name: 'wallet', align: 'left', label: 'Wallet' },
   {
     name: 'blockchain',
@@ -329,10 +363,15 @@ function formatAmount(amount: number | undefined, alt: string) {
   cursor: default;
   opacity: 1;
   transition: opacity 0.3s ease;
+  position: fixed;
+  left: 50%;
+  z-index: 1;
+  bottom: 150px;
+  pointer-events: none;
+  transform: translateX(-50%);
 }
 .synchronizing-btn[aria-hidden='true'] {
   opacity: 0;
-  pointer-events: none;
 }
 
 .wallet-cell,
