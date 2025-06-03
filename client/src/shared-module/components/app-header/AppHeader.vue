@@ -8,7 +8,6 @@
             src="/white.ico"
             class="header-logo"
             v-if="!parentRoute"
-            style="height: 3rem; margin: 5px"
         /></a>
         <q-btn
           class="q-mr-sm"
@@ -62,7 +61,7 @@ const parentRoute = computed(() => {
 
 <style scoped>
 .header-logo {
-  height: 2.25rem;
-  margin: 5px;
+  height: 3rem;
+  margin: 5px
 }
 </style>
