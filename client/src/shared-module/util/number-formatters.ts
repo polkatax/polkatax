@@ -30,6 +30,10 @@ export const formatCurrency = (value: number, currency: string) => {
 };
 
 export const formatCryptoAmount = (value: number): string => {
+  if (value === 0) {
+    return '0';
+  }
+
   if (value >= 1000000) {
     return value.toLocaleString(undefined, {
       maximumFractionDigits: 0,

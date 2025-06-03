@@ -62,14 +62,14 @@ from(fetchCurrency())
   .pipe(take(1))
   .subscribe((currency) => currency$.next(currency));
 
-const substrateChains$ = from(fetchSubscanChains()).pipe(shareReplay());
+const subscanChains$ = from(fetchSubscanChains()).pipe(shareReplay());
 
 export const useSharedStore = defineStore('shared', {
   state: () => {
     return {
       currency$: currency$.asObservable(),
       webSocketResponseError$,
-      substrateChains$,
+      subscanChains$,
       jobs$: jobs$.asObservable(),
       address: '',
     };

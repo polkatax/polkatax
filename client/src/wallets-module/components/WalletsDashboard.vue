@@ -12,15 +12,11 @@
         :disable="isDisabled"
       />
     </div>
-    <div
-      class="table q-my-md flex justify-center"
-      v-if="wallets && wallets.length > 0"
-    >
+    <div class="q-my-md" v-if="wallets && wallets.length > 0">
       <q-table
         :rows="wallets"
         :columns="columns"
         row-key="name"
-        :table-style="{ overflow: 'hidden' }"
         table-class="flex"
         class="content"
         hide-bottom
@@ -32,7 +28,7 @@
             style="cursor: pointer"
             @click="navigateToJob(props.row)"
           >
-            <q-td key="done" :props="props">
+            <q-td key="done" :props="props" style="overflow: hidden">
               <q-icon
                 :name="matSync"
                 size="md"
@@ -53,6 +49,11 @@
             <q-td key="timeframe" :props="props">
               <q-badge color="purple">
                 {{ props.row.timeframe }}
+              </q-badge>
+            </q-td>
+            <q-td key="walletWithTxFound" :props="props">
+              <q-badge color="purple">
+                {{ props.row.walletsWithTxFound }}
               </q-badge>
             </q-td>
             <q-td key="currency" :props="props">
@@ -107,7 +108,8 @@ const store = useSharedStore();
 const router = useRouter();
 
 const wallets: Ref<
-  { wallet: string; currency: string; done: boolean }[] | undefined
+  | { wallet: string; currency: string; done: boolean; walletsWithTx: number }[]
+  | undefined
 > = ref(undefined);
 
 const jobsSubscription = store.jobs$.subscribe((jobs) => {
@@ -121,10 +123,13 @@ const jobsSubscription = store.jobs$.subscribe((jobs) => {
         wallet: j.wallet,
         currency: j.currency,
         done: j.status === 'done' || j.status === 'error',
+        walletsWithTxFound: j.data?.values?.length > 0 ? 1 : 0,
       });
     } else {
       existing.done =
         existing.done && (j.status === 'done' || j.status === 'error');
+      existing.walletsWithTxFound =
+        existing.walletsWithTxFound + (j.data?.values?.length > 0 ? 1 : 0);
     }
   });
   wallets.value = r;
@@ -147,8 +152,9 @@ const isDisabled = computed(() => {
 const meme = ref('img/dollar-4932316_1280.jpg');
 
 const columns = ref([
-  { name: 'done', align: 'left', label: 'Status', field: 'done' },
-  { name: 'wallet', align: 'left', label: 'Wallet', field: 'wallet' },
+  { name: 'done', label: 'Status', field: 'done', align: 'left' },
+  { name: 'wallet', label: 'Wallet', field: 'wallet' },
+  { name: 'walletWithTxFound', label: 'Blockchains with transactions found' },
   { name: 'currency', label: 'Currency' },
   { name: 'delete', label: 'Delete' },
 ]);

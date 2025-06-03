@@ -1,24 +1,11 @@
 <template>
-  <q-layout view="lHh Lpr lFf">
+  <q-layout view="hHh lpR fFf">
+    <AppHeader />
     <q-page-container>
-      <q-page class="q-gutter-y-xl">
-
-          <!-- Hero -->
-          <div class="flex items-center q-pa-sm gradient-bg">
-            <img src="white.ico" style="height: 3rem; margin: 5px" />
-            <div class="text-h5 text-bold text-white">PolkaTax</div>
-          </div>
-      <div class="text-center q-mb-xl">
-        <div class="text-h4 text-bold">
-          Need Help with PolkaTax?
-        </div>
-        <div class="text-subtitle1 q-mt-sm" style="color: #666;">
-          Watch the quick tutorial or browse common questions below.
-        </div>
-      </div>
-
-      <!-- Tutorial Video -->
-      <div style="max-width: 900px" class="q-mx-auto">
+      <q-page>
+        <!-- Tutorial Video -->
+        <!-- PLACEHOLDER FOR TUTORIAL VIDEO
+      <div style="max-width: 900px" class="q-mx-auto q-my-lg">
         <q-card flat bordered class="q-pa-md" style="border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.08);">
           <div class="text-h6 q-mb-md">
             Getting Started Tutorial
@@ -34,80 +21,85 @@
           </div>
         </q-card>
       </div>
-
-      <!-- FAQ Section -->
-      <div  style="max-width: 900px" class="q-mx-auto">
-        <div class="text-h5 text-bold q-mb-md">Frequently Asked Questions</div>
-
-        <q-expansion-item
-        v-for="(item, index) in faqItems"
-        :key="index"
-        :label="item.question"
-        group="faq"
-        expand-icon="expand_more"
-        dense="false"
-        class="faq-item q-mb-md"
-        style="border-radius: 16px; box-shadow: 0 8px 24px rgba(0,0,0,0.07);"
-      >
-        <div class="faq-answer q-pa-md">{{ item.answer }}</div>
-      </q-expansion-item>
-      </div>
-        <!-- FOOTER -->
-        <div class="bg-grey-9 text-white q-pa-xl">
-          <div class="row q-col-gutter-lg content-wrapper">
-            <div class="col-12 col-md-3">
-              <div class="row items-center">
-                <q-img src="white.ico" style="border-radius: 50%; max-width: 2rem; height: 2rem;" fit="scale-down" />
-                <span class="q-ml-sm text-weight-bold">PolkaTax</span>
-              </div>
-              <p class="text-grey-4 q-mt-sm">The easiest way to handle your Substrate chain tax reporting.</p>
-            </div>
-            <div class="col-6 col-md-3" v-for="(group, g) in footerLinks" :key="g">
-              <div class="text-subtitle2 text-weight-bold q-mb-sm">{{ group.title }}</div>
-              <div v-for="link in group.links" :key="link" class="text-grey-4">
-                <a href="#" class="text-grey-4">{{ link }}</a>
-              </div>
-            </div>
+      -->
+        <!-- FAQ Section -->
+        <div class="q-mx-auto q-mb-xl q-my-xl content">
+          <div class="text-h5 text-bold q-mb-md">
+            Frequently Asked Questions
           </div>
-          <div class="text-center text-grey-5 q-mt-lg">
-            2025 PolkaTax
-          </div>
+
+          <q-expansion-item
+            v-for="(item, index) in faqItems"
+            :key="index"
+            :label="item.question"
+            group="faq"
+            expand-icon="expand_more"
+            :dense="false"
+            class="faq-item q-mb-md"
+            style="
+              border-radius: 16px;
+              box-shadow: 0 8px 24px rgba(0, 0, 0, 0.07);
+            "
+          >
+            <div class="faq-answer q-pa-md">{{ item.answer }}</div>
+          </q-expansion-item>
         </div>
-
       </q-page>
     </q-page-container>
+    <q-footer elevated>
+      <AppFooter />
+    </q-footer>
   </q-layout>
 </template>
 
-<script setup>
-const faqItems = [
+<script setup lang="ts">
+import { computed, onBeforeUnmount, Ref, ref } from 'vue';
+import AppFooter from '../shared-module/components/app-footer/AppFooter.vue';
+import AppHeader from '../shared-module/components/app-header/AppHeader.vue';
+import { useSharedStore } from '../shared-module/store/shared.store';
+
+const supportedChains: Ref<string[]> = ref([]);
+
+const store = useSharedStore();
+
+const chainsSubscription = store.subscanChains$.subscribe((c) => {
+  supportedChains.value = c.chains
+    .map((x) => x.label)
+    .sort((a, b) => (a.toUpperCase() > b.toUpperCase() ? 1 : -1));
+});
+
+onBeforeUnmount(() => {
+  chainsSubscription.unsubscribe();
+});
+
+const faqItems = computed(() => [
   {
-    question: 'How do I connect my Substrate wallet?',
-    answer: 'To connect your wallet, click the "Launch App" button and follow the prompts to authorize access securely.'
+    question: 'How do I connect my wallet?',
+    answer:
+      'To connect your wallet, click on "Wallets" in the main menu. Then, copy your wallet address from your crypto wallet extension and paste it into the input field. Click "Add" to complete the connection.',
   },
   {
     question: 'Which chains are supported?',
-    answer: 'We currently support Polkadot, Kusama, Moonbeam, Acala, Astar, and many more Substrate-based chains.'
+    answer:
+      'We currently support the following chains: ' +
+      supportedChains.value.join(', '),
   },
   {
     question: 'How do I export my tax reports?',
-    answer: 'Navigate to the Export section in the app and choose PDF or CSV format compatible with popular tax software like Koinly or TurboTax.'
+    answer:
+      'In the "Wallets" overview, click on the wallet you wish to export data from. This will open the list of connected blockchains. Click the export icon next to a chain, then select the year you want to export in the dropdown menu.',
   },
   {
     question: 'Is my data secure?',
-    answer: 'Yes, PolkaTax only fetches transaction data with your permission and does not store sensitive information beyond what is necessary for tax calculation.'
+    answer:
+      'Yes. PolkaTax only accesses publicly available blockchain data and stores all your information locally in your browser. No personal or sensitive data is transmitted to external servers.',
   },
   {
     question: 'Can I use PolkaTax for multiple accounts?',
-    answer: 'Yes, you can connect multiple wallets and manage their tax data in one unified dashboard.'
-  }
-]
-
-const footerLinks = [
-  { title: 'Product', links: ['Pricing', 'FAQ'] },
-  { title: 'Resources', links: ['Documentation'] },
-  { title: 'Company', links: ['About', 'Terms'] }
-];
+    answer:
+      'Absolutely. You can connect multiple wallets and manage all their tax data seamlessly from a single dashboard.',
+  },
+]);
 </script>
 
 <style scoped>
@@ -147,11 +139,6 @@ const footerLinks = [
   font-weight: 700;
   font-size: 2rem;
   margin-bottom: 2rem;
-}
-
-.gradient-bg {
-  background: linear-gradient(135deg, #ec4899, #8b5cf6);
-  color: white;
 }
 
 .card-icon {
@@ -215,10 +202,5 @@ a:hover {
   background: #f9fafb;
   padding: 3rem 1rem;
   border-radius: 24px;
-}
-
-.content-wrapper {
-  max-width: 1024px;
-  margin: auto;
 }
 </style>

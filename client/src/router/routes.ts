@@ -29,6 +29,11 @@ const routes: RouteRecordRaw[] = [
     component: () => import('src/layouts/WelcomeAll.vue'),
   },
   {
+    name: 'Tutorial & FAQ',
+    path: '/tutorial-faq',
+    component: () => import('src/layouts/TutorialFAQ.vue'),
+  },
+  {
     path: '/',
     component: () => import('src/layouts/MainLayout.vue'),
     children: [

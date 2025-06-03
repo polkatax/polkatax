@@ -9,7 +9,7 @@
     >
       <rewards-chart :currency="false" chartType="ColumnChart" />
     </div>
-    <div class="table q-my-md" v-if="rewards">
+    <div class="q-my-md" v-if="rewards">
       <staking-rewards-table />
     </div>
     <div v-if="!rewards" class="q-my-xl">

@@ -2,7 +2,6 @@
   <q-layout view="lHh Lpr lFf">
     <q-page-container>
       <q-page class="q-gutter-y-xl">
-
         <!-- HERO -->
         <div class="gradient-bg">
           <div class="flex items-center q-pa-sm">
@@ -11,12 +10,22 @@
           </div>
           <div class="q-pa-xl text-center text-white">
             <q-intersection transition="fade" once>
-              <div class="text-h3 text-bold q-mb-md">Simplify Your Substrate Tax Reporting</div>
+              <div class="text-h3 text-bold q-mb-md">
+                Simplify Your Substrate Tax Reporting
+              </div>
             </q-intersection>
             <p class="text-subtitle1 q-mb-xl">
-              Automatically fetch tax-relevant transactions from all Substrate chains and export for your tax software.
+              Automatically fetch tax-relevant transactions from all Substrate
+              chains and export for your tax software.
             </p>
-            <q-btn label="Launch App" color="white" text-color="primary" size="lg" to="/wallets" class="launchbutton"/>
+            <q-btn
+              label="Launch App"
+              color="white"
+              text-color="primary"
+              size="lg"
+              to="/wallets"
+              class="launchbutton"
+            />
           </div>
         </div>
 
@@ -29,10 +38,18 @@
               :key="name"
               transition="scale"
               once
-              class="col-6 col-sm-4 col-md-2 text-center">
-              <q-card flat bordered class="hover-card q-pa-sm q-mb-md bg-white" style="border-radius: 16px;">
-                <q-img :src="`/public/img/chain-logos/${name.toLowerCase()}.png`" />
-                <div class="text-caption text-weight-medium q-mt-sm">{{ name }}</div>
+              class="col-6 col-sm-4 col-md-2 text-center"
+            >
+              <q-card
+                flat
+                bordered
+                class="hover-card q-pa-sm q-mb-md bg-white"
+                style="border-radius: 16px"
+              >
+                <q-img :src="`/img/chain-logos/${name.toLowerCase()}.png`" />
+                <div class="text-caption text-weight-medium q-mt-sm">
+                  {{ name }}
+                </div>
               </q-card>
             </q-intersection>
           </div>
@@ -41,12 +58,15 @@
 
         <!-- FEATURES -->
         <div class="features-section content-wrapper">
-          <div class="section-title text-center">Powerful Features for Tax Compliance</div>
+          <div class="section-title text-center">
+            Powerful Features for Tax Compliance
+          </div>
           <div class="row q-col-gutter-md">
             <div
               v-for="(feature, i) in features"
               :key="i"
-              class="col-12 col-md-4">
+              class="col-12 col-md-4"
+            >
               <q-card class="q-pa-md">
                 <div class="card-icon" :style="feature.style">
                   <q-icon :name="feature.icon" size="32px" />
@@ -62,49 +82,49 @@
         <q-intersection transition="fade" once>
           <div class="content-wrapper text-center">
             <div class="q-pa-xl cta text-white">
-              <div class="text-h6 q-mb-sm">Ready to Simplify Your Crypto Taxes?</div>
+              <div class="text-h6 q-mb-sm">
+                Ready to Simplify Your Crypto Taxes?
+              </div>
               <p class="q-mb-md">
                 Use PolkaTax for accurate, compliant tax reporting.
               </p>
-              <q-btn label="Get Started for Free" color="white" text-color="primary" size="lg" class="launchbutton" to="/wallets"/>
+              <q-btn
+                label="Get Started for Free"
+                color="white"
+                text-color="primary"
+                size="lg"
+                class="launchbutton"
+                to="/wallets"
+              />
             </div>
           </div>
         </q-intersection>
 
         <!-- FOOTER -->
-        <div class="bg-grey-9 text-white q-pa-xl">
-          <div class="row q-col-gutter-lg content-wrapper">
-            <div class="col-12 col-md-4">
-              <div class="row items-center">
-                <q-img src="white.ico" style="border-radius: 50%; max-width: 2rem; height: 2rem;" fit="scale-down" />
-                <span class="q-ml-sm text-weight-bold">PolkaTax</span>
-              </div>
-              <p class="text-grey-4 q-mt-sm">The easiest way to handle your Substrate chain tax reporting.</p>
-            </div>
-            <div class="col-6 col-md-3" v-for="(group, g) in footerLinks" :key="g">
-              <div class="text-subtitle2 text-weight-bold q-mb-sm">{{ group.title }}</div>
-              <div v-for="link in group.links" :key="link" class="text-grey-4">
-                <a :href="link.link" class="text-grey-4">{{ link.label }}</a>
-              </div>
-            </div>
-          </div>
-          <div class="text-center text-grey-5 q-mt-lg">
-            2025 PolkaTax
-          </div>
-          <div class="text-center text-grey-5">
-           Crypto currency quotes provided by <a href="https://coingecko.com" class="text-grey-4">coingecko.com</a>
-           </div>
+        <div class="q-py-lg bg-grey-9">
+          <AppFooter />
         </div>
-
       </q-page>
     </q-page-container>
   </q-layout>
 </template>
 
 <script setup>
+import AppFooter from '../shared-module/components/app-footer/AppFooter.vue';
+
 const chains = [
-  'Polkadot', 'Kusama', 'Moonbeam', 'Acala', 'Astar', 'Bifrost',
-  'Mythos', 'Hydration', 'Peaq', 'EnergyWebX', 'Kilt', 'Crust'
+  'Polkadot',
+  'Kusama',
+  'Moonbeam',
+  'Acala',
+  'Astar',
+  'Bifrost',
+  'Mythos',
+  'Hydration',
+  'Peaq',
+  'EnergyWebX',
+  'Kilt',
+  'Crust',
 ];
 
 const features = [
@@ -122,15 +142,10 @@ const features = [
   },
   {
     icon: 'calculate',
-    title: 'Integration with taxation software',
+    title: 'Integration with Tax Software',
     desc: 'Integrates with tax software such as Koinly.',
     style: 'background-color: #ede9fe; color: #8b5cf6;',
-  }
-];
-
-const footerLinks = [
-  { title: 'Product', links: [{ label: 'About', link: '/about' }] },
-  { title: 'Resources', links: [ { label: 'Documentation', link: '/documentaiton' }, { label: 'GitHub', link: 'https://github.com/polkatax/polkatax' }] }
+  },
 ];
 </script>
 
@@ -144,11 +159,6 @@ const footerLinks = [
   font-weight: 700;
   font-size: 2rem;
   margin-bottom: 2rem;
-}
-
-.gradient-bg {
-  background: linear-gradient(135deg, #ec4899, #8b5cf6);
-  color: white;
 }
 
 .card-icon {
@@ -171,7 +181,7 @@ const footerLinks = [
 }
 
 a:hover.launchbutton {
-  color: rgba(230, 0, 122, 0.8)!important;
+  color: rgba(230, 0, 122, 0.8) !important;
 }
 
 .q-card {
