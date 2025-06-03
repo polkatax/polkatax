@@ -23,9 +23,15 @@
           :key="link"
           class="text-grey-4 text-center"
         >
-          <router-link :to="link.link" class="text-grey-4">{{
+          <router-link
+            v-if="link?.routerLink"
+            :to="link.routerLink"
+            class="text-grey-4"
+            >{{ link.label }}</router-link
+          >
+          <a v-if="link.link" :href="link.link" class="text-grey-4">{{
             link.label
-          }}</router-link>
+          }}</a>
         </div>
       </div>
     </div>
@@ -39,11 +45,19 @@
 const footerLinks = [
   {
     title: 'Product',
-    links: [{ label: 'Tutorial & FAQ', link: 'tutorial-faq' }],
+    links: [
+      { label: 'Tutorial & FAQ', routerLink: 'tutorial-faq', link: undefined },
+    ],
   },
   {
     title: 'Resources',
-    links: [{ label: 'GitHub', link: 'https://github.com/polkatax/polkatax' }],
+    links: [
+      {
+        label: 'GitHub',
+        routerLink: undefined,
+        link: 'https://github.com/polkatax/polkatax',
+      },
+    ],
   },
 ];
 </script>

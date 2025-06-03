@@ -27,7 +27,7 @@
       <div class="col-grow flex justify-center">
         <q-tabs align="left" class="desktop-only">
           <q-route-tab to="/wallets" label="Wallets" />
-          <q-route-tab to="/tutorial-faq" label="Tutorial" />
+          <q-route-tab to="/tutorial-faq" label="Tutorial & FAQ" />
         </q-tabs>
       </div>
 
