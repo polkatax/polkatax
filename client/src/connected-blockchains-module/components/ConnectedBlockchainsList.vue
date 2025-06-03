@@ -69,7 +69,7 @@
               {{
                 formatAmount(calculateTotalReward(props.row), '-') +
                 ' ' +
-                props.row?.data?.token
+                (props.row?.data?.token ?? '')
               }}
             </q-td>
             <q-td key="syncFromDate" :props="props">
