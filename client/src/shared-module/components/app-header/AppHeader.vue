@@ -4,10 +4,7 @@
       <!-- Left section: Logo or Back button + title -->
       <div class="row items-center q-py-xs" style="min-width: 250px">
         <a href="/"
-          ><img
-            src="/white.ico"
-            class="header-logo"
-            v-if="!parentRoute"
+          ><img src="/white.ico" class="header-logo" v-if="!parentRoute"
         /></a>
         <q-btn
           class="q-mr-sm"
@@ -62,6 +59,6 @@ const parentRoute = computed(() => {
 <style scoped>
 .header-logo {
   height: 3rem;
-  margin: 5px
+  margin: 5px;
 }
 </style>

@@ -1,13 +1,18 @@
 <template>
   <div class="q-pa-md row items-center">
     <q-input
+      class="address-input"
       filled
+      no-error-icon
       :model-value="props.modelValue"
       @update:model-value="onAddressChanged"
       label="Wallet address"
       data-testid="wallet-input"
       @keyup.enter="onEnterPressed"
       aria-describedby="wallet-info-tooltip"
+      :rules="[
+        (val) => !val || validateAddress(val) || 'Wallet address invalid',
+      ]"
     >
       <template v-slot:after>
         <q-icon name="info" aria-describedby="wallet-info-tooltip">
@@ -27,6 +32,7 @@
 </template>
 <script setup lang="ts">
 import 'vue';
+import { isValidAddress } from '../../../wallets-module/util/is-valid-address';
 
 const emits = defineEmits(['update:modelValue', 'enter-pressed']);
 
@@ -41,4 +47,15 @@ function onAddressChanged(value: string | number | null) {
 function onEnterPressed() {
   emits('enter-pressed');
 }
+
+function validateAddress(adr: string) {
+  return isValidAddress(adr);
+}
 </script>
+<style lang="css" scoped>
+.address-input {
+  max-width: 250px;
+  min-width: 250px;
+  padding-bottom: 0;
+}
+</style>
