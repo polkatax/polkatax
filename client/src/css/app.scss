@@ -22,6 +22,11 @@
   transition: 1s all;
 }
 
+.q-layout {
+  font-family: 'Inter', sans-serif;
+  margin: auto;
+}
+
 @keyframes spin {
   to {
     transform: rotate(-360deg);

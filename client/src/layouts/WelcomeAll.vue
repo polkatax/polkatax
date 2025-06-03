@@ -150,11 +150,6 @@ const features = [
 </script>
 
 <style scoped>
-.q-layout {
-  font-family: 'Inter', sans-serif;
-  margin: auto;
-}
-
 .section-title {
   font-weight: 700;
   font-size: 2rem;
