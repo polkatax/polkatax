@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia';
 import {
+  combineLatest,
   filter,
   firstValueFrom,
   from,
@@ -22,23 +23,40 @@ import { sortJobs } from './helper/job.service';
 
 const jobs$ = new ReplaySubject<JobResult[]>(1);
 
-fetchAllJobsFromIndexedDB().then((jobs) => {
-  const storedJobs = jobs.filter((job) => job.type === 'staking_rewards');
-  if (storedJobs.length > 1) {
-    storedJobs.forEach((s) => {
-      wsSendMsg({
-        type: 'fetchDataRequest',
-        payload: {
-          currency: s.currency,
-          wallet: s.wallet,
-          blockchains: [s.blockchain],
-          syncFromDate: s.status === 'done' ? s.syncedUntil : undefined,
-        },
-      });
-    });
-  }
-  jobs$.next(sortJobs(storedJobs));
-});
+const subscanChains$ = from(fetchSubscanChains()).pipe(shareReplay());
+
+combineLatest([subscanChains$, from(fetchAllJobsFromIndexedDB())])
+  .pipe(take(1))
+  .subscribe(async ([chains, jobs]) => {
+    let storedJobs = jobs.filter((job) => job.type === 'staking_rewards');
+    if (storedJobs.length > 1) {
+      storedJobs
+        .filter((j) => chains.chains.find((c) => c.domain === j.blockchain))
+        .forEach((s) => {
+          wsSendMsg({
+            type: 'fetchDataRequest',
+            payload: {
+              currency: s.currency,
+              wallet: s.wallet,
+              blockchains: [s.blockchain],
+              syncFromDate: s.status === 'done' ? s.syncedUntil : undefined,
+            },
+          });
+        });
+      const toDelete = storedJobs.filter(
+        (j) =>
+          j.status === 'error' &&
+          !chains.chains.find((c) => c.domain === j.blockchain)
+      );
+      if (toDelete.length > 0) {
+        await Promise.all(toDelete.map((j) => removeJobFromIndexedDB(j)));
+        storedJobs = (await fetchAllJobsFromIndexedDB()).filter(
+          (job) => job.type === 'staking_rewards'
+        );
+      }
+    }
+    jobs$.next(sortJobs(storedJobs));
+  });
 
 wsMsgReceived$
   .pipe(
@@ -61,8 +79,6 @@ const currency$ = new ReplaySubject<string>(1);
 from(fetchCurrency())
   .pipe(take(1))
   .subscribe((currency) => currency$.next(currency));
-
-const subscanChains$ = from(fetchSubscanChains()).pipe(shareReplay());
 
 export const useSharedStore = defineStore('shared', {
   state: () => {

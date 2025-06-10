@@ -45,6 +45,7 @@
               data-testid="wallet-address"
             >
               {{ props.row.wallet }}
+              <span @click.stop="clopyToClipboard(props.row.wallet)">📋</span>
             </q-td>
             <q-td key="timeframe" :props="props">
               <q-badge color="purple">
@@ -170,6 +171,15 @@ function confirmDelete(job: JobResult) {
     persistent: true,
   }).onOk(() => {
     store.removeWallet(job);
+  });
+}
+
+function clopyToClipboard(text: string) {
+  navigator.clipboard.writeText(text);
+  $q.notify({
+    position: 'top',
+    timeout: 750,
+    message: 'Wallet address copied!',
   });
 }
 </script>

@@ -130,7 +130,7 @@ test.describe('Wallet', () => {
     const statusIcon = page.getByTestId('wallet-status-icon').first();
     await expect(statusIcon).toContainClass('spinner');
     const walletAddress = page.getByTestId('wallet-address').first();
-    await expect(walletAddress).toHaveText(msg.payload.wallet);
+    await expect(walletAddress).toHaveText(msg.payload.wallet + ' 📋');
 
     wsWrapper.send({
       type: 'data',
