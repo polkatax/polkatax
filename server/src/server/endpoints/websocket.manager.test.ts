@@ -172,33 +172,6 @@ describe("WebSocketManager", () => {
     });
   });
 
-  describe("throttle", () => {
-    it("returns true if pending jobs exceed max", () => {
-      for (let i = 0; i < 100; i++) {
-        wsManager.connections.push({
-          subscription: { wallet: "w1", currency: "USD" },
-          socket,
-        });
-      }
-      jobsCache.fetchJobs.mockReturnValue([
-        { status: "pending", currency: "USD" },
-        { status: "in_progress", currency: "USD" },
-      ] as any);
-      expect(wsManager["throttle"](socket)).toBe(true);
-    });
-
-    it("returns false if pending jobs below max", () => {
-      wsManager.connections.push({
-        subscription: { wallet: "w1", currency: "USD" },
-        socket,
-      });
-      jobsCache.fetchJobs.mockReturnValue([
-        { status: "done", currency: "USD" },
-      ] as any);
-      expect(wsManager["throttle"](socket)).toBe(false);
-    });
-  });
-
   describe("wsHandler", () => {
     it("sets up socket.on for message and close", () => {
       wsManager.wsHandler(socket);

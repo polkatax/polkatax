@@ -101,27 +101,14 @@ export class WebSocketManager {
     );
   }
 
-  private throttle(socket: WebSocket): boolean {
-    const MAX_PENDING_JOBS = 50;
+  private throttle(msg: WebSocketIncomingMessage, socket: WebSocket): boolean {
+    const MAX_WALLETS = 4;
     const subscriptions = this.connections
       .filter((c) => c.socket === socket)
       .map((c) => c.subscription);
-    const pendingJobs = subscriptions.reduce<number>(
-      (prev: number, s: Subscription) => {
-        return (
-          prev +
-          this.jobsCache
-            .fetchJobs(s.wallet)
-            .filter(
-              (j) =>
-                (j.status === "pending" || j.status === "in_progress") &&
-                j.currency === s.currency,
-            ).length
-        );
-      },
-      0,
-    );
-    return pendingJobs >= MAX_PENDING_JOBS;
+    const wallets = subscriptions.map((s) => s.wallet);
+    const isNewSubscription = !wallets.includes(msg.payload.wallet);
+    return isNewSubscription && wallets.length >= MAX_WALLETS;
   }
 
   wsHandler = (socket: WebSocket) => {
@@ -141,20 +128,23 @@ export class WebSocketManager {
         });
       }
 
-      if (msg.type === "fetchDataRequest" && this.throttle(socket)) {
-        logger.info(
-          "WebSocketManager: Too many pending request for client. Last message " +
-            rawMsg,
-        );
-        return this.sendError(socket, { code: 429, msg: "Too many requests" });
-      }
-
       const result = WebSocketIncomingMessageSchema.safeParse(msg);
       if (!result.success) {
         logger.info(
           "WebSocketManager: Client sent mal-formatted message: " + rawMsg,
         );
         return this.sendError(socket, { code: 400, msg: "Invalid message" });
+      }
+
+      if (msg.type === "fetchDataRequest" && this.throttle(msg, socket)) {
+        logger.info(
+          "WebSocketManager: Too many pending request for client. Last message " +
+            rawMsg,
+        );
+        return this.sendError(socket, {
+          code: 429,
+          msg: "You cannot add more than 4 wallets to sync.",
+        });
       }
 
       try {
