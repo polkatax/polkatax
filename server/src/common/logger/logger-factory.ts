@@ -1,8 +1,16 @@
+import path from "path";
 import pino from "pino";
 
-export const createLogger = () => {
+export const createLogger = (fileName: string) => {
   const transport = pino.transport({
     targets: [
+      {
+        level: 'info',
+        target: 'pino/file',
+        options: {
+            destination: path.join(process.cwd(), fileName + '.log'),
+        },
+      },
       {
         level: "info",
         target: "pino-pretty",
@@ -19,3 +27,4 @@ export const createLogger = () => {
     transport,
   );
 };
+
