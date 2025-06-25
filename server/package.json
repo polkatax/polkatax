@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "description": "",
   "scripts": {
-    "pm2-prod": "pm2 start prod.config.js --no-daemon",
-    "pm2-stub": "pm2 start stub.config.js --no-daemon",
+    "pm2-prod": "pm2 start prod.config.js",
+    "pm2-stub": "pm2 start stub.config.js",
     "pm2-stop": "pm2 stop all",
     "build": "tsc && npm run copy-env-to-dist",
     "start:server": "ts-node src/server/start-server.ts",
