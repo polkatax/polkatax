@@ -6,8 +6,9 @@ import { logger } from "../../../logger/logger";
 import { hasChainEvmSupport } from "../util/has-chain-evm-support";
 import { Transfer } from "../model/raw-transfer";
 import { isEvmAddress } from "../../../data-aggregation/helper/is-evm-address";
+import { envFile } from "../../../env.config";
 
-dotenv.config({ path: __dirname + "/../.env" });
+dotenv.config({ path: envFile });
 
 export class SwapsAndTransfersService {
   constructor(
