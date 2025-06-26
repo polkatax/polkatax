@@ -20,6 +20,7 @@ import { addIsoDate } from './helper/add-iso-date';
 
 const jobs$ = new BehaviorSubject<JobResult[]>([]);
 const subscanChains$ = from(fetchSubscanChains()).pipe(shareReplay(1));
+const walletsAddresses$ = new BehaviorSubject(JSON.parse(localStorage.getItem('wallets') || '[]'));
 
 wsMsgReceived$
   .pipe(
@@ -84,12 +85,8 @@ export const useSharedStore = defineStore('shared', {
       subscanChains$,
       jobs$: jobs$.asObservable(),
       address: '',
+      walletsAddresses$: walletsAddresses$.asObservable()
     };
-  },
-  getters: {
-    walletAddresses() {
-      return JSON.parse(localStorage.getItem('wallets') || '[]');
-    },
   },
   actions: {
     selectCurrency(newCurrency: string) {
@@ -100,6 +97,7 @@ export const useSharedStore = defineStore('shared', {
       if (wallets.indexOf(wallet) === -1) {
         wallets.push(wallet);
         localStorage.setItem('wallets', JSON.stringify(wallets));
+        walletsAddresses$.next(wallets)
       }
     },
     async sync() {
@@ -120,6 +118,7 @@ export const useSharedStore = defineStore('shared', {
       );
       const newWallets = wallets.filter((w) => w !== job.wallet);
       localStorage.setItem('wallets', JSON.stringify(newWallets));
+      walletsAddresses$.next(wallets)
       const reqId = wsSendMsg({
         type: 'unsubscribeRequest',
         payload: {
