@@ -36,8 +36,8 @@ export class FiatExchangeRateService {
   private async sync() {
     logger.info("CurrencyExchangeRateService syncing");
     let results: ExchangeRates = this.exchangeRates;
-    // fetch data from 10 years back if it hasn't been stored yet. otherwise fetch current and last year
-    const yearsToLookPast = Object.keys(results).length === 0 ? 10 : 1;
+    // fetch data from current and last year
+    const yearsToLookPast = 1;
     for (let yearInPast = 0; yearInPast <= yearsToLookPast; yearInPast++) {
       let year = new Date().getFullYear() - yearInPast;
       results = {
