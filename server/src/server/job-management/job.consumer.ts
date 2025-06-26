@@ -8,7 +8,7 @@ import { StakingRewardsResponse } from "../data-aggregation/model/staking-reward
 export class JobConsumer {
   constructor(
     private jobsService: JobsService,
-    private stakingService: StakingRewardsWithFiatService,
+    private stakingRewardsWithFiatService: StakingRewardsWithFiatService,
   ) {}
 
   async process(job: Job): Promise<void> {
@@ -35,7 +35,7 @@ export class JobConsumer {
     }
 
     try {
-      const result = await this.stakingService.fetchStakingRewards({
+      const result = await this.stakingRewardsWithFiatService.fetchStakingRewards({
         chain,
         address: job.wallet,
         currency: job.currency,

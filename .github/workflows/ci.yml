@@ -56,3 +56,34 @@ jobs:
       - name: Run Browser tests
         working-directory: client
         run: npm run integration-tests 
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: test   
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up SSH
+        uses: webfactory/ssh-agent@v0.8.0
+        with:
+          ssh-private-key: ${{ secrets.HETZNER_SSH_KEY }}
+
+      - name: Copy files via SSH (excluding .env and .log files from deletion)
+        run: |
+          rsync -avz --delete \
+            --exclude='*.env' \
+            --exclude='*.log' \
+            -e "ssh -o StrictHostKeyChecking=no" \
+            ./ ${{ secrets.HETZNER_USER }}@${{ secrets.HETZNER_HOST }}:${{ secrets.DEPLOY_PATH }}
+
+      - name: Install & Restart app
+        run: |
+          ssh -o StrictHostKeyChecking=no ${{ secrets.HETZNER_USER }}@${{ secrets.HETZNER_HOST }} << 'EOF'
+            cd ${{ secrets.DEPLOY_PATH }}
+            npm install
+            npm run buid
+            cd server
+            npm run pm2-stop 
+            npm run pm2-stub
+          EOF
