@@ -1,13 +1,13 @@
 import { Job } from "../../model/job";
 import { StakingRewardsWithFiatService } from "../data-aggregation/services/staking-rewards-with-fiat.service";
 import { logger } from "../logger/logger";
-import { JobsCache } from "./jobs.cache";
+import { JobsService } from "./jobs.service";
 import * as subscanChains from "../../../res/gen/subscan-chains.json";
 import { StakingRewardsResponse } from "../data-aggregation/model/staking-rewards.response";
 
 export class JobConsumer {
   constructor(
-    private jobsCache: JobsCache,
+    private jobsService: JobsService,
     private stakingRewardsWithFiatService: StakingRewardsWithFiatService,
   ) {}
 
@@ -21,7 +21,7 @@ export class JobConsumer {
         (p) => p.domain.toLowerCase() === job.blockchain.toLowerCase(),
       );
       if (!chain) {
-        this.jobsCache.setError(
+        await this.jobsService.setError(
           {
             code: 400,
             msg: "Chain " + job.blockchain + " not found",
@@ -30,7 +30,14 @@ export class JobConsumer {
         );
         return;
       }
-      this.jobsCache.setInProgress(job);
+
+      const success = await this.jobsService.setInProgress(job);
+      if (!success) {
+        logger.info(
+          "Can not set job in progress. Probably it's being consumed by a different process already.",
+        );
+        return;
+      }
 
       const result =
         await this.stakingRewardsWithFiatService.fetchStakingRewards({
@@ -45,7 +52,7 @@ export class JobConsumer {
         ).values.filter((v) => v.timestamp < job.syncFromDate);
         result.values = result.values.concat(previouslySyncedValues);
       }
-      this.jobsCache.setDone(result, job);
+      await this.jobsService.setDone(result, job);
       logger.info(
         "Exit: JobConsumer process: " +
           JSON.stringify({ ...job, data: undefined }),
@@ -54,7 +61,7 @@ export class JobConsumer {
       logger.error(error);
       logger.error("Error processing job: " + JSON.stringify(job));
       try {
-        this.jobsCache.setError(
+        await this.jobsService.setError(
           {
             code: error?.statusCode ?? 500,
             msg:

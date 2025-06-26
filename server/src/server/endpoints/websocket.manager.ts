@@ -1,6 +1,5 @@
 import { JobManager } from "../job-management/job.manager";
 import * as WebSocket from "ws";
-import { JobsCache } from "../job-management/jobs.cache";
 import { WebSocketOutgoingMessage } from "../model/web-socket-msg";
 import { logger } from "../logger/logger";
 import { WsError } from "../model/ws-error";
@@ -8,6 +7,8 @@ import {
   WebSocketIncomingMessage,
   WebSocketIncomingMessageSchema,
 } from "./incoming-message-schema";
+import { JobRepository } from "../job-management/job.repository";
+import { JobId } from "../../model/job";
 
 interface Subscription {
   wallet: string;
@@ -19,7 +20,7 @@ export class WebSocketManager {
 
   constructor(
     private jobManager: JobManager,
-    private jobsCache: JobsCache,
+    private jobRepository: JobRepository,
   ) {}
 
   private subscriptionMachtes(s1: Subscription, s2: Subscription) {
@@ -30,7 +31,7 @@ export class WebSocketManager {
     socket: WebSocket,
     msg: WebSocketIncomingMessage,
   ): Promise<WebSocketOutgoingMessage> {
-    const { wallet, syncFromDate, currency, blockchains } = msg.payload;
+    const { wallet, currency, blockchains } = msg.payload;
     const subscription = { wallet, currency };
 
     if (
@@ -43,13 +44,11 @@ export class WebSocketManager {
       this.connections.push({ subscription, socket });
     }
 
-    const jobs = this.jobManager.enqueue(
+    const jobs = await this.jobManager.enqueue(
       msg.reqId,
       wallet,
-      "staking_rewards",
       currency,
       blockchains,
-      syncFromDate,
     );
 
     return {
@@ -169,17 +168,18 @@ export class WebSocketManager {
   };
 
   async startJobNotificationChannel() {
-    this.jobsCache.jobUpdate$.subscribe((job) => {
-      this.connections
-        .filter((c) =>
-          this.subscriptionMachtes(c.subscription, {
-            wallet: job.wallet,
-            currency: job.currency,
-          }),
-        )
-        .forEach((c) => {
+    this.jobRepository.jobChanged$.subscribe(async (jobId: JobId) => {
+      const matchingSubscriptions = this.connections.filter((c) =>
+        this.subscriptionMachtes(c.subscription, {
+          wallet: jobId.wallet,
+          currency: jobId.currency,
+        }),
+      );
+      if (matchingSubscriptions.length > 0) {
+        const job = await this.jobRepository.findJob(jobId);
+        matchingSubscriptions.forEach((c) => {
           logger.info(
-            `WebSocketManager: Sending job notification for ${JSON.stringify(c.subscription)}`,
+            `WebSocketManager: Sending job notification for wallet ${c.subscription.wallet} and currency ${c.subscription.currency}`,
           );
           c.socket.send(
             JSON.stringify({
@@ -190,6 +190,7 @@ export class WebSocketManager {
             } as WebSocketOutgoingMessage),
           );
         });
+      }
     });
   }
 }

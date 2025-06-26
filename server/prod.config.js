@@ -4,16 +4,15 @@ module.exports = {
       name: "main-server-3001",
       script: "node ./dist/src/server/start-server.js",
       env: {
-        ENV_FILE: ".env"
-      }
+        ENV_FILE: "pm2.env",
+      },
     },
     {
       name: "main-server-3004",
       script: "node ./dist/src/server/start-server.js",
       env: {
-        PORT: 3004,
-        ENV_FILE: ".env.3004"
-      }
+        ENV_FILE: "pm2-3004.env",
+      },
     },
     {
       name: "crypto-currency-prices",

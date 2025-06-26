@@ -8,7 +8,6 @@ import {
 } from "@jest/globals";
 import { ExchangeRateRestService } from "../exchange-rate-api/exchange-rate.rest-service";
 import { FiatExchangeRateService } from "./fiat-exchange-rate.service";
-import { logger } from "../logger/logger";
 import * as dateUtils from "../../common/util/date-utils";
 
 jest.useFakeTimers();

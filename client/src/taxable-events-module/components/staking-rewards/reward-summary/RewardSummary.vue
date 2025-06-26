@@ -34,7 +34,11 @@
       <tr v-if="rewards?.summary">
         <td class="text-left q-pa-sm">Value at payout time:</td>
         <td class="text-right q-pa-sm" data-testid="value-at-payout-time">
-          {{ formatCurrency(rewards.summary.fiatValue ?? 0, rewards.currency) }}
+          {{
+            isNaN(rewards?.summary?.fiatValue || NaN)
+              ? '-'
+              : formatCurrency(rewards.summary.fiatValue!, rewards.currency)
+          }}
         </td>
       </tr>
     </tbody>

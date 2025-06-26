@@ -1,73 +1,69 @@
 import { defineStore } from 'pinia';
 import {
+  BehaviorSubject,
   combineLatest,
   filter,
   firstValueFrom,
   from,
   map,
-  mergeMap,
   ReplaySubject,
   shareReplay,
   take,
 } from 'rxjs';
 import { fetchCurrency } from '../service/fetch-currency';
-import {
-  fetchAllJobsFromIndexedDB,
-  removeJobFromIndexedDB,
-} from '../service/job.repository';
 import { wsMsgReceived$, wsSendMsg } from '../service/ws-connection';
 import { JobResult } from '../model/job-result';
 import { fetchSubscanChains } from '../service/fetch-subscan-chains';
-import { updateJobList } from './helper/update-job-list';
-import { sortJobs } from './helper/job.service';
+import { mapRawValuesToRewards, sortJobs } from './helper/job.service';
+import { filterFromBeginningLastYear } from './helper/filter-from-beginning-last-year';
+import { addIsoDate } from './helper/add-iso-date';
 
-const jobs$ = new ReplaySubject<JobResult[]>(1);
-
-const subscanChains$ = from(fetchSubscanChains()).pipe(shareReplay());
-
-combineLatest([subscanChains$, from(fetchAllJobsFromIndexedDB())])
-  .pipe(take(1))
-  .subscribe(async ([chains, jobs]) => {
-    let storedJobs = jobs.filter((job) => job.type === 'staking_rewards');
-    if (storedJobs.length > 1) {
-      storedJobs
-        .filter((j) => chains.chains.find((c) => c.domain === j.blockchain))
-        .forEach((s) => {
-          wsSendMsg({
-            type: 'fetchDataRequest',
-            payload: {
-              currency: s.currency,
-              wallet: s.wallet,
-              blockchains: [s.blockchain],
-              syncFromDate: s.status === 'done' ? s.syncedUntil : undefined,
-            },
-          });
-        });
-      const toDelete = storedJobs.filter(
-        (j) =>
-          j.status === 'error' &&
-          !chains.chains.find((c) => c.domain === j.blockchain)
-      );
-      if (toDelete.length > 0) {
-        await Promise.all(toDelete.map((j) => removeJobFromIndexedDB(j)));
-        storedJobs = (await fetchAllJobsFromIndexedDB()).filter(
-          (job) => job.type === 'staking_rewards'
-        );
-      }
-    }
-    jobs$.next(sortJobs(storedJobs));
-  });
+const jobs$ = new BehaviorSubject<JobResult[]>([]);
+const subscanChains$ = from(fetchSubscanChains()).pipe(shareReplay(1));
 
 wsMsgReceived$
   .pipe(
     filter((msg) => msg.type === 'data'),
-    map((msg) => msg.payload),
-    mergeMap((array) => from(array))
+    map((msg) => msg.payload)
   )
-  .subscribe(async (newJobResult) => {
-    const jobs = await firstValueFrom(jobs$);
-    const updatedJobList = await updateJobList(newJobResult, jobs);
-    jobs$.next([...updatedJobList]);
+  .subscribe(async (payload: JobResult | JobResult[]) => {
+    let jobs = await firstValueFrom(jobs$);
+    const list: JobResult[] = Array.isArray(payload) ? payload : [payload];
+    for (const newJobResult of list) {
+      if (newJobResult.data) {
+        filterFromBeginningLastYear(newJobResult.data);
+        newJobResult.data = mapRawValuesToRewards(
+          newJobResult,
+          newJobResult.data.token,
+          addIsoDate(newJobResult.data.values)
+        );
+      }
+      jobs = jobs.filter(
+        (j) =>
+          j.blockchain !== newJobResult.blockchain ||
+          j.wallet !== newJobResult.wallet
+      );
+      jobs.push(newJobResult);
+    }
+    sortJobs(jobs);
+    jobs$.next(jobs);
+  });
+
+combineLatest([
+  from(fetchCurrency()),
+  from([JSON.parse(localStorage.getItem('wallets') || '[]') as string[]]),
+])
+  .pipe(take(1))
+  .subscribe(async ([currency, wallets]) => {
+    wallets.forEach((w) => {
+      wsSendMsg({
+        type: 'fetchDataRequest',
+        payload: {
+          currency: currency,
+          wallet: w,
+        },
+      });
+    });
   });
 
 const webSocketResponseError$ = wsMsgReceived$.pipe(
@@ -94,6 +90,13 @@ export const useSharedStore = defineStore('shared', {
     selectCurrency(newCurrency: string) {
       currency$.next(newCurrency);
     },
+    addWallet(wallet: string) {
+      const wallets = JSON.parse(localStorage.getItem('wallets') || '[]');
+      if (wallets.indexOf(wallet) === -1) {
+        wallets.push(wallet);
+        localStorage.setItem('wallets', JSON.stringify(wallets));
+      }
+    },
     async sync() {
       wsSendMsg({
         type: 'fetchDataRequest',
@@ -104,8 +107,14 @@ export const useSharedStore = defineStore('shared', {
           ),
         },
       });
+      this.addWallet(this.address.trim());
     },
     async removeWallet(job: JobResult) {
+      const wallets: string[] = JSON.parse(
+        localStorage.getItem('wallets') || '[]'
+      );
+      const newWallets = wallets.filter((w) => w !== job.wallet);
+      localStorage.setItem('wallets', JSON.stringify(newWallets));
       const reqId = wsSendMsg({
         type: 'unsubscribeRequest',
         payload: {
@@ -120,11 +129,10 @@ export const useSharedStore = defineStore('shared', {
           )
         )
       );
-      const toDelete = (await firstValueFrom(this.jobs$)).filter(
-        (j) => j.wallet === job.wallet && job.currency === j.currency
+      const jobs = (await firstValueFrom(this.jobs$)).filter(
+        (j) => j.wallet !== job.wallet || job.currency !== j.currency
       );
-      await Promise.all(toDelete.map((j) => removeJobFromIndexedDB(j)));
-      jobs$.next(await fetchAllJobsFromIndexedDB());
+      jobs$.next([...jobs]);
     },
   },
 });

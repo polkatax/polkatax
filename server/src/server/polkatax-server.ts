@@ -1,11 +1,11 @@
+import dotenv from "dotenv";
+import { envFile } from "./env.config";
+dotenv.config({ path: envFile });
 import Fastify from "fastify";
 import path from "path";
 import { logger } from "./logger/logger";
-import dotenv from "dotenv";
 import websocketPlugin from "@fastify/websocket";
 import rateLimit from "@fastify/rate-limit";
-import { envFile } from "./env.config";
-dotenv.config({ path: envFile });
 import * as fs from "fs";
 import { HttpError } from "../common/error/HttpError";
 import { WebSocketManager } from "./endpoints/websocket.manager";

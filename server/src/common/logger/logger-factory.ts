@@ -5,10 +5,10 @@ export const createLogger = (fileName: string) => {
   const transport = pino.transport({
     targets: [
       {
-        level: 'info',
-        target: 'pino/file',
+        level: "info",
+        target: "pino/file",
         options: {
-            destination: path.join(process.cwd(), fileName + '.log'),
+          destination: path.join(process.cwd(), fileName + ".log"),
         },
       },
       {
@@ -27,4 +27,3 @@ export const createLogger = (fileName: string) => {
     transport,
   );
 };
-

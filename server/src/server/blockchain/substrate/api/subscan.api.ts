@@ -14,6 +14,9 @@ import {
 import { logger } from "../../../logger/logger";
 import { apiThrottleQueue } from "./request-queue";
 import { HttpError } from "../../../../common/error/HttpError";
+import { envFile } from "../../../env.config";
+import dotenv from "dotenv";
+dotenv.config({ path: envFile });
 
 export class SubscanApi {
   private requestHelper: RequestHelper;

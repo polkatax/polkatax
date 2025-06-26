@@ -1,4 +1,4 @@
-import { JobsCache } from "./jobs.cache";
+import { JobsService } from "./jobs.service";
 import * as subscanChains from "../../../res/gen/subscan-chains.json";
 import { Job } from "../../model/job";
 import { filter, firstValueFrom } from "rxjs";
@@ -6,11 +6,10 @@ import { determineNextJob } from "./determine-next-job";
 import { AwilixContainer } from "awilix";
 import { isEvmAddress } from "../data-aggregation/helper/is-evm-address";
 import { getBeginningLastYear } from "./get-beginning-last-year";
-import { logger } from "../logger/logger";
 
 export class JobManager {
   constructor(
-    private jobsCache: JobsCache,
+    private jobsService: JobsService,
     private DIContainer: AwilixContainer,
   ) {}
 
@@ -28,34 +27,20 @@ export class JobManager {
     return now - job.lastModified > oneDayMs;
   }
 
-  enqueue(
+  async enqueue(
     reqId: string,
     wallet: string,
-    type: "staking_rewards" | "transactions",
     currency: string,
     blockchains: string[] = [],
-    syncFromDate: number = getBeginningLastYear(),
-  ): Job[] {
-    if (syncFromDate < getBeginningLastYear()) {
-      logger.warn(
-        "Client tried to set date to " +
-          syncFromDate +
-          ", which is less than beginning of last year.",
-      );
-      syncFromDate = getBeginningLastYear();
-    }
+  ): Promise<Job[]> {
+    const syncFromDate = getBeginningLastYear();
     const chains = blockchains.length
       ? blockchains
       : this.getStakingChains(wallet);
 
-    const matchingJobs = this.jobsCache
-      .fetchJobs(wallet)
-      .filter(
-        (j) =>
-          chains.includes(j.blockchain) &&
-          j.currency === currency &&
-          j.type === type,
-      );
+    const matchingJobs = (await this.jobsService.fetchJobs(wallet)).filter(
+      (j) => chains.includes(j.blockchain) && j.currency === currency,
+    );
 
     const alreadySyncedJobs: Job[] = [];
     const newJobs: Job[] = [];
@@ -63,34 +48,31 @@ export class JobManager {
     for (const blockchain of chains) {
       const job = matchingJobs.find((j) => j.blockchain === blockchain);
 
-      const jobCannotBeReused =
-        job && (job.status === "error" || job.syncFromDate > syncFromDate);
+      const jobCannotBeReused = job && job.status === "error";
       const jobOutdatedButDataReusable =
         job && job.status === "done" && this.isOutDated(job);
 
       if (job && jobCannotBeReused) {
-        this.jobsCache.delete(job);
+        this.jobsService.delete(job);
       }
 
       if (!job || jobCannotBeReused) {
         newJobs.push(
-          this.jobsCache.addJob(
+          await this.jobsService.addJob(
             reqId,
             wallet,
             blockchain,
-            type,
             syncFromDate,
             currency,
           ),
         );
       } else if (jobOutdatedButDataReusable) {
-        this.jobsCache.delete(job);
+        this.jobsService.delete(job);
         newJobs.push(
-          this.jobsCache.addJob(
+          await this.jobsService.addJob(
             reqId,
             wallet,
             blockchain,
-            type,
             Math.min(syncFromDate, job.syncedUntil || syncFromDate),
             currency,
             job.data,
@@ -109,7 +91,7 @@ export class JobManager {
 
     while (true) {
       const jobs = await firstValueFrom(
-        this.jobsCache.pendingJobs$.pipe(filter((jobs) => jobs.length > 0)),
+        this.jobsService.pendingJobs$.pipe(filter((jobs) => jobs.length > 0)),
       );
       const job = determineNextJob(jobs, previousWallet);
 
