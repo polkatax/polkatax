@@ -28,7 +28,6 @@ export const WalletInfoSchema = z.object({
     message: "Wallet must be a valid EVM or Substrate address",
   }),
   currency: z.string(),
-  syncFromDate: z.number().optional(),
   blockchains: z.array(z.string()).optional(),
 });
 

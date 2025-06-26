@@ -74,7 +74,7 @@
         </template>
       </q-table>
     </div>
-    <div v-if="wallets && wallets.length === 0" class="q-my-xl">
+    <div v-if="walletAddresses.length === 0" class="q-my-xl">
       <div class="text-h6 text-center">
         Export your staking rewards as CSV or PDF
       </div>
@@ -113,6 +113,12 @@ const wallets: Ref<
   | undefined
 > = ref(undefined);
 
+const walletAddresses : Ref<string[]> = ref([])
+
+const walletAddressesSub = store.walletsAddresses$.subscribe(addresses => {
+  walletAddresses.value = addresses
+})
+
 const jobsSubscription = store.jobs$.subscribe((jobs) => {
   const r: any[] = [];
   jobs.forEach((j) => {
@@ -138,6 +144,7 @@ const jobsSubscription = store.jobs$.subscribe((jobs) => {
 
 onUnmounted(() => {
   jobsSubscription.unsubscribe();
+  walletAddressesSub.unsubscribe()
 });
 
 function startSyncing() {

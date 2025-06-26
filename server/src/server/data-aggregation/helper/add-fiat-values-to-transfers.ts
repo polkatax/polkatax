@@ -33,7 +33,7 @@ export const addFiatValueToTransfer = (
   timestamp: number,
 ) => {
   const isoDate = formatDate(new Date(timestamp));
-  if (isoDate === currentIsoDate && quotes.quotes.latest) {
+  if (isoDate === currentIsoDate && quotes.quotes?.latest) {
     transfer.price = quotes.quotes.latest;
     transfer.fiatValue = transfer.amount * quotes.quotes.latest;
   } else if (quotes.quotes?.[isoDate]) {
