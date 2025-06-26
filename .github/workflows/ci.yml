@@ -74,6 +74,7 @@ jobs:
           rsync -avz --delete \
             --exclude='*.env' \
             --exclude='*.log' \
+            --exclude='server/dist' \
             -e "ssh -o StrictHostKeyChecking=no" \
             ./ ${{ secrets.HETZNER_USER }}@${{ secrets.HETZNER_HOST }}:${{ secrets.DEPLOY_PATH }}
 
@@ -82,7 +83,7 @@ jobs:
           ssh -o StrictHostKeyChecking=no ${{ secrets.HETZNER_USER }}@${{ secrets.HETZNER_HOST }} << 'EOF'
             cd ${{ secrets.DEPLOY_PATH }}
             npm install
-            npm run buid
+            npm run build
             cd server
             npm run pm2-stop 
             npm run pm2-stub
