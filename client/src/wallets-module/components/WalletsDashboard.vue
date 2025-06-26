@@ -74,7 +74,7 @@
         </template>
       </q-table>
     </div>
-    <div v-if="wallets && wallets.length === 0" class="q-my-xl">
+    <div v-if="store.walletAddresses.length === 0" class="q-my-xl">
       <div class="text-h6 text-center">
         Export your staking rewards as CSV or PDF
       </div>

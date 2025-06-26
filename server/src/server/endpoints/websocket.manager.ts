@@ -153,7 +153,8 @@ export class WebSocketManager {
         );
         socket.send(JSON.stringify(response));
       } catch (error) {
-        logger.error("WebSocketManager: error handling msg: " + rawMsg, error);
+        logger.error(error);
+        logger.error("WebSocketManager: error handling msg: " + rawMsg);
         return this.sendError(socket, {
           code: 500,
           msg: "Error processing incoming msg",

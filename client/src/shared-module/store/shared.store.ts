@@ -86,6 +86,11 @@ export const useSharedStore = defineStore('shared', {
       address: '',
     };
   },
+  getters: {
+    walletAddresses() {
+      return JSON.parse(localStorage.getItem('wallets') || '[]');
+    },
+  },
   actions: {
     selectCurrency(newCurrency: string) {
       currency$.next(newCurrency);

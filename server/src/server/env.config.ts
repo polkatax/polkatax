@@ -1,3 +1,5 @@
-console.log(__dirname + "/../../" + (process.env["ENV_FILE"] || ".env"));
-export const envFile =
-  __dirname + "/../../" + (process.env["ENV_FILE"] || ".env");
+import path from "path";
+
+export const envFile = path.normalize(
+  __dirname + "/../../" + (process.env["ENV_FILE"] || ".env"),
+);

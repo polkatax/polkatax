@@ -6,6 +6,7 @@ import { determineNextJob } from "./determine-next-job";
 import { AwilixContainer } from "awilix";
 import { isEvmAddress } from "../data-aggregation/helper/is-evm-address";
 import { getBeginningLastYear } from "./get-beginning-last-year";
+import { logger } from "../logger/logger";
 
 export class JobManager {
   constructor(
@@ -33,6 +34,9 @@ export class JobManager {
     currency: string,
     blockchains: string[] = [],
   ): Promise<Job[]> {
+    logger.info(
+      `Enter enqueue jobs ${reqId}, ${wallet}, ${currency}, ${blockchains}`,
+    );
     const syncFromDate = getBeginningLastYear();
     const chains = blockchains.length
       ? blockchains
@@ -82,7 +86,7 @@ export class JobManager {
         alreadySyncedJobs.push(job);
       }
     }
-
+    logger.info(`Exit enqueue jobs ${reqId}`);
     return [...alreadySyncedJobs, ...newJobs];
   }
 

@@ -18,7 +18,7 @@
     "test": "jest --config jest.unit.config.ts",
     "integration-tests": "jest --config jest.integration.config.ts --runInBand integration-tests  --detectOpenHandles",
     "format": "prettier --write . --ignore-path ../.gitignore",
-    "copy-env-to-dist": "if [ -f .env ]; then cp .env ./dist; fi && if [ -f .env.3004 ]; then cp .env.3004 ./dist; fi"
+    "copy-env-to-dist": "cp *.env ./dist && if [ -f .env ]; then cp .env ./dist; fi"
   },
   "author": "",
   "license": "ISC",

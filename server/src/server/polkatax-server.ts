@@ -14,6 +14,7 @@ import { JobManager } from "./job-management/job.manager";
 
 export const polkataxServer = {
   init: async () => {
+    logger.info("Using env var file: " + envFile)
     const fastify = Fastify({
       loggerInstance: logger,
     });

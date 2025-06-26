@@ -89,9 +89,8 @@ export class JobRepository {
   }
 
   private async executeJobQuery(query: string, values?: any[]): Promise<Job[]> {
-    return (
-      (await (await this.client).query(query, values)) as unknown as any[]
-    ).map((row) => this.mapToJob(row));
+    const rows = (await (await this.client).query(query, values)).rows;
+    return rows.map((row) => this.mapToJob(row));
   }
 
   async findJobysByWallet(wallet: string): Promise<Job[]> {
@@ -141,7 +140,7 @@ export class JobRepository {
             `;
 
     const values = [job.wallet, job.blockchain, job.currency];
-    return await (await this.client).query(query, values);
+    return (await (await this.client).query(query, values)).rows;
   }
 
   async setInProgress(jobId: JobId): Promise<Job[]> {
@@ -156,9 +155,7 @@ export class JobRepository {
             `;
 
     const values = [new Date(), jobId.wallet, jobId.blockchain, jobId.currency];
-    const result: Job[] = (await (
-      await this.client
-    ).query(query, values)) as unknown as Job[];
+    const result: Job[] = (await (await this.client).query(query, values)).rows;
     if (result.length > 0) {
       this.notifyJobChanged(jobId);
       this.notifyPendingJobsChanged();
@@ -213,7 +210,7 @@ export class JobRepository {
       blockchain: jobId.blockchain,
       currency: jobId.currency,
     };
-    const query = `NOTIFY job_changed ${JSON.stringify(payload)}`;
+    const query = `NOTIFY job_changed, '${JSON.stringify(payload)}';`;
     await (await this.client).query(query);
   }
 

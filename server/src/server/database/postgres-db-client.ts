@@ -2,9 +2,9 @@ import { Client } from "pg";
 
 export const initPostgresDbClient = async (): Promise<Client> => {
   const client = new Client({
-    user: "polkadot",
-    host: "localhost",
-    database: "fe_polkadot",
+    user: "polkatax",
+    host: process.env["DB_HOST"] || "localhost",
+    database: "polkatax_fe",
     password: process.env["DB_PASSWORD"],
     port: 5432,
   });

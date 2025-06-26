@@ -27,25 +27,26 @@ export const initInMemoryDb = async (): Promise<Client> => {
    */
   const clientWithNotify = {
     ...client,
-    query: (queryString: string, values: any[]) => {
+    query: async (queryString: string, values: any[]) => {
       queryString = queryString.trim();
       if (queryString.startsWith("NOTIFY")) {
         const parts = queryString.split(" ");
-        const channel = parts[1].replace(";", "");
+        const channel = parts[1].replace(";", "").replace(",", "");
         let payload = queryString
           .replace("NOTIFY", "")
-          .replace(channel, "")
+          .replace(channel + ",", "")
           .trim();
         if (payload.endsWith(";")) {
           payload = payload.substring(0, payload.length - 1);
         }
+        payload = payload.substring(1, payload.length - 1); // starting and ending quotes
         clientWithNotify.notificationSubscriptions.forEach((cb) => {
           cb({ channel, payload: payload || "{}" });
         });
       } else if (queryString.startsWith("LISTEN")) {
         // pass
       } else {
-        return client.query(queryString, values);
+        return { rows: await client.query(queryString, values) };
       }
     },
     on: (_event: string, cb: any) => {
