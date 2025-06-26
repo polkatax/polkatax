@@ -116,21 +116,6 @@ export class JobRepository {
     return await this.executeJobQuery(query);
   }
 
-  async softDeleteJob(job: Job) {
-    const query = `
-            UPDATE jobs
-            SET deleted = true
-            WHERE wallet = $1
-                AND blockchain = $2
-                AND currency = $3
-            `;
-    const values = [job.wallet, job.blockchain, job.currency];
-    console.log(values);
-    await (await this.client).query(query, values);
-    this.notifyJobChanged(job);
-    this.notifyPendingJobsChanged();
-  }
-
   async deleteJob(job: Job) {
     const query = `
             DELETE FROM jobs

@@ -40,7 +40,7 @@ export class JobsService {
   }
 
   delete(job: Job) {
-    this.jobRepository.softDeleteJob(job);
+    this.jobRepository.deleteJob(job);
   }
 
   fetchJob(

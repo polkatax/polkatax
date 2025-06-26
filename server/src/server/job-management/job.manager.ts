@@ -8,6 +8,8 @@ import { isEvmAddress } from "../data-aggregation/helper/is-evm-address";
 import { getBeginningLastYear } from "./get-beginning-last-year";
 import { logger } from "../logger/logger";
 
+const oneDayMs = 24 * 60 * 60 * 1000;
+
 export class JobManager {
   constructor(
     private jobsService: JobsService,
@@ -24,7 +26,6 @@ export class JobManager {
 
   isOutDated(job: Job) {
     const now = Date.now();
-    const oneDayMs = 24 * 60 * 60 * 1000;
     return now - job.lastModified > oneDayMs;
   }
 
@@ -57,7 +58,7 @@ export class JobManager {
         job && job.status === "done" && this.isOutDated(job);
 
       if (job && jobCannotBeReused) {
-        this.jobsService.delete(job);
+        await this.jobsService.delete(job);
       }
 
       if (!job || jobCannotBeReused) {
@@ -71,13 +72,13 @@ export class JobManager {
           ),
         );
       } else if (jobOutdatedButDataReusable) {
-        this.jobsService.delete(job);
+        await this.jobsService.delete(job);
         newJobs.push(
           await this.jobsService.addJob(
             reqId,
             wallet,
             blockchain,
-            Math.min(syncFromDate, job.syncedUntil || syncFromDate),
+            job.syncedUntil ? job.syncedUntil - oneDayMs : syncFromDate,
             currency,
             job.data,
           ),

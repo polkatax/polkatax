@@ -33,8 +33,8 @@ export class SubscanApi {
 
   private async retry<T>(
     query: () => Promise<T>,
-    retries = 2,
-    backOff = [3000, 5000],
+    retries = 3,
+    backOff = [3000, 5000, 10000],
   ): Promise<T> {
     for (let i = 0; i < retries; i++) {
       try {

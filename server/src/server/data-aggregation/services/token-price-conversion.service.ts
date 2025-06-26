@@ -25,7 +25,6 @@ export class TokenPriceConversionService {
       quotesInTargetCurrency[token] = {
         quotes: {
           timestamp: multiTokenQuotes[token].quotes.timestamp,
-          latest: multiTokenQuotes[token].quotes.latest,
         },
         currency: toCurrency,
       };
