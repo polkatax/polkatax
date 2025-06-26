@@ -1,16 +1,12 @@
 import { Client } from "pg";
 import { newDb } from "pg-mem";
 
-const db = newDb();
-const client = db.adapters.createPgPromise();
-
-const createDb = async () => {
-  await client.none(`CREATE TABLE IF NOT EXISTS jobs (
+const createDb = async (client: Client) => {
+  await (client as any).none(`CREATE TABLE IF NOT EXISTS jobs (
         status TEXT,
         wallet TEXT,
         blockchain TEXT,
         last_modified TIMESTAMPTZ,
-        deleted BOOLEAN,
         data JSONB,
         error JSONB,
         sync_from_date TIMESTAMPTZ,
@@ -20,8 +16,28 @@ const createDb = async () => {
         );`);
 };
 
+function parseNotifyCommand(input: string): {
+  channel: string;
+  rawPayload: any | null;
+} {
+  const trimmed = input.trim();
+
+  // Match: NOTIFY channel;  or  NOTIFY channel, 'payload';
+  const regex = /^NOTIFY\s+([\w\-]+)(?:,\s*'([^']*)')?;$/;
+
+  const match = trimmed.match(regex);
+  if (!match) {
+    throw new Error("Invalid NOTIFY syntax");
+  }
+
+  const [, channel, rawPayload] = match;
+  return { channel, rawPayload };
+}
+
 export const initInMemoryDb = async (): Promise<Client> => {
-  await createDb();
+  const db = newDb();
+  const client = db.adapters.createPgPromise();
+  await createDb(client);
   /**
    * notify does not work using pg-mem. Hence a wrapper is needed for local testing.
    */
@@ -30,18 +46,9 @@ export const initInMemoryDb = async (): Promise<Client> => {
     query: async (queryString: string, values: any[]) => {
       queryString = queryString.trim();
       if (queryString.startsWith("NOTIFY")) {
-        const parts = queryString.split(" ");
-        const channel = parts[1].replace(";", "").replace(",", "");
-        let payload = queryString
-          .replace("NOTIFY", "")
-          .replace(channel + ",", "")
-          .trim();
-        if (payload.endsWith(";")) {
-          payload = payload.substring(0, payload.length - 1);
-        }
-        payload = payload.substring(1, payload.length - 1); // starting and ending quotes
+        const { channel, rawPayload } = parseNotifyCommand(queryString);
         clientWithNotify.notificationSubscriptions.forEach((cb) => {
-          cb({ channel, payload: payload || "{}" });
+          cb({ channel, payload: rawPayload || "{}" });
         });
       } else if (queryString.startsWith("LISTEN")) {
         // pass
@@ -51,7 +58,6 @@ export const initInMemoryDb = async (): Promise<Client> => {
     },
     on: (_event: string, cb: any) => {
       clientWithNotify.notificationSubscriptions.push(cb);
-      console.log(clientWithNotify.notificationSubscriptions);
     },
     notificationSubscriptions: [],
   };

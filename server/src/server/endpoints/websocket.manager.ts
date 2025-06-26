@@ -16,15 +16,31 @@ interface Subscription {
 }
 
 export class WebSocketManager {
-  connections: { subscription: Subscription; socket: WebSocket }[] = [];
+  private connections: { subscription: Subscription; socket: WebSocket }[] = [];
+  private readonly MAX_WALLETS = 4;
 
   constructor(
     private jobManager: JobManager,
     private jobRepository: JobRepository,
   ) {}
 
-  private subscriptionMachtes(s1: Subscription, s2: Subscription) {
-    return s1.wallet === s2.wallet && s1.currency === s2.currency;
+  private match(sub1: Subscription, sub2: Subscription): boolean {
+    return sub1.wallet === sub2.wallet && sub1.currency === sub2.currency;
+  }
+
+  private addSubscription(socket: WebSocket, sub: Subscription) {
+    const alreadySubscribed = this.connections.some(
+      (c) => c.socket === socket && this.match(c.subscription, sub),
+    );
+    if (!alreadySubscribed) {
+      this.connections.push({ socket, subscription: sub });
+    }
+  }
+
+  private removeSubscription(socket: WebSocket, sub: Subscription) {
+    this.connections = this.connections.filter(
+      (c) => c.socket !== socket || !this.match(c.subscription, sub),
+    );
   }
 
   private async handleFetchDataRequest(
@@ -34,15 +50,7 @@ export class WebSocketManager {
     const { wallet, currency, blockchains } = msg.payload;
     const subscription = { wallet, currency };
 
-    if (
-      !this.connections.some(
-        (c) =>
-          c.socket === socket &&
-          this.subscriptionMachtes(c.subscription, subscription),
-      )
-    ) {
-      this.connections.push({ subscription, socket });
-    }
+    this.addSubscription(socket, subscription);
 
     const jobs = await this.jobManager.enqueue(
       msg.reqId,
@@ -64,12 +72,8 @@ export class WebSocketManager {
     msg: WebSocketIncomingMessage,
   ): Promise<WebSocketOutgoingMessage> {
     const { wallet, currency } = msg.payload;
-    const subscription = { wallet, currency };
-    this.connections = this.connections.filter(
-      (c) =>
-        c.socket !== socket ||
-        !this.subscriptionMachtes(c.subscription, subscription),
-    );
+    this.removeSubscription(socket, { wallet, currency });
+
     return {
       type: "acknowledgeUnsubscribe",
       reqId: msg.reqId,
@@ -78,10 +82,17 @@ export class WebSocketManager {
     };
   }
 
-  async handleIncomingMsg(
+  private async handleMessage(
     socket: WebSocket,
     msg: WebSocketIncomingMessage,
-  ): Promise<WebSocketOutgoingMessage> {
+  ): Promise<WebSocketOutgoingMessage | void> {
+    if (msg.type === "fetchDataRequest" && this.isThrottled(socket, msg)) {
+      return this.sendError(socket, {
+        code: 429,
+        msg: "You cannot add more than 4 wallets to sync.",
+      });
+    }
+
     switch (msg.type) {
       case "fetchDataRequest":
         return this.handleFetchDataRequest(socket, msg);
@@ -90,108 +101,91 @@ export class WebSocketManager {
     }
   }
 
-  private sendError(socket: WebSocket, error: WsError) {
-    socket.send(
-      JSON.stringify({
-        type: "error",
-        timestamp: Date.now(),
-        error,
-      }),
+  private isThrottled(
+    socket: WebSocket,
+    msg: WebSocketIncomingMessage,
+  ): boolean {
+    const wallets = this.connections
+      .filter((c) => c.socket === socket)
+      .map((c) => c.subscription.wallet);
+
+    return (
+      !wallets.includes(msg.payload.wallet) &&
+      wallets.length >= this.MAX_WALLETS
     );
   }
 
-  private throttle(msg: WebSocketIncomingMessage, socket: WebSocket): boolean {
-    const MAX_WALLETS = 4;
-    const subscriptions = this.connections
-      .filter((c) => c.socket === socket)
-      .map((c) => c.subscription);
-    const wallets = subscriptions.map((s) => s.wallet);
-    const isNewSubscription = !wallets.includes(msg.payload.wallet);
-    return isNewSubscription && wallets.length >= MAX_WALLETS;
+  private sendError(socket: WebSocket, error: WsError): void {
+    socket.send(
+      JSON.stringify({ type: "error", timestamp: Date.now(), error }),
+    );
   }
 
-  wsHandler = (socket: WebSocket) => {
-    socket.on("message", async (rawMsg) => {
-      logger.info("WebSocketManager: received msg: " + rawMsg);
+  wsHandler = (socket: WebSocket): void => {
+    socket.on("message", async (raw) => {
+      logger.info("WebSocketManager: received msg: " + raw);
+
       let msg: WebSocketIncomingMessage;
       try {
-        msg = JSON.parse(rawMsg);
-      } catch (error) {
-        logger.info(
-          "WebSocketManager: client sent invalid json: " + rawMsg,
-          error,
-        );
-        return this.sendError(socket, {
-          code: 400,
-          msg: "Error processing incoming msg",
-        });
+        msg = JSON.parse(raw.toString());
+      } catch (err) {
+        logger.info("Invalid JSON received", err);
+        return this.sendError(socket, { code: 400, msg: "Invalid JSON" });
       }
 
       const result = WebSocketIncomingMessageSchema.safeParse(msg);
       if (!result.success) {
-        logger.info(
-          "WebSocketManager: Client sent mal-formatted message: " + rawMsg,
-        );
         return this.sendError(socket, { code: 400, msg: "Invalid message" });
       }
 
-      if (msg.type === "fetchDataRequest" && this.throttle(msg, socket)) {
-        logger.info(
-          "WebSocketManager: Too many pending request for client. Last message " +
-            rawMsg,
-        );
-        return this.sendError(socket, {
-          code: 429,
-          msg: "You cannot add more than 4 wallets to sync.",
-        });
-      }
-
       try {
-        const response = await this.handleIncomingMsg(socket, msg);
-        logger.info(
-          `WebSocketManager: sending msg. RequestId: ${response.reqId}, type: ${response.type}, payload.length: ${response.payload.length}`,
-        );
-        socket.send(JSON.stringify(response));
-      } catch (error) {
-        logger.error(error);
-        logger.error("WebSocketManager: error handling msg: " + rawMsg);
-        return this.sendError(socket, {
+        const response = await this.handleMessage(socket, result.data);
+        if (response) {
+          logger.info(
+            `Sending response reqId: ${response.reqId}, type: ${response.type}, payload.length: ${response.payload.length}`,
+          );
+          socket.send(JSON.stringify(response));
+        }
+      } catch (err) {
+        logger.error("Message handling failed", err);
+        this.sendError(socket, {
           code: 500,
-          msg: "Error processing incoming msg",
+          msg: "Error processing message",
         });
       }
     });
 
     socket.on("close", () => {
-      logger.info("WebSocketManager close");
+      logger.info("WebSocketManager: client disconnected");
       this.connections = this.connections.filter((c) => c.socket !== socket);
     });
   };
 
-  async startJobNotificationChannel() {
+  async startJobNotificationChannel(): Promise<void> {
     this.jobRepository.jobChanged$.subscribe(async (jobId: JobId) => {
-      const matchingSubscriptions = this.connections.filter((c) =>
-        this.subscriptionMachtes(c.subscription, {
+      const matches = this.connections.filter((c) =>
+        this.match(c.subscription, {
           wallet: jobId.wallet,
           currency: jobId.currency,
         }),
       );
-      if (matchingSubscriptions.length > 0) {
-        const job = await this.jobRepository.findJob(jobId);
-        matchingSubscriptions.forEach((c) => {
-          logger.info(
-            `WebSocketManager: Sending job notification for wallet ${c.subscription.wallet} and currency ${c.subscription.currency}`,
-          );
-          c.socket.send(
-            JSON.stringify({
-              reqId: job.reqId,
-              payload: [job],
-              timestamp: Date.now(),
-              type: "data",
-            } as WebSocketOutgoingMessage),
-          );
-        });
-      }
+
+      if (!matches.length) return;
+
+      const job = await this.jobRepository.findJob(jobId);
+      const message: WebSocketOutgoingMessage = {
+        reqId: job.reqId,
+        payload: [job],
+        timestamp: Date.now(),
+        type: "data",
+      };
+
+      matches.forEach((c) => {
+        logger.info(
+          `Notifying wallet ${c.subscription.wallet}, currency ${c.subscription.currency}`,
+        );
+        c.socket.send(JSON.stringify(message));
+      });
     });
   }
 }

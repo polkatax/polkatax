@@ -5,73 +5,81 @@ import { WsError } from "../model/ws-error";
 import { Subject } from "rxjs";
 import { logger } from "../logger/logger";
 
-function snakeToCamel(str) {
-  return str.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
-}
+const snakeToCamel = (str: string) =>
+  str.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
 
-function mapToCamelCase(row: any): any {
-  const json = {};
-  Object.keys(row).forEach((key) => {
-    json[snakeToCamel(key)] = row[key];
-  });
-  return json;
-}
+const mapToCamelCase = (row: any) =>
+  Object.fromEntries(Object.entries(row).map(([k, v]) => [snakeToCamel(k), v]));
 
 export class JobRepository {
   pendingJobsChanged$ = new Subject<void>();
   jobChanged$ = new Subject<JobId>();
 
+  private _clientPromise: Promise<Client>;
+
   constructor() {
-    this.init();
+    this._clientPromise = this.init();
   }
 
-  private async init() {
+  private async init(): Promise<Client> {
     logger.info("Init JobRepository");
-    const _client = await this.client;
-    await _client.query(`
-            LISTEN job_changed;
-            LISTEN pending_jobs_changed;
-        `);
-    _client.on("notification", (msg) => {
+    const client = await this.client;
+
+    await client.query(`
+      LISTEN job_changed;
+      LISTEN pending_jobs_changed;
+    `);
+
+    client.on("notification", (msg) => {
       try {
-        const payload = JSON.parse(msg.payload || "{}");
+        const payload = JSON.parse(msg.payload ?? "{}");
         if (msg.channel === "job_changed") {
           logger.info(
-            `JobRepository: Received notification on channel ${msg.channel}, wallet: ${payload.wallet}, blockchain: ${payload.blockchain}`,
+            `JobRepository: Notification on ${msg.channel}, wallet: ${payload.wallet}, blockchain: ${payload.blockchain}`,
           );
           this.jobChanged$.next(payload);
-        } else {
-          logger.info(
-            `JobRepository: Received notification on channel ${msg.channel}.`,
-          );
+        } else if (msg.channel === "pending_jobs_changed") {
+          logger.info(`JobRepository: Notification on ${msg.channel}.`);
           this.pendingJobsChanged$.next(payload);
         }
-      } catch (e) {
-        logger.error("Failed to parse payload:", msg.payload);
+      } catch {
+        logger.error("JobRepository: Failed to parse payload:", msg.payload);
       }
     });
+
     logger.info("Init JobRepository complete.");
+    return client;
   }
 
-  get client(): Promise<Client> {
+  get client() {
     return connectToDb();
+  }
+
+  private async getClient() {
+    // wait for init client promise, useful to guarantee init is done
+    return this._clientPromise ?? this.client;
   }
 
   mapToJob(row: any): Job {
     const job = mapToCamelCase(row);
-    job.syncFromDate = job?.syncFromDate?.getTime();
-    job.syncedUntil = job?.syncedUntil?.getTime();
-    job.lastModified = job?.lastModified?.getTime();
-    return job as Job;
+    ["syncFromDate", "syncedUntil", "lastModified"].forEach((field) => {
+      if (job[field] instanceof Date) job[field] = job[field].getTime();
+    });
+    return job as unknown as Job;
+  }
+
+  private async executeJobQuery(query: string, values?: any[]): Promise<Job[]> {
+    const client = await this.getClient();
+    const { rows } = await client.query(query, values);
+    return rows.map(this.mapToJob.bind(this));
   }
 
   async insertJob(job: Job) {
     const query = `
-            INSERT INTO jobs (
-                wallet, blockchain, sync_from_date, currency, req_id, deleted, last_modified, status
-            )
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-            `;
+      INSERT INTO jobs (
+        wallet, blockchain, sync_from_date, currency, req_id, last_modified, status
+      ) VALUES ($1, $2, $3, $4, $5, $6, 'pending')
+    `;
 
     const values = [
       job.wallet,
@@ -79,83 +87,73 @@ export class JobRepository {
       new Date(job.syncFromDate),
       job.currency,
       job.reqId,
-      false,
       new Date(),
-      "pending",
     ];
-    await (await this.client).query(query, values);
-    this.notifyPendingJobsChanged();
+
+    const client = await this.getClient();
+    await client.query(query, values);
+    await this.notifyPendingJobsChanged();
     return job;
   }
 
-  private async executeJobQuery(query: string, values?: any[]): Promise<Job[]> {
-    const rows = (await (await this.client).query(query, values)).rows;
-    return rows.map((row) => this.mapToJob(row));
+  async findJobysByWallet(wallet: string) {
+    return this.executeJobQuery(`SELECT * FROM jobs WHERE wallet = $1`, [
+      wallet,
+    ]);
   }
 
-  async findJobysByWallet(wallet: string): Promise<Job[]> {
-    const query = `SELECT * FROM jobs WHERE wallet = $1 AND deleted = false`;
-    const values = [wallet];
-    return this.executeJobQuery(query, values);
+  async findJob(jobId: JobId) {
+    const jobs = await this.executeJobQuery(
+      `SELECT * FROM jobs WHERE wallet = $1 AND blockchain = $2 AND currency = $3`,
+      [jobId.wallet, jobId.blockchain, jobId.currency],
+    );
+    return jobs[0];
   }
 
-  async findJob(jobId: JobId): Promise<Job | undefined> {
-    const query = `SELECT * FROM jobs WHERE wallet = $1 AND blockchain = $2 AND currency = $3 AND deleted = false`;
-    const values = [jobId.wallet, jobId.blockchain, jobId.currency];
-    const jobs = await this.executeJobQuery(query, values);
-    return jobs.length > 0 ? jobs[0] : undefined;
+  async fetchAllJobs() {
+    return this.executeJobQuery(
+      `SELECT req_id, wallet, error, blockchain, sync_from_date, status, last_modified, currency, synced_until FROM jobs`,
+    );
   }
 
-  async fetchAllJobs(): Promise<Job[]> {
-    const query = `SELECT req_id, wallet, error, blockchain, sync_from_date, status, last_modified, currency, synced_until, deleted FROM jobs`;
-    return await this.executeJobQuery(query);
-  }
-
-  async fetchAllPendingJobs(): Promise<Job[]> {
-    const query = `SELECT * FROM jobs WHERE status = 'pending' and deleted = false`;
-    return await this.executeJobQuery(query);
+  async fetchAllPendingJobs() {
+    return this.executeJobQuery(`SELECT * FROM jobs WHERE status = 'pending'`);
   }
 
   async deleteJob(job: Job) {
-    const query = `
-            DELETE FROM jobs
-            WHERE wallet = $1
-                AND blockchain = $2
-                AND currency = $3
-            `;
-
-    const values = [job.wallet, job.blockchain, job.currency];
-    return (await (await this.client).query(query, values)).rows;
+    const client = await this.getClient();
+    const { rows } = await client.query(
+      `DELETE FROM jobs WHERE wallet = $1 AND blockchain = $2 AND currency = $3`,
+      [job.wallet, job.blockchain, job.currency],
+    );
+    return rows;
   }
 
-  async setInProgress(jobId: JobId): Promise<Job[]> {
+  async setInProgress(jobId: JobId) {
     const query = `
-            UPDATE jobs
-            SET status = 'in_progress', last_modified = $1
-            WHERE wallet = $2
-                AND blockchain = $3
-                AND currency = $4
-                AND status != 'in_progress'
-            RETURNING *;
-            `;
+      UPDATE jobs
+      SET status = 'in_progress', last_modified = $1
+      WHERE wallet = $2 AND blockchain = $3 AND currency = $4 AND status != 'in_progress'
+      RETURNING *
+    `;
 
     const values = [new Date(), jobId.wallet, jobId.blockchain, jobId.currency];
-    const result: Job[] = (await (await this.client).query(query, values)).rows;
-    if (result.length > 0) {
-      this.notifyJobChanged(jobId);
-      this.notifyPendingJobsChanged();
+    const client = await this.getClient();
+    const { rows } = await client.query(query, values);
+
+    if (rows.length > 0) {
+      await this.notifyJobChanged(jobId);
+      await this.notifyPendingJobsChanged();
     }
-    return result;
+    return rows;
   }
 
   async setError(jobId: JobId, error: WsError) {
     const query = `
-            UPDATE jobs
-            SET status = 'error', error = $1, last_modified = $2
-            WHERE wallet = $3
-                AND blockchain = $4
-                AND currency = $5
-            `;
+      UPDATE jobs
+      SET status = 'error', error = $1, last_modified = $2
+      WHERE wallet = $3 AND blockchain = $4 AND currency = $5
+    `;
 
     const values = [
       error,
@@ -164,18 +162,17 @@ export class JobRepository {
       jobId.blockchain,
       jobId.currency,
     ];
-    await (await this.client).query(query, values);
-    this.notifyJobChanged(jobId);
+    const client = await this.getClient();
+    await client.query(query, values);
+    await this.notifyJobChanged(jobId);
   }
 
   async setDone(jobId: JobId, data: any, syncedUntil: number) {
     const query = `
-            UPDATE jobs
-            SET status = 'done', error = 'null', last_modified = $1, data=$2, synced_until = $3
-            WHERE wallet = $4
-                AND blockchain = $5
-                AND currency = $6
-            `;
+      UPDATE jobs
+      SET status = 'done', error = 'null', last_modified = $1, data = $2, synced_until = $3
+      WHERE wallet = $4 AND blockchain = $5 AND currency = $6
+    `;
 
     const values = [
       new Date(),
@@ -185,21 +182,19 @@ export class JobRepository {
       jobId.blockchain,
       jobId.currency,
     ];
-    await (await this.client).query(query, values);
-    this.notifyJobChanged(jobId);
+    const client = await this.getClient();
+    await client.query(query, values);
+    await this.notifyJobChanged(jobId);
   }
 
-  async notifyJobChanged(jobId: JobId) {
-    const payload = {
-      wallet: jobId.wallet,
-      blockchain: jobId.blockchain,
-      currency: jobId.currency,
-    };
-    const query = `NOTIFY job_changed, '${JSON.stringify(payload)}';`;
-    await (await this.client).query(query);
+  private async notifyJobChanged(jobId: JobId) {
+    const payload = JSON.stringify(jobId);
+    const client = await this.getClient();
+    await client.query(`NOTIFY job_changed, '${payload}';`);
   }
 
-  async notifyPendingJobsChanged() {
-    await (await this.client).query(`NOTIFY pending_jobs_changed;`);
+  private async notifyPendingJobsChanged() {
+    const client = await this.getClient();
+    await client.query(`NOTIFY pending_jobs_changed;`);
   }
 }

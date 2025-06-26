@@ -1,5 +1,5 @@
 import { Job, JobId } from "../../model/job";
-import { filter, from, shareReplay, switchMap } from "rxjs";
+import { from, shareReplay, switchMap } from "rxjs";
 import { logger } from "../logger/logger";
 import { WsError } from "../model/ws-error";
 import { JobRepository } from "./job.repository";
@@ -57,8 +57,8 @@ export class JobsService {
   }
 
   async setDone(data: any, jobId: JobId) {
-    const eightDaysMs = 8 * 24 * 60 * 60 * 1000;
-    const syncedUntil = Date.now() - eightDaysMs; // "guaranteed" to be synced until 8 days ago, because backend data is not updated daily!
+    const eightDaysMs = 6 * 24 * 60 * 60 * 1000;
+    const syncedUntil = Date.now() - eightDaysMs; // "guaranteed" to be synced until 6 days ago, because backend data is not updated daily!
     this.jobRepository.setDone(jobId, data, syncedUntil);
   }
 

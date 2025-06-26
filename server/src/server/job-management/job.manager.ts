@@ -8,7 +8,7 @@ import { isEvmAddress } from "../data-aggregation/helper/is-evm-address";
 import { getBeginningLastYear } from "./get-beginning-last-year";
 import { logger } from "../logger/logger";
 
-const oneDayMs = 24 * 60 * 60 * 1000;
+const ONE_DAY_MS = 24 * 60 * 60 * 1000;
 
 export class JobManager {
   constructor(
@@ -16,17 +16,16 @@ export class JobManager {
     private DIContainer: AwilixContainer,
   ) {}
 
-  getStakingChains(wallet: string) {
-    const isEvmWallet = isEvmAddress(wallet);
+  getStakingChains(wallet: string): string[] {
+    const isEvm = isEvmAddress(wallet);
     return subscanChains.chains
       .filter((c) => c.stakingPallets.length > 0 && !c.pseudoStaking)
-      .filter((c) => !isEvmWallet || c.evmPallet || c.evmAddressSupport)
+      .filter((c) => !isEvm || c.evmPallet || c.evmAddressSupport)
       .map((c) => c.domain);
   }
 
-  isOutDated(job: Job) {
-    const now = Date.now();
-    return now - job.lastModified > oneDayMs;
+  isOutdated(job: Job): boolean {
+    return Date.now() - job.lastModified > ONE_DAY_MS;
   }
 
   async enqueue(
@@ -35,60 +34,56 @@ export class JobManager {
     currency: string,
     blockchains: string[] = [],
   ): Promise<Job[]> {
-    logger.info(
-      `Enter enqueue jobs ${reqId}, ${wallet}, ${currency}, ${blockchains}`,
-    );
+    logger.info(`Enter enqueue jobs ${reqId}, ${wallet}, ${currency}`);
+
     const syncFromDate = getBeginningLastYear();
     const chains = blockchains.length
       ? blockchains
       : this.getStakingChains(wallet);
-
-    const matchingJobs = (await this.jobsService.fetchJobs(wallet)).filter(
+    const jobs = await this.jobsService.fetchJobs(wallet);
+    const matchingJobs = jobs.filter(
       (j) => chains.includes(j.blockchain) && j.currency === currency,
     );
 
-    const alreadySyncedJobs: Job[] = [];
     const newJobs: Job[] = [];
 
-    for (const blockchain of chains) {
-      const job = matchingJobs.find((j) => j.blockchain === blockchain);
+    for (const chain of chains) {
+      const job = matchingJobs.find((j) => j.blockchain === chain);
 
-      const jobCannotBeReused = job && job.status === "error";
-      const jobOutdatedButDataReusable =
-        job && job.status === "done" && this.isOutDated(job);
-
-      if (job && jobCannotBeReused) {
-        await this.jobsService.delete(job);
-      }
-
-      if (!job || jobCannotBeReused) {
+      if (!job || job.status === "error") {
+        if (job) await this.jobsService.delete(job);
         newJobs.push(
           await this.jobsService.addJob(
             reqId,
             wallet,
-            blockchain,
+            chain,
             syncFromDate,
             currency,
           ),
         );
-      } else if (jobOutdatedButDataReusable) {
+        continue;
+      }
+
+      if (job.status === "done" && this.isOutdated(job)) {
         await this.jobsService.delete(job);
         newJobs.push(
           await this.jobsService.addJob(
             reqId,
             wallet,
-            blockchain,
-            job.syncedUntil ? job.syncedUntil - oneDayMs : syncFromDate,
+            chain,
+            job.syncedUntil ? job.syncedUntil - ONE_DAY_MS : syncFromDate,
             currency,
             job.data,
           ),
         );
-      } else {
-        alreadySyncedJobs.push(job);
+        continue;
       }
+
+      newJobs.push(job);
     }
+
     logger.info(`Exit enqueue jobs ${reqId}`);
-    return [...alreadySyncedJobs, ...newJobs];
+    return newJobs;
   }
 
   async start() {
@@ -98,12 +93,12 @@ export class JobManager {
       const jobs = await firstValueFrom(
         this.jobsService.pendingJobs$.pipe(filter((jobs) => jobs.length > 0)),
       );
-      const job = determineNextJob(jobs, previousWallet);
 
-      if (job) {
-        previousWallet = job.wallet;
-        await this.DIContainer.resolve("jobConsumer").process(job);
-      }
+      const job = determineNextJob(jobs, previousWallet);
+      if (!job) continue;
+
+      previousWallet = job.wallet;
+      await this.DIContainer.resolve("jobConsumer").process(job);
     }
   }
 }
