@@ -17,7 +17,7 @@
     "start-with-stubs": "concurrently \"npm run start:server\" \"npm run start:crypto-currency-prices\" \"npm run start:fiat-exchange-rates-stub\"",
     "generate-subscan-chain-list": "ts-node src/generators/generate-subscan-chain-list.ts",
     "test": "jest --config jest.unit.config.ts",
-    "integration-tests": "jest --config jest.integration.config.ts --runInBand integration-tests  --detectOpenHandles",
+    "integration-tests": "ts-node e2e-tests/staking-rewards.test.ts",
     "format": "prettier --write . --ignore-path ../.gitignore",
     "copy-env-to-dist": "cp *.env ./dist && if [ -f .env ]; then cp .env ./dist; fi"
   },
@@ -42,6 +42,8 @@
     "pg": "^8.16.2",
     "pino-pretty": "^10.2.0",
     "pm2": "^6.0.5",
+    "puppeteer-extra": "^3.3.6",
+    "puppeteer-extra-plugin-stealth": "^2.11.2",
     "ts-node": "^10.9.2",
     "zod": "^3.25.34"
   },

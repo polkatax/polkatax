@@ -3,6 +3,8 @@ import { logger } from "../logger/logger";
 import { HttpError } from "../../common/error/HttpError";
 import { Quotes } from "../../model/crypto-currency-prices/crypto-currency-quotes";
 import { formatDate } from "../../common/util/date-utils";
+import puppeteer from 'puppeteer-extra';
+import StealthPlugin from 'puppeteer-extra-plugin-stealth';
 
 export class CoingeckoRestService {
   async fetchPrices(
@@ -41,15 +43,21 @@ export class CoingeckoRestService {
     return jsonData;
   }
 
+ 
+
+  private async getPageContent(url: string): Promise<string> {
+      puppeteer.use(StealthPlugin());
+      const browser = await puppeteer.launch();
+      const page = await browser.newPage();
+      await page.goto(url);
+      const content = await page.content();
+      await browser.close();
+      return content
+    } 
+
   private async getExportDataUrl(tokenId: string) {
-    const response = await fetch("https://www.coingecko.com/en/coins/" + tokenId + "/historical_data", {
-      headers: {
-        "User-Agent": "Mozilla/5.0",
-        "Accept": "text/html",
-      },
-    });
-    const html = await response.text();
-    const document = parse(html);
+    const content = await this.getPageContent("https://www.coingecko.com/en/coins/" + tokenId + "/historical_data")
+    const document = parse(content);
     const exportLink = document.querySelector(
       '[data-coin-historical-data-target="exportDropdownMenu"] [data-view-component] span:nth-child(2)',
     );
