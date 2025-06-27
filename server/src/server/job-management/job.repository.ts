@@ -32,7 +32,7 @@ export class JobRepository {
 
     client.on("notification", (msg) => {
       try {
-        const payload = JSON.parse(msg.payload ?? "{}");
+        const payload = JSON.parse(msg.payload || "{}");
         if (msg.channel === "job_changed") {
           logger.info(
             `JobRepository: Notification on ${msg.channel}, wallet: ${payload.wallet}, blockchain: ${payload.blockchain}`,
@@ -48,6 +48,10 @@ export class JobRepository {
     });
 
     logger.info("Init JobRepository complete.");
+
+    // initial notification to check for pending jobs after startup.
+    this.pendingJobsChanged$.next();
+
     return client;
   }
 

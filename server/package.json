@@ -7,6 +7,7 @@
     "pm2-stub": "pm2 start stub.config.js",
     "pm2-stop": "pm2 stop all",
     "build": "tsc && npm run copy-env-to-dist",
+    "reset-stuck-jobs": "ENV_FILE=pm2.env ts-node src/server/database/reset-stuck-jobs.ts",
     "start:server": "ts-node src/server/start-server.ts",
     "start:crypto-currency-prices": "ts-node src/crypto-currency-prices/main.ts",
     "start:crypto-currency-prices-stub": "ts-node src/crypto-currency-prices/start-stub.ts",
@@ -16,7 +17,7 @@
     "start-with-stubs": "concurrently \"npm run start:server\" \"npm run start:crypto-currency-prices\" \"npm run start:fiat-exchange-rates-stub\"",
     "generate-subscan-chain-list": "ts-node src/generators/generate-subscan-chain-list.ts",
     "test": "jest --config jest.unit.config.ts",
-    "integration-tests": "jest --config jest.integration.config.ts --runInBand integration-tests  --detectOpenHandles",
+    "integration-tests": "ts-node e2e-tests/staking-rewards.test.ts",
     "format": "prettier --write . --ignore-path ../.gitignore",
     "copy-env-to-dist": "cp *.env ./dist && if [ -f .env ]; then cp .env ./dist; fi"
   },
