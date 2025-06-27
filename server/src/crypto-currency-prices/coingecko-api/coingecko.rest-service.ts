@@ -67,6 +67,7 @@ export class CoingeckoRestService {
       );
     } catch (error) {
       logger.warn("No quotes found for token " + tokenId);
+      logger.warn(error)
       return undefined;
     }
     const url = "https://www.coingecko.com" + dataUrl
