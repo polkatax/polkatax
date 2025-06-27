@@ -70,9 +70,9 @@ describe("Staking rewards amounts", () => {
     verify(
       "0x56F17ebFe6B126E9f196e7a87f74e9f026a27A1F",
       "mythos",
-      23942.09502102308,
+      19186.24877880681,
       Date.UTC(2025, 0, 1),
-      Date.UTC(2025, 6, 1),
+      Date.UTC(2025, 5, 1),
     );
   }, 30_000);
 
@@ -81,9 +81,9 @@ describe("Staking rewards amounts", () => {
     await verify(
       "5CH5GH5za1HJ5rFRTd3bE6iRRefUKLR9EB3rhakyYC9ew7N1",
       "peaq",
-      1813964.9872180407,
+      1548293.1475236798,
       Date.UTC(2025, 0, 1),
-      Date.UTC(2025, 6, 1),
+      Date.UTC(2025, 5, 1),
     );
     logger.info("done peaq");
   }, 30_000);
@@ -104,7 +104,7 @@ describe("Staking rewards amounts", () => {
       "creditcoin",
       "USD",
       Date.UTC(2024, 0, 1),
-      Date.UTC(2025, 6, 1),
+      Date.UTC(2025, 5, 1),
     );
     const slashes = rewards.values.filter((v) => v.amount < 0);
     expect(slashes.length).toBe(4);
