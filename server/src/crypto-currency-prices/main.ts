@@ -31,7 +31,8 @@ export const cryptoCurrencyPricesServer = {
         }>,
       ) => {
         const { tokenId } = request.params;
-        const { currency } = request.query;
+        let { currency } = request.query;
+        currency = currency?.toLocaleLowerCase()
         logger.info("Entry /crypto-historic-prices/ with token " + tokenId + " and currency " + currency)
         const quotes = await tokenPriceHistoryService.getHistoricPrices(
           tokenId,
