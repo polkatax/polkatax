@@ -58,6 +58,7 @@ export class CoingeckoRestService {
     tokenId: string,
     currency: string = "usd",
   ): Promise<Quotes> {
+    logger.info("Entry fetchHistoricalData for " + tokenId + " in " + currency)
     let dataUrl = "";
     try {
       dataUrl = (await this.getExportDataUrl(tokenId)).replace(
@@ -82,6 +83,8 @@ export class CoingeckoRestService {
       );
       result[previousDay] = Number(dataPoint["price"]);
     }
+    
+    logger.info(`Exit fetchHistoricalData with ${Object.keys(result).length} data points`)
     return result;
   }
 }
