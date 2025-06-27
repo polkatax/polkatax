@@ -42,9 +42,12 @@ export class CoingeckoRestService {
   }
 
   private async getExportDataUrl(tokenId: string) {
-    const response = await fetch(
-      "https://www.coingecko.com/en/coins/" + tokenId + "/historical_data",
-    );
+    const response = await fetch("https://www.coingecko.com/en/coins/" + tokenId + "/historical_data", {
+      headers: {
+        "User-Agent": "Mozilla/5.0",
+        "Accept": "text/html",
+      },
+    });
     const html = await response.text();
     const document = parse(html);
     const exportLink = document.querySelector(
