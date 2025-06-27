@@ -115,9 +115,17 @@ export class TokenPriceHistoryService {
     coingeckoId: string,
     currency: string = "usd",
   ) {
-    logger.info("Entry fetchQuotesForId for " + coingeckoId + " in " + currency)
+    logger.info(
+      "Entry fetchQuotesForId for " + coingeckoId + " in " + currency,
+    );
     if (this.informationUpToDate(coingeckoId, currency)) {
-      logger.info("Exit fetchQuotesForId for " + coingeckoId + " in " + currency + ". Returning cached data.")
+      logger.info(
+        "Exit fetchQuotesForId for " +
+          coingeckoId +
+          " in " +
+          currency +
+          ". Returning cached data.",
+      );
       return this.cachedPrices[this.combine(coingeckoId, currency)];
     }
     const quotes: Quotes = await this.coingeckoRestService.fetchHistoricalData(
@@ -126,7 +134,7 @@ export class TokenPriceHistoryService {
     );
     const idCurr = this.combine(coingeckoId, currency);
     this.cachedPrices[idCurr] = quotes;
-    logger.info("Exit fetchQuotesForId for " + coingeckoId + " in " + currency)
+    logger.info("Exit fetchQuotesForId for " + coingeckoId + " in " + currency);
     return this.cachedPrices[idCurr];
   }
 }
