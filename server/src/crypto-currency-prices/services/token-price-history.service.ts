@@ -52,9 +52,9 @@ export class TokenPriceHistoryService {
         try {
           if (!this.informationUpToDate(coingeckoId, currency)) {
             const quotes = await this.fetchQuotesForId(coingeckoId, currency);
-            if (!quotes) {
+            if (!quotes || !this.informationUpToDate(coingeckoId, currency)) {
               logger.warn(
-                `Syncing for ${coingeckoId} failed. Removing token from sync list`,
+                `Syncing for ${coingeckoId} failed or was incomplete. Removing token from sync list`,
               );
               this.tokensToSync = this.tokensToSync.filter(
                 (t) => t !== coingeckoId,
