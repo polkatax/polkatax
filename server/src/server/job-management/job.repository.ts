@@ -48,6 +48,10 @@ export class JobRepository {
     });
 
     logger.info("Init JobRepository complete.");
+
+    // initial notification to check for pending jobs after startup.
+    this.pendingJobsChanged$.next();
+
     return client;
   }
 
