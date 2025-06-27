@@ -29,6 +29,12 @@ jobs:
         working-directory: server
         run: npm run test
 
+      - name: Run e2e Tests
+        working-directory: server
+        run: npm run e2e-tests
+        env:
+          SUBSCAN_API_KEY: ${{ secrets.SUBSCAN_API_KEY }}
+
   client-tests:
     runs-on: ubuntu-latest
 
