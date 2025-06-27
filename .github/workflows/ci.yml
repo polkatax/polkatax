@@ -82,10 +82,19 @@ jobs:
         run: |
           ssh -o StrictHostKeyChecking=no ${{ secrets.HETZNER_USER }}@${{ secrets.HETZNER_HOST }} << 'EOF'
             cd ${{ secrets.DEPLOY_PATH }}
-            npm install
-            npm run build
-            cd server
-            npm run pm2-stop 
-            npm run reset-stuck-jobs
-            npm run pm2-stub
+          # Install dependencies and build the project
+          npm install
+          npm run build
+
+          # Navigate to the server directory
+          cd server
+
+          # Stop the PM2-managed app
+          npm run pm2-stop
+
+          # Reset any stuck jobs in the database
+          npm run reset-stuck-jobs
+
+          # Start the PM2-managed app again
+          npm run pm2-stub
           EOF
