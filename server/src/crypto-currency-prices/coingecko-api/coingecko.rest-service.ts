@@ -47,7 +47,7 @@ export class CoingeckoRestService {
 
   private async getPageContent(url: string): Promise<string> {
       puppeteer.use(StealthPlugin());
-      const browser = await puppeteer.launch();
+      const browser = await puppeteer.launch({ args: ['--no-sandbox', '--disable-setuid-sandbox'] });
       const page = await browser.newPage();
       await page.goto(url);
       const content = await page.content();
