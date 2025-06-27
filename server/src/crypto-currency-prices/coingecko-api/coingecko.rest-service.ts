@@ -69,7 +69,9 @@ export class CoingeckoRestService {
       logger.warn("No quotes found for token " + tokenId);
       return undefined;
     }
-    const response = await fetch("https://www.coingecko.com" + dataUrl);
+    const url = "https://www.coingecko.com" + dataUrl
+    logger.info("Fetching data from url: " + url)
+    const response = await fetch(url);
     const csv = await response.text();
     let json = this.csvToJson(csv).filter((d) => d["snapped_at"] && d["price"]);
     const result: { timestamp: number } = {
