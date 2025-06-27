@@ -35,12 +35,13 @@ export class JobConsumer {
     }
 
     try {
-      const result = await this.stakingRewardsWithFiatService.fetchStakingRewards({
-        chain,
-        address: job.wallet,
-        currency: job.currency,
-        startDate: job.syncFromDate,
-      });
+      const result =
+        await this.stakingRewardsWithFiatService.fetchStakingRewards({
+          chain,
+          address: job.wallet,
+          currency: job.currency,
+          startDate: job.syncFromDate,
+        });
 
       // Merge previously synced values (if any)
       if (job.data) {

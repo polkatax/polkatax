@@ -7,6 +7,7 @@
     "pm2-stub": "pm2 start stub.config.js",
     "pm2-stop": "pm2 stop all",
     "build": "tsc && npm run copy-env-to-dist",
+    "reset-stuck-jobs": "ENV_FILE=pm2.env ts-node src/server/database/reset-stuck-jobs.ts",
     "start:server": "ts-node src/server/start-server.ts",
     "start:crypto-currency-prices": "ts-node src/crypto-currency-prices/main.ts",
     "start:crypto-currency-prices-stub": "ts-node src/crypto-currency-prices/start-stub.ts",

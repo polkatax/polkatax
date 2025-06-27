@@ -86,5 +86,6 @@ jobs:
             npm run build
             cd server
             npm run pm2-stop 
+            npm run reset-stuck-jobs
             npm run pm2-stub
           EOF
