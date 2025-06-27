@@ -3,8 +3,6 @@ import { logger } from "../logger/logger";
 import { HttpError } from "../../common/error/HttpError";
 import { Quotes } from "../../model/crypto-currency-prices/crypto-currency-quotes";
 import { formatDate } from "../../common/util/date-utils";
-import puppeteer from 'puppeteer-extra';
-import StealthPlugin from 'puppeteer-extra-plugin-stealth';
 
 export class CoingeckoRestService {
   async fetchPrices(
@@ -43,18 +41,37 @@ export class CoingeckoRestService {
     return jsonData;
   }
 
+  private async getPageContent(url: string) {
+    if (!process.env['ZYTE_USER']) {
+      logger.info("No ZYTE_USER given. Fetching data directly.")
+      const response = await fetch(url);
+      return response.text();
+    } else {
+      const username = process.env['ZYTE_USER'];
+      const zyteUrl = 'https://api.zyte.com/v1/extract';
+  
+      const body = {
+        url,
+        httpResponseBody: true,
+        followRedirect: true
+      };
+      const response = await fetch(zyteUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Basic ' + Buffer.from(username + ':').toString('base64')
+        },
+        body: JSON.stringify(body)
+      })
+      const json = await response.json()
+      const httpResponseBody = Buffer.from(
+        json.httpResponseBody, 
+        "base64"
+      )
+      return httpResponseBody.toString()
+    }
+  }
  
-
-  private async getPageContent(url: string): Promise<string> {
-      puppeteer.use(StealthPlugin());
-      const browser = await puppeteer.launch({ args: ['--no-sandbox', '--disable-setuid-sandbox'] });
-      const page = await browser.newPage();
-      await page.goto(url);
-      const content = await page.content();
-      await browser.close();
-      return content
-    } 
-
   private async getExportDataUrl(tokenId: string) {
     const content = await this.getPageContent("https://www.coingecko.com/en/coins/" + tokenId + "/historical_data")
     const document = parse(content);
@@ -83,8 +100,7 @@ export class CoingeckoRestService {
     }
     const url = "https://www.coingecko.com" + dataUrl
     logger.info("Fetching data from url: " + url)
-    const response = await fetch(url);
-    const csv = await response.text();
+    const csv = await this.getPageContent(url);
     let json = this.csvToJson(csv).filter((d) => d["snapped_at"] && d["price"]);
     const result: { timestamp: number } = {
       timestamp: Date.now(),
