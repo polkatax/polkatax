@@ -32,7 +32,7 @@ export class JobRepository {
 
     client.on("notification", (msg) => {
       try {
-        const payload = JSON.parse(msg.payload ?? "{}");
+        const payload = JSON.parse(msg.payload || "{}");
         if (msg.channel === "job_changed") {
           logger.info(
             `JobRepository: Notification on ${msg.channel}, wallet: ${payload.wallet}, blockchain: ${payload.blockchain}`,
