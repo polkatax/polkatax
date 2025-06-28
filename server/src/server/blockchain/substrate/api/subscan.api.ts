@@ -212,7 +212,7 @@ export class SubscanApi {
         event_id: entry.event_id,
         amount: BigNumber(entry.amount),
         timestamp: entry.block_timestamp * 1000, // convert from sec to ms
-        block: entry.extrinsic_index.split("-")[0],
+        block: entry.block_num ?? Number(entry.extrinsic_index.split("-")[0]),
         hash: entry.extrinsic_hash,
       };
     });

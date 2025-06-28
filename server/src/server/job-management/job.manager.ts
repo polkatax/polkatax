@@ -90,15 +90,25 @@ export class JobManager {
     let previousWallet: string | undefined;
 
     while (true) {
-      const jobs = await firstValueFrom(
-        this.jobsService.pendingJobs$.pipe(filter((jobs) => jobs.length > 0)),
-      );
+      try {
+        const jobs = await firstValueFrom(
+          this.jobsService.pendingJobs$.pipe(filter((jobs) => jobs.length > 0)),
+        );
 
-      const job = determineNextJob(jobs, previousWallet);
-      if (!job) continue;
+        const jobInfo = determineNextJob(jobs, previousWallet);
+        if (!jobInfo) continue;
 
-      previousWallet = job.wallet;
-      await this.DIContainer.resolve("jobConsumer").process(job);
+        const job = await this.jobsService.fetchJob(
+          jobInfo.wallet,
+          jobInfo.blockchain,
+          jobInfo.currency,
+        );
+
+        previousWallet = job.wallet;
+        await this.DIContainer.resolve("jobConsumer").process(job);
+      } catch (error) {
+        logger.error(error);
+      }
     }
   }
 }

@@ -31,7 +31,7 @@ export class StakingRewardsViaEventsService {
           event_id: transfer.amount < 0 ? "Slash" : "Reward",
           amount: transfer.amount,
           timestamp: transfer.timestamp,
-          block: Number(transfer.extrinsic_index.split("-")[0]),
+          block: transfer.block,
           hash: transfer.hash,
         };
       });

@@ -81,8 +81,8 @@ export class JobRepository {
   async insertJob(job: Job) {
     const query = `
       INSERT INTO jobs (
-        wallet, blockchain, sync_from_date, currency, req_id, last_modified, status
-      ) VALUES ($1, $2, $3, $4, $5, $6, 'pending')
+        wallet, blockchain, sync_from_date, currency, req_id, last_modified, status, data
+      ) VALUES ($1, $2, $3, $4, $5, $6, 'pending', $7)
     `;
 
     const values = [
@@ -92,6 +92,7 @@ export class JobRepository {
       job.currency,
       job.reqId,
       new Date(),
+      job.data,
     ];
 
     const client = await this.getClient();
@@ -121,7 +122,9 @@ export class JobRepository {
   }
 
   async fetchAllPendingJobs() {
-    return this.executeJobQuery(`SELECT * FROM jobs WHERE status = 'pending'`);
+    return this.executeJobQuery(
+      `SELECT req_id, wallet, error, blockchain, sync_from_date, status, last_modified, currency, synced_until FROM jobs WHERE status = 'pending'`,
+    );
   }
 
   async deleteJob(job: Job) {

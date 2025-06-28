@@ -32,8 +32,13 @@ export const cryptoCurrencyPricesServer = {
       ) => {
         const { tokenId } = request.params;
         let { currency } = request.query;
-        currency = currency?.toLocaleLowerCase()
-        logger.info("Entry /crypto-historic-prices/ with token " + tokenId + " and currency " + currency)
+        currency = currency?.toLocaleLowerCase();
+        logger.info(
+          "Entry /crypto-historic-prices/ with token " +
+            tokenId +
+            " and currency " +
+            currency,
+        );
         const quotes = await tokenPriceHistoryService.getHistoricPrices(
           tokenId,
           currency,
@@ -49,7 +54,7 @@ export const cryptoCurrencyPricesServer = {
           // use yesterday eod quotes if current day not finished yet
           quotes.quotes[todayFormatted] = quotes.quotes[formatDate(yesterday)];
         }
-        logger.info("Exit /crypto-historic-prices/")
+        logger.info("Exit /crypto-historic-prices/");
         return quotes;
       },
     });

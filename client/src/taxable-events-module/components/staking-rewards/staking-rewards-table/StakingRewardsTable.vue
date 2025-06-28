@@ -112,7 +112,7 @@ const rewardToken = computed(() => {
 });
 
 const initialPagination = ref({
-  sortBy: 'block',
+  sortBy: 'timestamp',
   descending: true,
   page: 1,
   rowsPerPage: 10,
