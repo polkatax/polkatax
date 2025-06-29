@@ -113,11 +113,11 @@ const wallets: Ref<
   | undefined
 > = ref(undefined);
 
-const walletAddresses : Ref<string[]> = ref([])
+const walletAddresses: Ref<string[]> = ref([]);
 
-const walletAddressesSub = store.walletsAddresses$.subscribe(addresses => {
-  walletAddresses.value = addresses
-})
+const walletAddressesSub = store.walletsAddresses$.subscribe((addresses) => {
+  walletAddresses.value = addresses;
+});
 
 const jobsSubscription = store.jobs$.subscribe((jobs) => {
   const r: any[] = [];
@@ -144,7 +144,7 @@ const jobsSubscription = store.jobs$.subscribe((jobs) => {
 
 onUnmounted(() => {
   jobsSubscription.unsubscribe();
-  walletAddressesSub.unsubscribe()
+  walletAddressesSub.unsubscribe();
 });
 
 function startSyncing() {
