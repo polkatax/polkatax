@@ -13,7 +13,7 @@
       </tr>
       <tr>
         <td class="text-left q-pa-sm">Blockchain:</td>
-        <td class="text-right q-pa-sm">
+        <td class="text-right q-pa-sm" data-testid="summary-blockchain">
           {{ blockchainLabel ?? rewards.chain }}
         </td>
       </tr>

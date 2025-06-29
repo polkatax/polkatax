@@ -6,6 +6,7 @@
         :columns="columns"
         :pagination="{ rowsPerPage: 0 }"
         row-key="name"
+        data-testid="connected-chains-data-table"
         hide-bottom
       >
         <template v-slot:body="props">

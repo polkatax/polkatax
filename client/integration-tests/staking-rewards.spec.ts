@@ -75,7 +75,7 @@ test.describe('Wallet', () => {
     await page.click('[data-testid="submit"]');
     await wsWrapper.waitForNMessages(1);
     const msg = wsWrapper.receivedMessages[0];
-    expect(msg).toMatchObject({
+    await expect(msg).toMatchObject({
       type: 'fetchDataRequest',
       payload: {
         wallet: '2Fd1UGzT8yuhksiKy98TpDg794dEELvNFqenJjRHFvwfuU83',
@@ -149,6 +149,109 @@ test.describe('Wallet', () => {
       ],
     });
     await expect(statusIcon).not.toHaveClass('spinner');
+  });
+
+  test('Navigation to connected blockchains and details', async ({ page }) => {
+    page.on('console', (msg) => {
+      console.log(`Browser log: ${msg.type()}: ${msg.text()}`);
+    });
+
+    wsWrapper = new WsWrapper();
+
+    await mockCountry(page, 'IT');
+    await mockSubscanChainList(page);
+    await page.goto('http://localhost:9000/wallets');
+    await page.fill(
+      '[data-testid="wallet-input"]',
+      '2Fd1UGzT8yuhksiKy98TpDg794dEELvNFqenJjRHFvwfuU83'
+    );
+    await page.click('[data-testid="submit"]');
+    await wsWrapper.waitForNMessages(1);
+    wsWrapper.send({
+      type: 'data',
+      reqId: '123',
+      payload: [
+        {
+          reqId: '123',
+          wallet: '2Fd1UGzT8yuhksiKy98TpDg794dEELvNFqenJjRHFvwfuU83',
+          blockchain: 'kusama',
+          type: 'staking_rewards',
+          status: 'done',
+          currency: 'EUR',
+          syncFromDate: 1703980800000,
+          data: mockRewards,
+        },
+        {
+          reqId: '123',
+          wallet: '2Fd1UGzT8yuhksiKy98TpDg794dEELvNFqenJjRHFvwfuU83',
+          blockchain: 'mythos',
+          type: 'staking_rewards',
+          status: 'done',
+          currency: 'EUR',
+          syncFromDate: 1703980800000,
+          data: mockRewards,
+        },
+      ],
+    });
+    const rows = page.locator('[data-testid="wallet-data-table"] tr');
+    await expect(rows).toHaveCount(2);
+    await page
+      .getByText('2Fd1UGzT8yuhksiKy98TpDg794dEELvNFqenJjRHFvwfuU83')
+      .click();
+    await expect(page.getByTestId('title')).toHaveText('Connected Blockchains');
+    const blockchainRows = page.locator(
+      '[data-testid="connected-chains-data-table"] tr'
+    );
+    await expect(blockchainRows).toHaveCount(3);
+    await page.getByText('Kusama').click();
+    await expect(page.getByTestId('title')).toHaveText('Taxable Events');
+    await expect(page.getByTestId('summary-blockchain')).toHaveText('Kusama');
+  });
+
+  test('Breadcrumbs navigation', async ({ page }) => {
+    page.on('console', (msg) => {
+      console.log(`Browser log: ${msg.type()}: ${msg.text()}`);
+    });
+
+    wsWrapper = new WsWrapper();
+
+    await mockCountry(page, 'IT');
+    await mockSubscanChainList(page);
+    await page.goto('http://localhost:9000/wallets');
+    await page.fill(
+      '[data-testid="wallet-input"]',
+      '2Fd1UGzT8yuhksiKy98TpDg794dEELvNFqenJjRHFvwfuU83'
+    );
+    await page.click('[data-testid="submit"]');
+    await wsWrapper.waitForNMessages(1);
+    wsWrapper.send({
+      type: 'data',
+      reqId: '123',
+      payload: [
+        {
+          reqId: '123',
+          wallet: '2Fd1UGzT8yuhksiKy98TpDg794dEELvNFqenJjRHFvwfuU83',
+          blockchain: 'kusama',
+          type: 'staking_rewards',
+          status: 'done',
+          currency: 'EUR',
+          syncFromDate: 1703980800000,
+          data: mockRewards,
+        },
+      ],
+    });
+    await page
+      .getByText('2Fd1UGzT8yuhksiKy98TpDg794dEELvNFqenJjRHFvwfuU83')
+      .click();
+    await expect(page.getByTestId('title')).toHaveText('Connected Blockchains');
+    await page.getByText('Kusama').click();
+    await expect(page.getByTestId('title')).toHaveText('Taxable Events');
+    await page.getByTestId('breadcrumb-Connected blockchains').click();
+    expect(page.url()).toBe(
+      'http://localhost:9000/wallets/2Fd1UGzT8yuhksiKy98TpDg794dEELvNFqenJjRHFvwfuU83/EUR'
+    );
+    await page.getByTestId('breadcrumb-Wallets').click();
+    await expect(page.getByTestId('title')).toHaveText('Wallets');
   });
 
   test.afterEach(async () => {
