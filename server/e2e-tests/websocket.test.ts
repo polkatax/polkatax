@@ -29,18 +29,6 @@ export class WebSocketWrapper {
     this.socket.onmessage = (event) => {
       this.wsMsgReceived$.next(JSON.parse(event.data));
     };
-
-    this.socket.onerror = async (err) => {
-      if (this.connectionAttemps < 5) {
-        console.warn(`❌ WebSocket error. Retry in 1 second...`);
-        this.socket.close();
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-        this.init();
-      } else {
-        console.error(err);
-        fail("Could not establich ws connection");
-      }
-    };
   }
 
   sendMsg(msg: any) {
