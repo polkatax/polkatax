@@ -13,12 +13,14 @@
           class="q-mr-sm"
           @click="exportRewardsAsPdf"
           :disable="noRewards"
+          data-testid="pdfExport"
           >Export Pdf
         </q-btn>
         <q-btn
           color="primary"
           class="q-mr-sm"
           @click="exportRewardsAsCsv"
+          data-testid="csvExport"
           :disable="noRewards"
           >Export CSV
         </q-btn>
@@ -26,6 +28,7 @@
           color="primary"
           class="q-mr-sm"
           @click="exportRewardsAsKoinlyCsv"
+          data-testid="koinlyExport"
           :disable="noRewards"
           >Koinly Export
         </q-btn>
