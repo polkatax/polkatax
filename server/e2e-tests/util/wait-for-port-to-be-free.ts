@@ -23,7 +23,7 @@ export async function waitForPortToBeFree(
   throw new Error(`Port ${port} is still in use after waiting`);
 }
 
-export async function waitForPortToBeOppupied(
+export async function waitForPortToBeOccupied(
   port: number,
   retries = 10,
   interval = 100,

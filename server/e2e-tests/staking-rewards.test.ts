@@ -4,7 +4,7 @@ import { startStub as cryptoPricesStub } from "../src/crypto-currency-prices/stu
 import { fetchStakingRewards } from "./util/fetch-staking-rewars";
 import {
   waitForPortToBeFree,
-  waitForPortToBeOppupied,
+  waitForPortToBeOccupied,
 } from "./util/wait-for-port-to-be-free";
 
 let cryptoPriceServer: FastifyInstance;
@@ -12,14 +12,14 @@ let cryptoPriceServer: FastifyInstance;
 beforeAll(async () => {
   await waitForPortToBeFree(3003);
   /**
-   * Crypto prices are mocked.
+   * Crypto prices are NOT mocked.
    */
   cryptoPriceServer = await cryptoPricesStub();
-  await waitForPortToBeOppupied(3003);
+  await waitForPortToBeOccupied(3003);
 });
 
 afterAll(async () => {
-  cryptoPriceServer = await cryptoPriceServer.close();
+  await cryptoPriceServer.close();
 });
 
 describe("Staking rewards amounts", () => {

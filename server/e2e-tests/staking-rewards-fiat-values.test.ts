@@ -3,7 +3,7 @@ import { FastifyInstance } from "fastify";
 import { fetchStakingRewards } from "./util/fetch-staking-rewars";
 import {
   waitForPortToBeFree,
-  waitForPortToBeOppupied,
+  waitForPortToBeOccupied,
 } from "./util/wait-for-port-to-be-free";
 import { cryptoCurrencyPricesServer } from "../src/crypto-currency-prices/crypto-prices.server";
 
@@ -15,7 +15,7 @@ beforeAll(async () => {
    * Actual crypto prices from coingecko are used
    */
   cryptoPriceServer = await cryptoCurrencyPricesServer.init();
-  await waitForPortToBeOppupied(3003);
+  await waitForPortToBeOccupied(3003);
 });
 
 afterAll(async () => {
