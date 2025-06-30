@@ -53,7 +53,7 @@ export const cryptoCurrencyPricesServer = {
       },
     });
 
-    fastify.listen(
+    await fastify.listen(
       { port: Number(process.env["CRYPTO_CURRENCY_PRICES_PORT"] || 3003) },
       (err) => {
         if (err) {

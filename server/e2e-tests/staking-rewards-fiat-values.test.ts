@@ -1,21 +1,25 @@
 import { describe, expect, test, beforeAll, afterAll } from "@jest/globals";
 import { FastifyInstance } from "fastify";
 import { fetchStakingRewards } from "./util/fetch-staking-rewars";
-import { waitForPortToBeFree } from "./util/wait-for-port-to-be-free";
+import {
+  waitForPortToBeFree,
+  waitForPortToBeOppupied,
+} from "./util/wait-for-port-to-be-free";
 import { cryptoCurrencyPricesServer } from "../src/crypto-currency-prices/crypto-prices.server";
 
 let cryptoPriceServer: FastifyInstance;
 
 beforeAll(async () => {
+  await waitForPortToBeFree(3003);
   /**
    * Actual crypto prices from coingecko are used
    */
   cryptoPriceServer = await cryptoCurrencyPricesServer.init();
+  await waitForPortToBeOppupied(3003);
 });
 
 afterAll(async () => {
   cryptoPriceServer = await cryptoPriceServer.close();
-  await waitForPortToBeFree(3003);
 });
 
 describe("Should support multiple currencies", () => {
