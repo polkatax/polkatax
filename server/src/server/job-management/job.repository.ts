@@ -195,7 +195,15 @@ export class JobRepository {
   }
 
   private async notifyJobChanged(jobId: JobId) {
-    const payload = JSON.stringify(jobId);
+    /**
+     * Just using blockchain, currency, wallet is necessary bc the interface can be called with
+     * Job object which is too large for Notify
+     */
+    const payload = JSON.stringify({
+      wallet: jobId.wallet,
+      blockchain: jobId.blockchain,
+      currency: jobId.currency,
+    } as JobId);
     const client = await this.getClient();
     await client.query(`NOTIFY job_changed, '${payload}';`);
   }
