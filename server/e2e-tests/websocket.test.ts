@@ -9,13 +9,16 @@ import { polkataxServer } from "../src/server/polkatax-server";
 import { filter, firstValueFrom, ReplaySubject, Subject, take } from "rxjs";
 import { WebSocketOutgoingMessage } from "../src/server/model/web-socket-msg";
 import WebSocket from "ws";
+import { fail } from "assert";
 
 export class WebSocketWrapper {
   socket: WebSocket;
   connected$ = new ReplaySubject<boolean>(1);
   wsMsgReceived$ = new Subject<WebSocketOutgoingMessage>();
+  connectionAttemps = 0;
 
   init() {
+    this.connectionAttemps += 1;
     this.socket = new WebSocket("ws://127.0.0.1:3001/ws");
 
     this.socket.onopen = () => {
@@ -25,6 +28,18 @@ export class WebSocketWrapper {
 
     this.socket.onmessage = (event) => {
       this.wsMsgReceived$.next(JSON.parse(event.data));
+    };
+
+    this.socket.onerror = async (err) => {
+      if (this.connectionAttemps < 5) {
+        console.warn(`❌ WebSocket error. Retry in 1 second...`);
+        this.socket.close();
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        this.init();
+      } else {
+        console.error(err);
+        fail("Could not establich ws connection");
+      }
     };
   }
 
