@@ -17,6 +17,7 @@ import { fetchSubscanChains } from '../service/fetch-subscan-chains';
 import { mapRawValuesToRewards, sortJobs } from './helper/job.service';
 import { filterFromBeginningLastYear } from './helper/filter-from-beginning-last-year';
 import { addIsoDate } from './helper/add-iso-date';
+import { convertToGenericAddress } from '../util/convert-to-generic-address';
 
 const jobs$ = new BehaviorSubject<JobResult[]>([]);
 const subscanChains$ = from(fetchSubscanChains()).pipe(shareReplay(1));
@@ -103,16 +104,17 @@ export const useSharedStore = defineStore('shared', {
       }
     },
     async sync() {
+      const genericAddress = convertToGenericAddress(this.address.trim());
       wsSendMsg({
         type: 'fetchDataRequest',
         payload: {
-          wallet: this.address.trim(),
+          wallet: genericAddress,
           currency: await firstValueFrom(
             useSharedStore().currency$.pipe(filter((c) => c !== undefined))
           ),
         },
       });
-      this.addWallet(this.address.trim());
+      this.addWallet(genericAddress);
     },
     async removeWallet(job: JobResult) {
       const wallets: string[] = JSON.parse(

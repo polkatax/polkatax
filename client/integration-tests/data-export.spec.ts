@@ -19,7 +19,7 @@ test.describe('Wallet', () => {
     await page.goto('http://localhost:9000/wallets');
     await page.fill(
       '[data-testid="wallet-input"]',
-      '2Fd1UGzT8yuhksiKy98TpDg794dEELvNFqenJjRHFvwfuU83'
+      '5FEoE3EYfi9WSdrF97XB9FerXcv3sqoyv4GimEiK9anJMKw2'
     );
     await page.click('[data-testid="submit"]');
     await wsWrapper.waitForNMessages(1);
@@ -29,7 +29,7 @@ test.describe('Wallet', () => {
       payload: [
         {
           reqId: '123',
-          wallet: '2Fd1UGzT8yuhksiKy98TpDg794dEELvNFqenJjRHFvwfuU83',
+          wallet: '5FEoE3EYfi9WSdrF97XB9FerXcv3sqoyv4GimEiK9anJMKw2',
           blockchain: 'kusama',
           type: 'staking_rewards',
           status: 'done',
@@ -43,7 +43,7 @@ test.describe('Wallet', () => {
     const rows = page.locator('[data-testid="wallet-data-table"] tr');
     await expect(rows).toHaveCount(2);
     await page
-      .getByText('2Fd1UGzT8yuhksiKy98TpDg794dEELvNFqenJjRHFvwfuU83')
+      .getByText('5FEoE3EYfi9WSdrF97XB9FerXcv3sqoyv4GimEiK9anJMKw2')
       .click();
     await expect(page.getByTestId('title')).toHaveText('Connected Blockchains');
     const blockchainRows = page.locator(

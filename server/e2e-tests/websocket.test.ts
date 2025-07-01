@@ -29,7 +29,7 @@ export class WebSocketWrapper {
   }
 
   sendMsg(msg: any) {
-    const reqId = '123';
+    const reqId = "123";
     this.connected$.pipe(take(1)).subscribe(() => {
       this.socket.send(
         JSON.stringify({
