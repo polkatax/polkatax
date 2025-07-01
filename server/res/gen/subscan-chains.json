@@ -74,6 +74,16 @@
       "delegatedStaking": false
     },
     {
+      "domain": "shibuya",
+      "label": "Shibuya",
+      "token": "SBY",
+      "stakingPallets": ["DappStaking"],
+      "evmPallet": true,
+      "standardStaking": false,
+      "parachainStaking": false,
+      "delegatedStaking": false
+    },
+    {
       "domain": "sora",
       "label": "SORA",
       "token": "XOR",
@@ -164,6 +174,16 @@
       "delegatedStaking": false
     },
     {
+      "domain": "opal",
+      "label": "Opal",
+      "token": "OPL",
+      "stakingPallets": [],
+      "evmPallet": true,
+      "standardStaking": false,
+      "parachainStaking": false,
+      "delegatedStaking": false
+    },
+    {
       "domain": "nodle",
       "label": "Nodle",
       "token": "NODL",
@@ -244,6 +264,16 @@
       "parachainStaking": false,
       "delegatedStaking": false,
       "pseudoStaking": true
+    },
+    {
+      "domain": "khala",
+      "label": "Khala (Archived)",
+      "token": "PHA",
+      "stakingPallets": [],
+      "evmPallet": false,
+      "standardStaking": false,
+      "parachainStaking": false,
+      "delegatedStaking": false
     },
     {
       "domain": "karura",
@@ -372,6 +402,16 @@
       "token": "RING",
       "stakingPallets": ["DarwiniaStaking"],
       "evmPallet": true,
+      "standardStaking": false,
+      "parachainStaking": false,
+      "delegatedStaking": false
+    },
+    {
+      "domain": "dancebox",
+      "label": "Dancebox",
+      "token": "DANCE",
+      "stakingPallets": ["PooledStaking"],
+      "evmPallet": false,
       "standardStaking": false,
       "parachainStaking": false,
       "delegatedStaking": false
