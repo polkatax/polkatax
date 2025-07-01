@@ -54,7 +54,7 @@ beforeAll(async () => {
   await waitForPortToBeFree(3001);
   await waitForPortToBeFree(3003);
   /**
-   * Crypto prices are NOT mocked.
+   * Crypto prices are mocked.
    */
   cryptoPriceServer = await cryptoPricesStub();
   server = await polkataxServer.init();

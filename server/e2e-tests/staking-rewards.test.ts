@@ -12,7 +12,7 @@ let cryptoPriceServer: FastifyInstance;
 beforeAll(async () => {
   await waitForPortToBeFree(3003);
   /**
-   * Crypto prices are NOT mocked.
+   * Crypto prices are mocked.
    */
   cryptoPriceServer = await cryptoPricesStub();
   await waitForPortToBeOccupied(3003);
@@ -51,6 +51,14 @@ describe("Staking rewards amounts", () => {
       Date.UTC(2025, 5, 1),
     );
     expect(totalAmount).toBe(1548293.1475236798);
+  }, 30_000);
+
+  test("moonbeam", async () => {
+    const { totalAmount } = await fetchStakingRewards(
+      "0xd8C8f8E07F779C34aEc474bA1A04E20E792b5c5f",
+      "moonbeam",
+    );
+    expect(totalAmount).toBe(184.17376356100766);
   }, 30_000);
 
   test("creditcoin", async () => {
