@@ -29,7 +29,7 @@ export class WebSocketWrapper {
   }
 
   sendMsg(msg: any) {
-    const reqId = '123';
+    const reqId = "123";
     this.connected$.pipe(take(1)).subscribe(() => {
       this.socket.send(
         JSON.stringify({
@@ -54,7 +54,7 @@ beforeAll(async () => {
   await waitForPortToBeFree(3001);
   await waitForPortToBeFree(3003);
   /**
-   * Crypto prices are NOT mocked.
+   * Crypto prices are mocked.
    */
   cryptoPriceServer = await cryptoPricesStub();
   server = await polkataxServer.init();

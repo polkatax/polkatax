@@ -1,7 +1,7 @@
 import { decodeAddress } from '@polkadot/util-crypto';
 import { getAddress } from 'ethers';
 
-function isValidEvmAddress(addr: string): boolean {
+export function isValidEvmAddress(addr: string): boolean {
   try {
     return getAddress(addr) === addr;
   } catch {
@@ -9,7 +9,7 @@ function isValidEvmAddress(addr: string): boolean {
   }
 }
 
-function isValidSubstrateAddress(addr: string): boolean {
+export function isValidSubstrateAddress(addr: string): boolean {
   try {
     decodeAddress(addr);
     return true;

@@ -9,6 +9,7 @@ import {
 } from "./incoming-message-schema";
 import { JobRepository } from "../job-management/job.repository";
 import { JobId } from "../../model/job";
+import { convertToGenericAddress } from "../../common/util/convert-to-generic-address";
 
 interface Subscription {
   wallet: string;
@@ -136,6 +137,12 @@ export class WebSocketManager {
       const result = WebSocketIncomingMessageSchema.safeParse(msg);
       if (!result.success) {
         return this.sendError(socket, { code: 400, msg: "Invalid message" });
+      }
+
+      if (result.data.payload?.wallet) {
+        result.data.payload.wallet = convertToGenericAddress(
+          result.data.payload.wallet,
+        );
       }
 
       try {

@@ -19,7 +19,7 @@ test.describe('Staking rewards', () => {
     await page.goto('http://localhost:9000/wallets');
     await page.fill(
       '[data-testid="wallet-input"]',
-      '2Fd1UGzT8yuhksiKy98TpDg794dEELvNFqenJjRHFvwfuU83'
+      '5FEoE3EYfi9WSdrF97XB9FerXcv3sqoyv4GimEiK9anJMKw2'
     );
     await page.click('[data-testid="submit"]');
     await wsWrapper.waitForNMessages(1);
@@ -27,7 +27,7 @@ test.describe('Staking rewards', () => {
     await expect(msg).toMatchObject({
       type: 'fetchDataRequest',
       payload: {
-        wallet: '2Fd1UGzT8yuhksiKy98TpDg794dEELvNFqenJjRHFvwfuU83',
+        wallet: '5FEoE3EYfi9WSdrF97XB9FerXcv3sqoyv4GimEiK9anJMKw2',
         currency: 'EUR',
       },
       timestamp: expect.any(Number),
@@ -112,7 +112,7 @@ test.describe('Staking rewards', () => {
     await page.goto('http://localhost:9000/wallets');
     await page.fill(
       '[data-testid="wallet-input"]',
-      '2Fd1UGzT8yuhksiKy98TpDg794dEELvNFqenJjRHFvwfuU83'
+      '5FEoE3EYfi9WSdrF97XB9FerXcv3sqoyv4GimEiK9anJMKw2'
     );
     await page.click('[data-testid="submit"]');
     await wsWrapper.waitForNMessages(1);
@@ -122,7 +122,7 @@ test.describe('Staking rewards', () => {
       payload: [
         {
           reqId: '123',
-          wallet: '2Fd1UGzT8yuhksiKy98TpDg794dEELvNFqenJjRHFvwfuU83',
+          wallet: '5FEoE3EYfi9WSdrF97XB9FerXcv3sqoyv4GimEiK9anJMKw2',
           blockchain: 'kusama',
           type: 'staking_rewards',
           status: 'done',
@@ -132,7 +132,7 @@ test.describe('Staking rewards', () => {
         },
         {
           reqId: '123',
-          wallet: '2Fd1UGzT8yuhksiKy98TpDg794dEELvNFqenJjRHFvwfuU83',
+          wallet: '5FEoE3EYfi9WSdrF97XB9FerXcv3sqoyv4GimEiK9anJMKw2',
           blockchain: 'mythos',
           type: 'staking_rewards',
           status: 'done',
@@ -145,7 +145,7 @@ test.describe('Staking rewards', () => {
     const rows = page.locator('[data-testid="wallet-data-table"] tr');
     await expect(rows).toHaveCount(2);
     await page
-      .getByText('2Fd1UGzT8yuhksiKy98TpDg794dEELvNFqenJjRHFvwfuU83')
+      .getByText('5FEoE3EYfi9WSdrF97XB9FerXcv3sqoyv4GimEiK9anJMKw2')
       .click();
     await expect(page.getByTestId('title')).toHaveText('Connected Blockchains');
     const blockchainRows = page.locator(
@@ -169,7 +169,7 @@ test.describe('Staking rewards', () => {
     await page.goto('http://localhost:9000/wallets');
     await page.fill(
       '[data-testid="wallet-input"]',
-      '2Fd1UGzT8yuhksiKy98TpDg794dEELvNFqenJjRHFvwfuU83'
+      '5FEoE3EYfi9WSdrF97XB9FerXcv3sqoyv4GimEiK9anJMKw2'
     );
     await page.click('[data-testid="submit"]');
     await wsWrapper.waitForNMessages(1);
@@ -179,7 +179,7 @@ test.describe('Staking rewards', () => {
       payload: [
         {
           reqId: '123',
-          wallet: '2Fd1UGzT8yuhksiKy98TpDg794dEELvNFqenJjRHFvwfuU83',
+          wallet: '5FEoE3EYfi9WSdrF97XB9FerXcv3sqoyv4GimEiK9anJMKw2',
           blockchain: 'kusama',
           type: 'staking_rewards',
           status: 'done',
@@ -190,14 +190,14 @@ test.describe('Staking rewards', () => {
       ],
     });
     await page
-      .getByText('2Fd1UGzT8yuhksiKy98TpDg794dEELvNFqenJjRHFvwfuU83')
+      .getByText('5FEoE3EYfi9WSdrF97XB9FerXcv3sqoyv4GimEiK9anJMKw2')
       .click();
     await expect(page.getByTestId('title')).toHaveText('Connected Blockchains');
     await page.getByText('Kusama').click();
     await expect(page.getByTestId('title')).toHaveText('Taxable Events');
     await page.getByTestId('breadcrumb-Connected blockchains').click();
     expect(page.url()).toBe(
-      'http://localhost:9000/wallets/2Fd1UGzT8yuhksiKy98TpDg794dEELvNFqenJjRHFvwfuU83/EUR'
+      'http://localhost:9000/wallets/5FEoE3EYfi9WSdrF97XB9FerXcv3sqoyv4GimEiK9anJMKw2/EUR'
     );
     await page.getByTestId('breadcrumb-Wallets').click();
     await expect(page.getByTestId('title')).toHaveText('Wallets');

@@ -1,5 +1,5 @@
 <template>
-  <div class="q-pa-md row items-center">
+  <div class="q-pt-md q-pb-xl q-px-md row items-center">
     <q-input
       class="address-input"
       filled
@@ -14,6 +14,29 @@
         (val) => !val || validateAddress(val) || 'Wallet address invalid',
       ]"
     >
+      <template
+        v-if="
+          isValidAddress(props.modelValue) && !isEvmAddress && !isGenericAddress
+        "
+        v-slot:hint
+      >
+        <div
+          class="text-caption text-grey-7"
+          style="
+            white-space: nowrap;
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+          "
+        >
+          Hint: You entered a parachain-specific address.<br />
+          This address maps to the generic address
+          {{
+            convertToGenericAddress(props.modelValue.trim()).substring(0, 4)
+          }}.... All results are shown using the canonical address format.
+        </div>
+      </template>
       <template v-slot:after>
         <q-icon name="info" aria-describedby="wallet-info-tooltip">
           <q-tooltip
@@ -32,7 +55,12 @@
 </template>
 <script setup lang="ts">
 import 'vue';
-import { isValidAddress } from '../../../wallets-module/util/is-valid-address';
+import { computed } from 'vue';
+import { isValidAddress, isValidEvmAddress } from '../../util/is-valid-address';
+import {
+  isGenericSubstrateAddress,
+  convertToGenericAddress,
+} from '../../util/convert-to-generic-address';
 
 const emits = defineEmits(['update:modelValue', 'enter-pressed']);
 
@@ -49,8 +77,16 @@ function onEnterPressed() {
 }
 
 function validateAddress(adr: string) {
-  return isValidAddress(adr);
+  return isValidAddress(adr.trim());
 }
+
+const isGenericAddress = computed(() => {
+  return isGenericSubstrateAddress(props.modelValue.trim());
+});
+
+const isEvmAddress = computed(() => {
+  return isValidEvmAddress(props.modelValue.trim());
+});
 </script>
 <style lang="css" scoped>
 .address-input {
