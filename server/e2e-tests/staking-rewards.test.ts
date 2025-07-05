@@ -1,106 +1,69 @@
 import { describe, expect, test, beforeAll, afterAll } from "@jest/globals";
-import { StakingRewardsResponse } from "../src/server/data-aggregation/model/staking-rewards.response";
-import { fetchStakingRewards } from "./fetch-staking-rewars";
-import { logger } from "../src/server/logger/logger";
 import { FastifyInstance } from "fastify";
 import { startStub as cryptoPricesStub } from "../src/crypto-currency-prices/stub";
-
-import net from "net";
-
-async function waitForPortToBeFree(port: number, retries = 10, interval = 100) {
-  for (let i = 0; i < retries; i++) {
-    const isFree = await new Promise((resolve) => {
-      const tester = net
-        .createServer()
-        .once("error", () => resolve(false))
-        .once("listening", () => {
-          tester.close();
-          resolve(true);
-        })
-        .listen(port);
-    });
-
-    if (isFree) return;
-    await new Promise((r) => setTimeout(r, interval));
-  }
-  throw new Error(`Port ${port} is still in use after waiting`);
-}
-
-const verify = async (
-  address: string,
-  chain: string,
-  expectedRewardsAmount,
-  startDate = Date.UTC(2024, 0, 1),
-  endDate = Date.UTC(2025, 0, 1),
-) => {
-  const rewards: StakingRewardsResponse = await fetchStakingRewards(
-    address,
-    chain,
-    "USD",
-    startDate,
-    endDate,
-  );
-  const total = rewards.values.reduce((current, value) => {
-    return current + value.amount;
-  }, 0);
-  await expect(total).toBe(expectedRewardsAmount);
-};
+import { fetchStakingRewards } from "./util/fetch-staking-rewars";
+import {
+  waitForPortToBeFree,
+  waitForPortToBeOccupied,
+} from "./util/wait-for-port-to-be-free";
 
 let cryptoPriceServer: FastifyInstance;
 
 beforeAll(async () => {
+  await waitForPortToBeFree(3003);
+  /**
+   * Crypto prices are mocked.
+   */
   cryptoPriceServer = await cryptoPricesStub();
+  await waitForPortToBeOccupied(3003);
 });
 
 afterAll(async () => {
-  cryptoPriceServer = await cryptoPriceServer.close();
-  await waitForPortToBeFree(3003);
+  await cryptoPriceServer.close();
 });
 
 describe("Staking rewards amounts", () => {
-  test("kusama", () => {
-    verify(
-      "5GeJMTfNpe2mmJgnxHoYJDVvNFcn8X4fbdtVPHVonFSX9tH7",
+  test("kusama", async () => {
+    const { totalAmount } = await fetchStakingRewards(
+      "15abVnvSgRJFCqhJuvrYSNL5DscRppcog8cyYaVALLU3LFjB",
       "kusama",
-      48.988706091223946,
     );
+    expect(totalAmount).toBe(48.988706091223946);
   }, 30_000);
 
-  test("mythos", () => {
-    verify(
+  test("mythos", async () => {
+    const { totalAmount } = await fetchStakingRewards(
       "0x56F17ebFe6B126E9f196e7a87f74e9f026a27A1F",
       "mythos",
-      19186.24877880681,
+      "USD",
       Date.UTC(2025, 0, 1),
       Date.UTC(2025, 5, 1),
     );
+    expect(totalAmount).toBe(19186.24877880681);
   }, 30_000);
 
   test("peaq", async () => {
-    console.log("peaq");
-    await verify(
-      "5CH5GH5za1HJ5rFRTd3bE6iRRefUKLR9EB3rhakyYC9ew7N1",
+    const { totalAmount } = await fetchStakingRewards(
+      "1DNQcM4RnYmXPFwRG6bNFYaHGf81dyHJfnLrskL6HBB7Vcx",
       "peaq",
-      1548293.1475236798,
+      "USD",
       Date.UTC(2025, 0, 1),
       Date.UTC(2025, 5, 1),
     );
-    logger.info("done peaq");
+    expect(totalAmount).toBe(1548293.1475236798);
   }, 30_000);
 
-  test("astar", async () => {
-    await verify(
-      "Z5MiZYL4717LSJi99DY3Dzv2iqWwHzwr27qCf8ozrNq6xxL",
-      "astar",
-      19282.742288529327,
-      Date.UTC(2024, 0, 1),
-      Date.UTC(2025, 0, 1),
+  test("moonbeam", async () => {
+    const { totalAmount } = await fetchStakingRewards(
+      "0xd8C8f8E07F779C34aEc474bA1A04E20E792b5c5f",
+      "moonbeam",
     );
+    expect(totalAmount).toBe(184.17376356100766);
   }, 30_000);
 
   test("creditcoin", async () => {
-    const rewards: StakingRewardsResponse = await fetchStakingRewards(
-      "5D7qiJYBd77Jzp6bWzi92iboELedLTMURWrPXFi25BAwsHdT",
+    const { rewards } = await fetchStakingRewards(
+      "1248rdoFUtNnSM77Udm9AsRx5xeH2kucW1asgYhNdGCU3syf",
       "creditcoin",
       "USD",
       Date.UTC(2024, 0, 1),

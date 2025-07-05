@@ -1,13 +1,12 @@
 <template>
   <q-page class="q-px-sm q-mx-auto content margin-auto">
-    <div
-      class="q-my-md flex justify-center align-center items-center row-md row-lg row-xl column-xs row-sm"
-    >
+    <div class="q-my-md flex justify-center align-center items-center row">
       <address-input v-model="store.address" @enter-pressed="startSyncing" />
       <q-btn
         color="primary"
         label="Add"
         data-testid="submit"
+        class="q-mt-md q-mb-xl"
         @click="startSyncing"
         :disable="isDisabled"
       />
@@ -101,7 +100,7 @@ import AddressInput from '../../shared-module/components/address-input/AddressIn
 import { computed, onUnmounted, Ref, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useSharedStore } from '../../shared-module/store/shared.store';
-import { isValidAddress } from '../util/is-valid-address';
+import { isValidAddress } from '../../shared-module/util/is-valid-address';
 import { useQuasar } from 'quasar';
 import { JobResult } from '../../shared-module/model/job-result';
 const $q = useQuasar();
@@ -113,11 +112,11 @@ const wallets: Ref<
   | undefined
 > = ref(undefined);
 
-const walletAddresses : Ref<string[]> = ref([])
+const walletAddresses: Ref<string[]> = ref([]);
 
-const walletAddressesSub = store.walletsAddresses$.subscribe(addresses => {
-  walletAddresses.value = addresses
-})
+const walletAddressesSub = store.walletsAddresses$.subscribe((addresses) => {
+  walletAddresses.value = addresses;
+});
 
 const jobsSubscription = store.jobs$.subscribe((jobs) => {
   const r: any[] = [];
@@ -144,7 +143,7 @@ const jobsSubscription = store.jobs$.subscribe((jobs) => {
 
 onUnmounted(() => {
   jobsSubscription.unsubscribe();
-  walletAddressesSub.unsubscribe()
+  walletAddressesSub.unsubscribe();
 });
 
 function startSyncing() {

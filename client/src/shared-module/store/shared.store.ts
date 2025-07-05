@@ -17,10 +17,13 @@ import { fetchSubscanChains } from '../service/fetch-subscan-chains';
 import { mapRawValuesToRewards, sortJobs } from './helper/job.service';
 import { filterFromBeginningLastYear } from './helper/filter-from-beginning-last-year';
 import { addIsoDate } from './helper/add-iso-date';
+import { convertToGenericAddress } from '../util/convert-to-generic-address';
 
 const jobs$ = new BehaviorSubject<JobResult[]>([]);
 const subscanChains$ = from(fetchSubscanChains()).pipe(shareReplay(1));
-const walletsAddresses$ = new BehaviorSubject(JSON.parse(localStorage.getItem('wallets') || '[]'));
+const walletsAddresses$ = new BehaviorSubject(
+  JSON.parse(localStorage.getItem('wallets') || '[]')
+);
 
 wsMsgReceived$
   .pipe(
@@ -85,7 +88,7 @@ export const useSharedStore = defineStore('shared', {
       subscanChains$,
       jobs$: jobs$.asObservable(),
       address: '',
-      walletsAddresses$: walletsAddresses$.asObservable()
+      walletsAddresses$: walletsAddresses$.asObservable(),
     };
   },
   actions: {
@@ -97,20 +100,21 @@ export const useSharedStore = defineStore('shared', {
       if (wallets.indexOf(wallet) === -1) {
         wallets.push(wallet);
         localStorage.setItem('wallets', JSON.stringify(wallets));
-        walletsAddresses$.next(wallets)
+        walletsAddresses$.next(wallets);
       }
     },
     async sync() {
+      const genericAddress = convertToGenericAddress(this.address.trim());
       wsSendMsg({
         type: 'fetchDataRequest',
         payload: {
-          wallet: this.address.trim(),
+          wallet: genericAddress,
           currency: await firstValueFrom(
             useSharedStore().currency$.pipe(filter((c) => c !== undefined))
           ),
         },
       });
-      this.addWallet(this.address.trim());
+      this.addWallet(genericAddress);
     },
     async removeWallet(job: JobResult) {
       const wallets: string[] = JSON.parse(
@@ -118,7 +122,7 @@ export const useSharedStore = defineStore('shared', {
       );
       const newWallets = wallets.filter((w) => w !== job.wallet);
       localStorage.setItem('wallets', JSON.stringify(newWallets));
-      walletsAddresses$.next(wallets)
+      walletsAddresses$.next(wallets);
       const reqId = wsSendMsg({
         type: 'unsubscribeRequest',
         payload: {

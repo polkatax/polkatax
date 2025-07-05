@@ -13,6 +13,8 @@ Data can be shown as graph and table and can be exported in CSV and JSON format.
 This project does NOT offer a one-click solution to taxation of crypto currencies.
 Rather, the user is encouraged to export the data to CSV for further processing.
 
+Note: At this time, only staking rewards export is supported.
+
 ## Install the dependencies
 
 The project is split into a server and a client folder
@@ -98,6 +100,15 @@ npm run start-with-stubs
 ```
 This will provide dummy values for fiat-to-fiat values, allowing you to test without needing an EXCHANGERATE_HOST_API_KEY.
 
+### Running e2e-test
+
+Note: E2E tests make calls to the Subscan API and require a valid SUBSCAN_API_KEY.
+
+To run the E2E tests, navigate to the `server` folder and execute:
+```bash
+npm run e2e-tests
+```
+
 ### Production setup
 
 For production environments, first build the application:
@@ -138,8 +149,7 @@ This will generate a new list of substrate chains in the `res/gen/` folder.
 
 The current implementation uses coingecko, however without API key.
 The reason are the relatively high costs of purchasing a coingecko API key.
-The consequence is that you might encounter errors with code 429 from coingecko if too many
-requests are made, especially when you just started the application.
+The consequence is that you might encounter errors with code 429 from coingecko if too many requests are made. To mitigate this issue [ZYTE](https://www.zyte.com/) is used in production.
 
 ## Documentation of Architecture 
 

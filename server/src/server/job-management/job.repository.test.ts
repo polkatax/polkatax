@@ -171,6 +171,26 @@ describe("JobRepository", () => {
     );
   });
 
+  test("notify job changed should omit job data", async () => {
+    const job = {
+      wallet: "w1",
+      blockchain: "chain1",
+      currency: "CUR",
+      data: "LARGE_AMOUNT_OF_DATA",
+    };
+    mockClient.query.mockResolvedValue({});
+    await jobRepo["notifyJobChanged"](job);
+
+    const jobId = {
+      ...job,
+      data: undefined,
+    };
+    expect(mockClient.query).toHaveBeenNthCalledWith(
+      2,
+      `NOTIFY job_changed, '${JSON.stringify(jobId)}';`,
+    );
+  });
+
   test("setDone updates job status and triggers jobChanged notification", async () => {
     const jobId = { wallet: "w1", blockchain: "chain1", currency: "CUR" };
     mockClient.query.mockResolvedValue({});
