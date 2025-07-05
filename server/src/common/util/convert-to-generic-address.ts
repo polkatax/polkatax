@@ -3,7 +3,10 @@ import { decodeAddress, encodeAddress } from "@polkadot/util-crypto";
 export const convertToGenericAddress = (address: string): string => {
   if (isValidSubstrateAddress(address)) {
     const publicKey = decodeAddress(address);
-    return encodeAddress(publicKey, 42);
+    /**
+     * @see https://polkadot.polkassembly.io/referenda/1217
+     */
+    return encodeAddress(publicKey, 0);
   } else {
     return address;
   }

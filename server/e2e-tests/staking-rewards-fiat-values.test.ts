@@ -25,7 +25,7 @@ afterAll(async () => {
 describe("Should support multiple currencies", () => {
   test("astar EUR", async () => {
     const { totalAmount, totalFiat } = await fetchStakingRewards(
-      "Z5MiZYL4717LSJi99DY3Dzv2iqWwHzwr27qCf8ozrNq6xxL",
+      "1494RbqK8edUZ9HPcUpR9ifnoJ83fNrLuKMB8EvJgaQPh8vH",
       "astar",
       "EUR",
     );
@@ -35,7 +35,7 @@ describe("Should support multiple currencies", () => {
 
   test("astar CHF", async () => {
     const { totalFiat } = await fetchStakingRewards(
-      "Z5MiZYL4717LSJi99DY3Dzv2iqWwHzwr27qCf8ozrNq6xxL",
+      "1494RbqK8edUZ9HPcUpR9ifnoJ83fNrLuKMB8EvJgaQPh8vH",
       "astar",
       "CHF",
     );
@@ -44,7 +44,7 @@ describe("Should support multiple currencies", () => {
 
   test("astar IDR", async () => {
     const { totalFiat } = await fetchStakingRewards(
-      "Z5MiZYL4717LSJi99DY3Dzv2iqWwHzwr27qCf8ozrNq6xxL",
+      "1494RbqK8edUZ9HPcUpR9ifnoJ83fNrLuKMB8EvJgaQPh8vH",
       "astar",
       "IDR",
     );
@@ -53,7 +53,7 @@ describe("Should support multiple currencies", () => {
 
   test("astar USD", async () => {
     const { totalFiat } = await fetchStakingRewards(
-      "Z5MiZYL4717LSJi99DY3Dzv2iqWwHzwr27qCf8ozrNq6xxL",
+      "1494RbqK8edUZ9HPcUpR9ifnoJ83fNrLuKMB8EvJgaQPh8vH",
       "astar",
       "USD",
     );

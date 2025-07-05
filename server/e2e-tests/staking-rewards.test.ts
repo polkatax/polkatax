@@ -25,7 +25,7 @@ afterAll(async () => {
 describe("Staking rewards amounts", () => {
   test("kusama", async () => {
     const { totalAmount } = await fetchStakingRewards(
-      "5GeJMTfNpe2mmJgnxHoYJDVvNFcn8X4fbdtVPHVonFSX9tH7",
+      "15abVnvSgRJFCqhJuvrYSNL5DscRppcog8cyYaVALLU3LFjB",
       "kusama",
     );
     expect(totalAmount).toBe(48.988706091223946);
@@ -44,7 +44,7 @@ describe("Staking rewards amounts", () => {
 
   test("peaq", async () => {
     const { totalAmount } = await fetchStakingRewards(
-      "5CH5GH5za1HJ5rFRTd3bE6iRRefUKLR9EB3rhakyYC9ew7N1",
+      "1DNQcM4RnYmXPFwRG6bNFYaHGf81dyHJfnLrskL6HBB7Vcx",
       "peaq",
       "USD",
       Date.UTC(2025, 0, 1),
@@ -63,7 +63,7 @@ describe("Staking rewards amounts", () => {
 
   test("creditcoin", async () => {
     const { rewards } = await fetchStakingRewards(
-      "5D7qiJYBd77Jzp6bWzi92iboELedLTMURWrPXFi25BAwsHdT",
+      "1248rdoFUtNnSM77Udm9AsRx5xeH2kucW1asgYhNdGCU3syf",
       "creditcoin",
       "USD",
       Date.UTC(2024, 0, 1),
